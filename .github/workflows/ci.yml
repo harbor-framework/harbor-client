@@ -39,4 +39,11 @@ jobs:
           uv venv wheel-check
           uv pip install --python wheel-check/bin/python dist/*.whl
           cd "${RUNNER_TEMP}"
-          "${GITHUB_WORKSPACE}/wheel-check/bin/python" -c 'from harbor_client import HarborAPIClient, AsyncHarborAPIClient; import importlib.resources; assert importlib.resources.files("harbor_client").joinpath("types/__init__.pyi").is_file()'
+          "${GITHUB_WORKSPACE}/wheel-check/bin/python" - <<'PYCODE'
+          from importlib.resources import files
+          from harbor_client import HarborAPIClient, AsyncHarborAPIClient
+          package = files("harbor_client")
+          for name in ("__init__.pyi", "types/__init__.pyi", "_openapi.json.gz", "py.typed"):
+              if not package.joinpath(name).is_file():
+                  raise RuntimeError(f"Missing SDK package data: {name}")
+          PYCODE

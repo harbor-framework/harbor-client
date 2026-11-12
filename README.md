@@ -12,9 +12,9 @@ with sync_client(token="your-api-key") as client:
 
 ## Regeneration
 
-The API definition and Fern configuration live with the API source. Fern opens SDK update pull requests against this repository. It owns generation commits, customization detection, three-way merging, and `.fern/replay.lock`. Review the generated changes and CI results before merging.
+The API implementation owns the public OpenAPI document. This repository keeps its input snapshot and Fern configuration; the scheduled generation workflow checks for changes daily and can also be run manually. Fern opens SDK update pull requests against this repository. It owns generation commits, customization detection, three-way merging, and `.fern/replay.lock`. Review the generated changes and CI results before merging.
 
-Commit necessary edits to generated files normally: Fern Replay detects them on the next regeneration. Resolve conflicts with `fern replay resolve .`; do not edit the lockfile by hand or accept unresolved patches. `.fernignore` protects the fully owned validation/transfer helpers, packaging support, tests, and CI. It does not freeze generated resource clients or models.
+Commit necessary edits to generated files normally: Fern Replay detects them on the next regeneration. Resolve conflicts with `npx fern-replay resolve .`; do not edit the lockfile by hand or accept unresolved patches. `.fernignore` protects the fully owned validation/transfer helpers, packaging support, tests, and CI. It does not freeze generated resource clients or models.
 
 The SDK retains regression tests for all documented operations, pagination, wire validation, pooling, and signed transfers. Static export stubs are derived from Fern's model registry during the standard package build; there is no separate SDK assembly or patch-generation command.
 
