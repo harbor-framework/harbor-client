@@ -1,0 +1,16 @@
+# Project-owned support and tests; generated operations/models stay under Replay.
+.fern/replay.lock
+.fern/replay.yml
+.gitattributes
+.fernignore
+.github/
+tests/
+requirements-dev.txt
+ruff.toml
+ty.toml
+pytest.ini
+setup.py
+build_support.py
+LICENSE
+src/harbor_client/validation.py
+src/harbor_client/transfers.py
