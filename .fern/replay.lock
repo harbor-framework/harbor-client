@@ -14151,7 +14151,7 @@ patches:
             with sync_client(transport=httpx.MockTransport(handler)) as client:
                 client.packages.download_file(version_id=UUID, file="folder/file.txt")
             assert b"folder%2Ffile.txt" in requests[0].url.raw_path
-    status: unresolved
+    status: resolving
   - id: patch-279854b0
     content_hash: sha256:03b8084f1d73eec535280ea83eab684c157aa6d57c09d6cc1689e44aee86e4ef
     original_commit: 279854b0271ade090783681330617e675225bc05

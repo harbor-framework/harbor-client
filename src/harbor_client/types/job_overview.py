@@ -126,8 +126,8 @@ class JobOverview(BaseModel):
     finished_at: Optional[str]
     visibility: Optional[JobOverviewVisibility]
     created_by: Optional[str]
-    created_by_user: Optional[JobCreator]
-    owner_organization: Optional[JobOwnerOrganization]
+    created_by_user: JobCreator
+    owner_organization: JobOwnerOrganization
     access_relation: Optional[JobOverviewAccessRelation]
     can_operate: bool
     can_manage_access: bool
@@ -135,13 +135,13 @@ class JobOverview(BaseModel):
     can_transfer: bool
     is_hosted: Optional[bool]
     billing_blocked: bool
-    manual_pause: Optional[JobManualPauseSummary]
-    cancellation: Optional[JobCancellationSummary]
+    manual_pause: JobManualPauseSummary
+    cancellation: JobCancellationSummary
     config: Any
     datasets: Optional[List[str]]
     run_targets: Optional[List[JobOverviewRunTargetsItem]]
-    stats: Optional[JobOverviewStatistics]
-    circuit: Optional[JobCircuitState]
+    stats: JobOverviewStatistics
+    circuit: JobCircuitState
     circuits: Optional[List[JobBucketCircuitState]]
 
 

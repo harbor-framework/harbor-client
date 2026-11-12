@@ -135,8 +135,8 @@ class JobDetail(BaseModel):
     finished_at: Optional[str]
     visibility: JobDetailVisibility
     created_by: Optional[str]
-    created_by_user: Optional[JobCreator]
-    owner_organization: Optional[JobOwnerOrganization]
+    created_by_user: JobCreator
+    owner_organization: JobOwnerOrganization
     access_relation: Optional[JobDetailAccessRelation]
     can_operate: bool
     can_manage_access: bool
