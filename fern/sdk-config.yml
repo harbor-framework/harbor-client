@@ -37,8 +37,11 @@ targets:
       github:
         repository: harbor-framework/harbor-client
         mode: pull-request
-        branch: main
-        workflows: false
+        branch: codex/sdk-native-release
+      publish:
+        registry: pypi
+        username: __token__
+        password: OIDC
     package:
       packageName: harbor-client
       moduleName: harbor_client

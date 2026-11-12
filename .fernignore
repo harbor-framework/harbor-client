@@ -3,7 +3,8 @@
 .fern/replay.yml
 .gitattributes
 .fernignore
-.github/
+.github/workflows/checks.yml
+.github/workflows/generate.yml
 tests/
 requirements-dev.txt
 ruff.toml

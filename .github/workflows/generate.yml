@@ -85,5 +85,5 @@ jobs:
             git push
           fi
           # Token-authenticated pushes do not trigger another pull_request run.
-          gh workflow run ci.yml --ref "$(git branch --show-current)"
+          gh workflow run checks.yml --ref "$(git branch --show-current)"
           echo "SDK update: $PR_URL" >> "$GITHUB_STEP_SUMMARY"
