@@ -1,4 +1,4 @@
 target-version = "py312"
 # Fern owns generated formatting and imports. Explicit CI paths below still
 # check our validation and transfer helpers inside the package.
-extend-exclude = ["src/harbor_client"]
+extend-exclude = ["src/harbor_client", "examples"]
