@@ -30,14 +30,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: cf4f0b52bc8d3edd932fc828265a636f425e483c
+  - commit_sha: 4704a0bb66980debf9e96212a99484d8ef3c7a52
+    tree_hash: 0cbc87da8c176596b8b45e426663d3dfc7727a62
+    timestamp: 2026-11-12T23:45:58.941Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: 4704a0bb66980debf9e96212a99484d8ef3c7a52
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:7b22dadcbc1060f1f792da467acc8472e74941e064c6c5c04f61b0b9dc8d8b8d
+    content_hash: sha256:87e7a1c58eaed993a7964192574aefeb8fc708791ae6a48489cedc896330c680
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: cf4f0b52bc8d3edd932fc828265a636f425e483c
+    base_generation: 4704a0bb66980debf9e96212a99484d8ef3c7a52
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -64,7 +70,7 @@ patches:
       - src/harbor_client/types/utils/cast_models.py
     patch_content: |
       diff --git a/pyproject.toml b/pyproject.toml
-      index ace1658..7ae02b9 100644
+      index 2cc1924..a55a4d3 100644
       --- a/pyproject.toml
       +++ b/pyproject.toml
       @@ -1,3 +1,9 @@
@@ -78,7 +84,7 @@ patches:
        requires = ["setuptools>=61.0"]
        build-backend = "setuptools.build_meta"
       @@ -7,12 +13,15 @@ name = "harbor-framework-client"
-       version = "0.1.0"
+       version = "0.1.1"
        description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
        readme = "PyPI_README.md"
       -requires-python = ">=3.9"
@@ -232,7 +238,7 @@ patches:
            additional_headers: typing.Dict[str, typing.Any]
            additional_query_parameters: typing.Dict[str, typing.Any]
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 10267e6..b8f0d35 100644
+      index 0971ede..415c411 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
       @@ -909,7 +909,7 @@ class JobsClient(BaseService):
@@ -431,7 +437,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/net/transport/serializer.py b/src/harbor_client/net/transport/serializer.py
-      index ddba9ae..f5bc0b8 100644
+      index 666f65d..6f05825 100644
       --- a/src/harbor_client/net/transport/serializer.py
       +++ b/src/harbor_client/net/transport/serializer.py
       @@ -481,7 +481,7 @@ class Serializer:
@@ -852,7 +858,7 @@ patches:
 
         [project]
         name = "harbor-framework-client"
-        version = "0.1.0"
+        version = "0.1.1"
         description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
         readme = "PyPI_README.md"
         requires-python = ">=3.12"
@@ -3215,7 +3221,7 @@ patches:
                 sort: JobsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> SyncPager[JobSummary]:
-                """list
+                """SDK generation verification: the jobs listing wire contract is unchanged.
 
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
@@ -6173,14 +6179,14 @@ patches:
                 self.errors: dict[int, ApiError] = {}
                 self.config: Optional["SdkConfig"] = config
 
-                self.headers["User-Agent"] = "harbor-framework-client/0.1.0"
+                self.headers["User-Agent"] = "harbor-framework-client/0.1.1"
                 self.headers["X-Fern-Language"] = "Python"
                 self.headers["X-Fern-Runtime"] = f"python/{platform.python_version()}"
                 self.headers["X-Fern-Platform"] = (
                     f"{platform.system().lower()}/{platform.release()}"
                 )
                 self.headers["X-Fern-SDK-Name"] = "harbor-framework-client"
-                self.headers["X-Fern-SDK-Version"] = "0.1.0"
+                self.headers["X-Fern-SDK-Version"] = "0.1.1"
 
                 # Apply default headers, FIRST contributor of a header name winning (FSDK-1671).
                 #
