@@ -18,7 +18,11 @@ Commit necessary edits to generated files normally: Fern Replay detects them on 
 
 The SDK retains regression tests for all documented operations, pagination, wire validation, pooling, and signed transfers. Static export stubs are derived from Fern's model registry during the standard package build; there is no separate SDK assembly or patch-generation command.
 
-Generation and release are separate. There is no automatic registry publication in this repository.
+Generation and release are separate. After an SDK update is reviewed and merged, publish a GitHub release tagged `v<package version>` to run the release workflow. It requires SDK checks, builds distributions and publishes with PyPI trusted publishing. Starting the workflow manually runs verification and builds only; it never publishes. Build files and authenticated generation logs are not uploaded as Actions artifacts.
+
+One-time PyPI setup: register `harbor-framework/harbor-client`, workflow `release.yml`, and environment `pypi` as the trusted publisher for `harbor-framework-client`. No PyPI API token is needed. Configure GitHub's `pypi` environment to restrict release deployments to the intended tags.
+
+Fern 6.17.0's SDK Config publishing preview emitted compile/test jobs but no publish job. The release workflow therefore uses the official PyPA action, following Fern's documented publishing fallback. Generation and Replay still use Fern's native publisher.
 
 ## Ownership of custom code
 

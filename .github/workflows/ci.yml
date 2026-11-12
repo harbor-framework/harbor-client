@@ -1,5 +1,6 @@
 name: SDK checks
 on:
+  workflow_call:
   pull_request:
   workflow_dispatch:
   push:
@@ -37,7 +38,8 @@ jobs:
       - name: Verify the built distribution independently
         run: |
           uv venv wheel-check
-          uv pip install --python wheel-check/bin/python dist/*.whl
+          wheels=(dist/*.whl)
+          uv pip install --python wheel-check/bin/python -r requirements-dev.txt "${wheels[0]}[tus]"
           cd "${RUNNER_TEMP}"
           "${GITHUB_WORKSPACE}/wheel-check/bin/python" - <<'PYCODE'
           from importlib.resources import files
@@ -47,3 +49,4 @@ jobs:
               if not package.joinpath(name).is_file():
                   raise RuntimeError(f"Missing SDK package data: {name}")
           PYCODE
+          "${GITHUB_WORKSPACE}/wheel-check/bin/python" -m pytest "${GITHUB_WORKSPACE}/tests" -o pythonpath= -q

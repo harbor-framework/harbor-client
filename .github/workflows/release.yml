@@ -1,0 +1,46 @@
+name: Release SDK
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sdk-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+  distribution:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: "3.12"
+          enable-cache: false
+      - name: Check the release identity
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PYCODE'
+          import os
+          import tomllib
+          from pathlib import Path
+          project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
+          tag = os.environ.get("RELEASE_TAG")
+          if tag and tag != "v" + project["version"]:
+              raise SystemExit("The release tag must match the package version")
+          if project["name"] != "harbor-framework-client":
+              raise SystemExit("The distribution name must be harbor-framework-client")
+          PYCODE
+      - run: uv build
+      - run: uvx twine check dist/*
+      - name: Publish the verified release to PyPI
+        if: github.event_name == 'release'
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
