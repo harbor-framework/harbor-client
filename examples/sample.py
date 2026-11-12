@@ -1,10 +1,4 @@
 from harbor_client import HarborAPIClient
-from harbor_client.types import (
-    JobsListRequestScope,
-    JobsListRequestAccess,
-    JobsListRequestArchive,
-    JobsListRequestSort,
-)
 
 client = HarborAPIClient(
     harbor_api_version="YOUR_HARBOR_API_VERSION",
