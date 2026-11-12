@@ -80,8 +80,8 @@ jobs:
             exit 1
           fi
           if [[ -n "$SPEC_REF" ]]; then
-            gh api --method GET "repos/$GITHUB_REPOSITORY/contents/fern/openapi.json" \
-              -f ref="$SPEC_REF" -H 'Accept: application/vnd.github.raw+json' > "$RUNNER_TEMP/openapi.json"
+            git fetch --no-tags -- origin "$SPEC_REF"
+            git show FETCH_HEAD:fern/openapi.json > "$RUNNER_TEMP/openapi.json"
           else
             source_url="${SPEC_URL:-$API_SPEC_URL}"
             if [[ "$source_url" != https://* ]]; then
