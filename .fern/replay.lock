@@ -12,16 +12,21 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: 7bf79a237d6b0f05988dfb4a3fa80332daf1ae96
+  - commit_sha: 1228f9c4bc330cf83520597c5136ca467b3d87b7
+    tree_hash: 717fbb9f16e2e46b8ec5d760131b8e84f8d8e62a
+    timestamp: 2026-11-12T23:16:48.126Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: 1228f9c4bc330cf83520597c5136ca467b3d87b7
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:d6e1df69e8edef20164ce36591cf7ce0581f6d6ef206041ec20ee55c4759f583
+    content_hash: sha256:5e47a54d2c603ce0000629a4d6b15886b2d280610e10300280451fe3716ff873
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
     base_generation: 7bf79a237d6b0f05988dfb4a3fa80332daf1ae96
     files:
-      - .github/workflows/ci.yml
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
       - src/harbor_client/client.py
@@ -30,7 +35,6 @@ patches:
       - src/harbor_client/leaderboards/client.py
       - src/harbor_client/net/transport/serializer.py
       - src/harbor_client/packages/client.py
-      - src/harbor_client/py.typed
       - src/harbor_client/secrets/client.py
       - src/harbor_client/trials/client.py
       - src/harbor_client/types/evaluation_summary_row.py
@@ -46,14 +50,7 @@ patches:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/utils/base_model.py
       - src/harbor_client/types/utils/cast_models.py
-      - tests/test_codegen_contracts.py
-      - tests/test_contract.py
-      - tests/test_model_fidelity.py
-      - tests/test_native_operations.py
-      - tests/test_pagination.py
-      - tests/test_sdk.py
-      - tests/test_transfers.py
-    patch_content: |
+    patch_content: |+
       diff --git a/pyproject.toml b/pyproject.toml
       index 3b2f7d5..8828c4a 100644
       --- a/pyproject.toml
@@ -825,57 +822,61 @@ patches:
                    # Pydantic models: use model_validate() for each item. Validated one at a time so the
                    # failing element's index reaches the error message.
                    if hasattr(element_type, "model_validate"):
+      diff --git a/tests/test_contract.py b/tests/test_contract.py
+      index 89f81ea..fa69e7d 100644
+      --- a/tests/test_contract.py
+      +++ b/tests/test_contract.py
+      @@ -80,6 +80,15 @@ def response_fixture(path, method="get"):
+           return data
+       
+       
+      +def submit_request(config):
+      +    schema = SPEC["paths"]["/v1/jobs/submit"]["post"]["requestBody"]["content"][
+      +        "application/json"
+      +    ]["schema"]
+      +    payload = example(schema, allow_null=False)
+      +    payload.update(config=config, idempotency_key="test")
+      +    return payload
+      +
+      +
+       @pytest.mark.parametrize(
+           "operation", ["submit", "preflight-direct", "preflight-gateway"]
+       )
+      @@ -95,15 +104,13 @@ def test_checked_operations_reject_forbidden_fields_before_network(
+           with sync_client(token="key", transport=httpx.MockTransport(handler)) as client:
+               with pytest.raises((ContractError, ModelValidationError, TypeError)) as error:
+                   if operation == "submit":
+      -                client.jobs.submit(
+      -                    config=config,
+      -                    idempotency_key="test",
+      -                    relay_inference=False,
+      -                    session_id=None,
+      -                )
+      +                client.jobs.submit(**submit_request(config))
+                   else:
+                       config["credential_mode"] = operation.removeprefix("preflight-")
+                       client.secrets.preflight(config=config)
+      +    if isinstance(error.value, TypeError):
+      +        # Fern wraps Pydantic errors; reject unrelated signature errors.
+      +        assert field in str(error.value)
+           assert "sensitive-value" not in str(error.value)
+       
+       
+      @@ -117,10 +124,9 @@ def test_open_agent_config_stays_open_and_valid_submission_works():
+       
+           with sync_client(token="key", transport=httpx.MockTransport(handler)) as client:
+               client.jobs.submit(
+      -            config={"agents": [{"name": "oracle", "future_field": {"allowed": True}}]},
+      -            idempotency_key="test",
+      -            relay_inference=False,
+      -            session_id=None,
+      +            **submit_request(
+      +                {"agents": [{"name": "oracle", "future_field": {"allowed": True}}]}
+      +            )
+               )
+           assert sent[0]["config"]["agents"][0]["future_field"] == {"allowed": True}
+       
     theirs_snapshot:
-      .github/workflows/ci.yml: |
-        name: SDK checks
-        on:
-          pull_request:
-          workflow_dispatch:
-          push:
-            branches: [main]
-        permissions:
-          contents: read
-        jobs:
-          sdk:
-            runs-on: ubuntu-latest
-            strategy:
-              matrix:
-                python: ["3.12", "3.13"]
-            steps:
-              - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
-                with:
-                  fetch-depth: 0
-              - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-                with:
-                  python-version: ${{ matrix.python }}
-              - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-                with:
-                  node-version: "22"
-                  cache: npm
-              - run: npm ci --ignore-scripts --no-audit --no-fund
-              - name: Reject unresolved native Replay patches
-                run: |
-                  node --input-type=module -e 'import { status } from "@fern-api/replay"; const s=status(process.cwd()); if (!s.initialized || s.unresolvedCount > 0) process.exit(1);'
-              - run: uv venv
-              - run: uv pip install -r requirements-dev.txt '.[tus]'
-              - run: .venv/bin/ruff check . src/harbor_client/validation.py src/harbor_client/transfers.py
-              - run: .venv/bin/ruff format --check . src/harbor_client/validation.py src/harbor_client/transfers.py
-              - run: .venv/bin/ty check
-              - run: .venv/bin/pytest tests
-              - run: uv build
-              - name: Verify the built distribution independently
-                run: |
-                  uv venv wheel-check
-                  uv pip install --python wheel-check/bin/python dist/*.whl
-                  cd "${RUNNER_TEMP}"
-                  "${GITHUB_WORKSPACE}/wheel-check/bin/python" - <<'PYCODE'
-                  from importlib.resources import files
-                  from harbor_client import HarborAPIClient, AsyncHarborAPIClient
-                  package = files("harbor_client")
-                  for name in ("__init__.pyi", "types/__init__.pyi", "_openapi.json.gz", "py.typed"):
-                      if not package.joinpath(name).is_file():
-                          raise RuntimeError(f"Missing SDK package data: {name}")
-                  PYCODE
       pyproject.toml: |+
         [project.optional-dependencies]
         tus = ["tuspy>=1.1.0,<2"]
@@ -888,7 +889,7 @@ patches:
         build-backend = "setuptools.build_meta"
 
         [project]
-        name = "harbor-client"
+        name = "harbor-framework-client"
         version = "0.1.0"
         description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
         readme = "PyPI_README.md"
@@ -8948,7 +8949,6 @@ patches:
                     request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
-      src/harbor_client/py.typed: ""
       src/harbor_client/secrets/client.py: |
         from typing import Any, Optional, Generator, List, Union
         from ..services.utils.validator import Validator
@@ -13768,256 +13768,6 @@ patches:
                 return hasattr(cls_type, "__origin__") and cls_type.__origin__ is Union
 
             return cast(F, wrapper)
-      tests/test_codegen_contracts.py: |
-        """Regressions for schema-preserving generation and nullable operation results."""
-
-        from collections.abc import Awaitable
-        import importlib
-        import json
-        from pathlib import Path
-        import re
-        from typing import get_args, get_origin, get_type_hints
-
-        import httpx
-        import pytest
-        from jsonschema import Draft202012Validator
-
-        from harbor_client.net.transport.http_response import HttpResponse
-        from harbor_client.validation import async_client, sync_client
-        from test_contract import SPEC, UUID, example, response_fixture
-
-        pytestmark = pytest.mark.unit
-        PACKAGE = Path(__file__).resolve().parents[1]
-
-
-        def _nullable(schema):
-            if "$ref" in schema:
-                return _nullable(
-                    SPEC["components"]["schemas"][schema["$ref"].rsplit("/", 1)[-1]]
-                )
-            return schema.get("type") == "null" or any(
-                _nullable(branch) for branch in schema.get("anyOf", [])
-            )
-
-
-        def _snake(name):
-            return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name).lower()
-
-
-        def _schema(path, verb="get"):
-            return SPEC["paths"][path][verb]["responses"]["200"]["content"]["application/json"][
-                "schema"
-            ]
-
-
-        def _cases():
-            for path, methods in SPEC["paths"].items():
-                for verb, operation in methods.items():
-                    schema = (
-                        operation.get("responses", {})
-                        .get("200", {})
-                        .get("content", {})
-                        .get("application/json", {})
-                        .get("schema", {})
-                    )
-                    if not _nullable(schema):
-                        continue
-                    group, name = operation["operationId"].split(".", 1)
-                    kwargs = {
-                        parameter["name"]: example(parameter["schema"])
-                        for parameter in operation.get("parameters", [])
-                        if parameter.get("required") and parameter["in"] in {"path", "query"}
-                    }
-                    body_schema = (
-                        operation.get("requestBody", {})
-                        .get("content", {})
-                        .get("application/json", {})
-                        .get("schema")
-                    )
-                    if body_schema:
-                        kwargs.update(example(body_schema, allow_null=False))
-                    yield _snake(group), _snake(name), path, kwargs, verb
-
-
-        NULLABLE_OPERATIONS = list(_cases())
-
-
-        def _checked_fixture(operation, verb, null):
-            value = None if null else response_fixture(operation, verb)
-            Draft202012Validator({**SPEC, **_schema(operation, verb)}).validate(value)
-            return value
-
-
-        def _json_value(value):
-            if hasattr(value, "model_dump"):
-                return value.model_dump(mode="json", by_alias=True, exclude_unset=True)
-            return value
-
-
-        @pytest.mark.parametrize("resource,method,operation,kwargs,verb", NULLABLE_OPERATIONS)
-        @pytest.mark.parametrize("null", [True, False], ids=["null", "present"])
-        @pytest.mark.parametrize("raw", [False, True], ids=["parsed", "raw"])
-        def test_sync_nullable_responses_preserve_both_wire_branches(
-            resource, method, operation, kwargs, verb, null, raw
-        ):
-            value = _checked_fixture(operation, verb, null)
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                assert request.url.path.endswith(operation.format(**kwargs))
-                assert request.method.lower() == verb
-                return httpx.Response(
-                    200, content=json.dumps(value), headers={"Content-Type": "application/json"}
-                )
-
-            with sync_client(token="test", transport=httpx.MockTransport(handler)) as client:
-                service = getattr(client, resource)
-                result = getattr(service.with_raw_response if raw else service, method)(
-                    **kwargs
-                )
-                if raw:
-                    assert result.status_code == 200
-                    result = result.data
-                assert _json_value(result) == value
-            assert len(requests) == 1
-
-
-        @pytest.mark.parametrize("resource,method,operation,kwargs,verb", NULLABLE_OPERATIONS)
-        @pytest.mark.parametrize("null", [True, False], ids=["null", "present"])
-        @pytest.mark.parametrize("raw", [False, True], ids=["parsed", "raw"])
-        async def test_async_nullable_responses_preserve_both_wire_branches(
-            resource, method, operation, kwargs, verb, null, raw
-        ):
-            value = _checked_fixture(operation, verb, null)
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                assert request.url.path.endswith(operation.format(**kwargs))
-                assert request.method.lower() == verb
-                return httpx.Response(
-                    200, content=json.dumps(value), headers={"Content-Type": "application/json"}
-                )
-
-            async with async_client(
-                token="test", transport=httpx.MockTransport(handler)
-            ) as client:
-                service = getattr(client, resource)
-                result = await getattr(service.with_raw_response if raw else service, method)(
-                    **kwargs
-                )
-                if raw:
-                    assert result.status_code == 200
-                    result = result.data
-                assert _json_value(result) == value
-            assert len(requests) == 1
-
-
-        @pytest.mark.parametrize("resource,method,operation,kwargs,verb", NULLABLE_OPERATIONS)
-        def test_nullable_return_annotations_include_value_not_awaitable_or_raw_wrapper(
-            resource, method, operation, kwargs, verb
-        ):
-            del operation, kwargs, verb
-            module = importlib.import_module(f"harbor_client.{resource}.client")
-            service_name = "".join(part.capitalize() for part in resource.split("_")) + "Client"
-            sync = get_type_hints(getattr(getattr(module, service_name), method))["return"]
-            asynchronous = get_type_hints(
-                getattr(getattr(module, "Async" + service_name), method)
-            )["return"]
-            raw_sync = get_type_hints(getattr(getattr(module, "Raw" + service_name), method))[
-                "return"
-            ]
-            raw_async = get_type_hints(
-                getattr(getattr(module, "AsyncRaw" + service_name), method)
-            )["return"]
-            assert sync is type(None) or type(None) in get_args(sync)
-            assert get_origin(asynchronous) is Awaitable
-            assert get_args(asynchronous) == (sync,)
-            assert get_origin(raw_sync) is HttpResponse
-            assert get_args(raw_sync) == (sync,)
-            assert raw_async == raw_sync
-
-
-        @pytest.mark.parametrize("available", [False, True], ids=["unavailable", "available"])
-        @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
-        async def test_dataset_task_union_keeps_available_and_unavailable_shapes(
-            available, asynchronous
-        ):
-            path = "/v1/packages/{organization_name}/{name}/versions/{ref}/manifest"
-            shape = (
-                "AvailableDatasetTaskDependency"
-                if available
-                else "UnavailableDatasetTaskDependency"
-            )
-            item = example(SPEC["components"]["schemas"][shape], allow_null=False)
-            payload = example(
-                SPEC["components"]["schemas"]["DatasetVersionManifest"], allow_null=False
-            )
-            payload["tasks"] = [item]
-            payload["missing_task_count"] = 0 if available else 1
-            Draft202012Validator({**SPEC, **_schema(path)}).validate(payload)
-            transport = httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
-            if asynchronous:
-                async with async_client(token="test", transport=transport) as client:
-                    result = await client.packages.get_version_manifest(
-                        organization_name="example", name="dataset", ref="1"
-                    )
-            else:
-                with sync_client(token="test", transport=transport) as client:
-                    result = client.packages.get_version_manifest(
-                        organization_name="example", name="dataset", ref="1"
-                    )
-            assert result.model_dump(mode="json", by_alias=True, exclude_unset=True) == payload
-            assert ("id" in type(result.tasks[0]).model_fields) is available
-
-
-        @pytest.mark.parametrize(
-            "method,operation,kwargs",
-            [
-                ("get", "/v1/leaderboards/{leaderboard_id}", {"leaderboard_id": UUID}),
-                ("get_row", "/v1/leaderboards/rows/{row_id}", {"row_id": UUID}),
-                (
-                    "list_rows",
-                    "/v1/leaderboards/rows",
-                    {"leaderboard_id": UUID, "page_token": "opaque+/cursor=="},
-                ),
-            ],
-        )
-        @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
-        async def test_new_leaderboard_reads_decode_the_documented_types(
-            method, operation, kwargs, asynchronous
-        ):
-            payload = response_fixture(operation)
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                assert request.url.path.endswith(operation.format(**kwargs))
-                assert dict(request.url.params) == {
-                    key: value
-                    for key, value in kwargs.items()
-                    if "{" + key + "}" not in operation
-                }
-                return httpx.Response(200, json=payload)
-
-            transport = httpx.MockTransport(handler)
-            if asynchronous:
-                async with async_client(token="test", transport=transport) as client:
-                    if method == "list_rows":
-                        pager = client.leaderboards.list_rows(**kwargs)
-                        await anext(pager.iter_pages())
-                        result = pager.last_response.body
-                    else:
-                        result = await getattr(client.leaderboards, method)(**kwargs)
-            else:
-                with sync_client(token="test", transport=transport) as client:
-                    result = getattr(client.leaderboards, method)(**kwargs)
-                    if method == "list_rows":
-                        next(result.iter_pages())
-                        result = result.last_response.body
-            assert _json_value(result) == payload
-            assert len(requests) == 1
       tests/test_contract.py: |
         """Exact wire-contract enforcement around unmodified generated Fern operations."""
 
@@ -14101,6 +13851,15 @@ patches:
             return data
 
 
+        def submit_request(config):
+            schema = SPEC["paths"]["/v1/jobs/submit"]["post"]["requestBody"]["content"][
+                "application/json"
+            ]["schema"]
+            payload = example(schema, allow_null=False)
+            payload.update(config=config, idempotency_key="test")
+            return payload
+
+
         @pytest.mark.parametrize(
             "operation", ["submit", "preflight-direct", "preflight-gateway"]
         )
@@ -14116,15 +13875,13 @@ patches:
             with sync_client(token="key", transport=httpx.MockTransport(handler)) as client:
                 with pytest.raises((ContractError, ModelValidationError, TypeError)) as error:
                     if operation == "submit":
-                        client.jobs.submit(
-                            config=config,
-                            idempotency_key="test",
-                            relay_inference=False,
-                            session_id=None,
-                        )
+                        client.jobs.submit(**submit_request(config))
                     else:
                         config["credential_mode"] = operation.removeprefix("preflight-")
                         client.secrets.preflight(config=config)
+            if isinstance(error.value, TypeError):
+                # Fern wraps Pydantic errors; reject unrelated signature errors.
+                assert field in str(error.value)
             assert "sensitive-value" not in str(error.value)
 
 
@@ -14138,10 +13895,9 @@ patches:
 
             with sync_client(token="key", transport=httpx.MockTransport(handler)) as client:
                 client.jobs.submit(
-                    config={"agents": [{"name": "oracle", "future_field": {"allowed": True}}]},
-                    idempotency_key="test",
-                    relay_inference=False,
-                    session_id=None,
+                    **submit_request(
+                        {"agents": [{"name": "oracle", "future_field": {"allowed": True}}]}
+                    )
                 )
             assert sent[0]["config"]["agents"][0]["future_field"] == {"allowed": True}
 
@@ -14395,1613 +14151,551 @@ patches:
             with sync_client(transport=httpx.MockTransport(handler)) as client:
                 client.packages.download_file(version_id=UUID, file="folder/file.txt")
             assert b"folder%2Ffile.txt" in requests[0].url.raw_path
-      tests/test_model_fidelity.py: |
-        """Nullable references retain both their wire values and required fields."""
+    status: unresolved
+  - id: patch-279854b0
+    content_hash: sha256:246c6aa4a5479b4cf257bfdcbe70e9ecd81c3a40107e0fe006eee536e9740cbe
+    original_commit: 279854b0271ade090783681330617e675225bc05
+    original_message: Name the Python distribution harbor-framework-client
+    original_author: Sam Vance <samvance243@gmail.com>
+    base_generation: a579245f98323afc475818f4ec384a77db0da792
+    files:
+      - pyproject.toml
+    patch_content: |
+      diff --git a/PyPI_README.md b/PyPI_README.md
+      index 2d6107b..1f15bc6 100644
+      --- a/PyPI_README.md
+      +++ b/PyPI_README.md
+      @@ -34,13 +34,13 @@ This SDK is compatible with the following versions: `Python >= 3.9`
+       To get started with the SDK, we recommend installing using `pip`:
+       
+       ```bash
+      -pip install harbor-client
+      +pip install harbor-framework-client
+       ```
+       
+       If you are using Python 3, you can use `pip3` instead:
+       
+       ```bash
+      -pip3 install harbor-client
+      +pip3 install harbor-framework-client
+       ```
+       
+       ## Disabling Redirects<a id="disabling-redirects"></a>
+      diff --git a/pyproject.toml b/pyproject.toml
+      index 8828c4a..5a3da79 100644
+      --- a/pyproject.toml
+      +++ b/pyproject.toml
+      @@ -9,7 +9,7 @@ requires = ["setuptools>=61.0"]
+       build-backend = "setuptools.build_meta"
+       
+       [project]
+      -name = "harbor-client"
+      +name = "harbor-framework-client"
+       version = "0.1.0"
+       description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
+       readme = "PyPI_README.md"
+    theirs_snapshot:
+      PyPI_README.md: |
+        # HarborApiClient Python SDK 0.1.0<a id="harborapiclient-python-sdk-010"></a>
 
-        from typing import get_args
+        Welcome to the HarborApiClient SDK documentation. This guide will help you get started with integrating and using the HarborApiClient SDK in your project.
 
-        import httpx
-        import pytest
-        from jsonschema import Draft202012Validator
-        from pydantic import ValidationError
+        ## Versions<a id="versions"></a>
 
-        from harbor_client import types
-        from harbor_client.validation import sync_client
-        from test_contract import SPEC, example, response_fixture
+        - SDK version: `0.1.0`
 
+        ## About the API<a id="about-the-api"></a>
 
-        def test_valid_package_metadata_is_decoded_without_error():
-            payload = response_fixture("/v1/packages/{organization_name}/{name}/versions")
-            schema = SPEC["paths"]["/v1/packages/{organization_name}/{name}/versions"]["get"][
-                "responses"
-            ]["200"]["content"]["application/json"]["schema"]
-            Draft202012Validator({**SPEC, **schema}).validate(payload)
-            with sync_client(
-                token="test",
-                transport=httpx.MockTransport(
-                    lambda request: httpx.Response(200, json=payload)
-                ),
-            ) as client:
-                pager = client.packages.list_versions(
-                    organization_name="example", name="missing"
-                )
-                assert next(pager.iter_pages()) == []
-                assert pager.last_response.body["package"] == payload["package"]
+        To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version.
 
+        ## Table of Contents<a id="table-of-contents"></a>
 
-        def required_nullable_reference_fields():
-            for name, schema in SPEC["components"]["schemas"].items():
-                if "anyOf" in schema:
-                    schema = next(
-                        (item for item in schema["anyOf"] if item.get("type") == "object"),
-                        schema,
-                    )
-                for field in schema.get("required", []):
-                    branches = schema.get("properties", {}).get(field, {}).get("anyOf", [])
-                    if any("$ref" in item for item in branches) and any(
-                        item.get("type") == "null" for item in branches
-                    ):
-                        yield name, field, schema
+        - [Setup & Configuration](#setup--configuration)
+          - [Supported Language Versions](#supported-language-versions)
+          - [Installation](#installation)
+        - [Authentication](#authentication)
+          - [Access Token Authentication](#access-token-authentication)
+        - [Setting a Custom Timeout](#setting-a-custom-timeout)
+        - [Sample Usage](#sample-usage)
+        - [Services](#services)
+        - [Models](#models)
+          - [Using Union Types](#using-union-types)
 
+        # Setup & Configuration<a id="setup--configuration"></a>
 
-        @pytest.mark.parametrize(
-            "name,field,schema", list(required_nullable_reference_fields())
+        ## Supported Language Versions<a id="supported-language-versions"></a>
+
+        This SDK is compatible with the following versions: `Python >= 3.9`
+
+        ## Installation<a id="installation"></a>
+
+        To get started with the SDK, we recommend installing using `pip`:
+
+        ```bash
+        pip install harbor-framework-client
+        ```
+
+        If you are using Python 3, you can use `pip3` instead:
+
+        ```bash
+        pip3 install harbor-framework-client
+        ```
+
+        ## Disabling Redirects<a id="disabling-redirects"></a>
+
+        By default, the SDK follows HTTP redirects (3xx responses) automatically. Pass
+        `follow_redirects=False` to get the redirect response back as-is instead:
+
+        ```python
+        client = HarborAPIClient(follow_redirects=False)
+        ```
+
+        This can also be changed later with `client.set_follow_redirects(False)`.
+
+        ## Logging<a id="logging"></a>
+
+        The SDK is silent by default. Pass a standard library `logging.Logger` as `logger` to log
+        every outgoing request and its response (method, URL, status, and duration):
+
+        ```python
+        import logging
+
+        logger = logging.getLogger("HarborAPIClient")
+        logger.setLevel(logging.INFO)
+        logger.addHandler(logging.StreamHandler())
+
+        client = HarborAPIClient(logger=logger)
+        ```
+
+        This can also be changed later with `client.set_logging(logger)`.
+
+        `Authorization` and `Cookie` header values are always redacted in logged output, regardless
+        of the logger's own configuration.
+
+        ## Authentication<a id="authentication"></a>
+
+        ### Access Token Authentication<a id="access-token-authentication"></a>
+
+        The HarborAPIClient API uses an Access Token for authentication.
+
+        This token must be provided to authenticate your requests to the API.
+
+        #### Setting the Access Token<a id="setting-the-access-token"></a>
+
+        When you initialize the SDK, you can set the access token as follows:
+
+        ```py
+        HarborAPIClient(
+            token="YOUR_TOKEN",
+            harbor_api_version="YOUR_HARBOR_API_VERSION",
+            timeout=10
         )
-        def test_required_nullable_references_accept_null_without_making_fields_optional(
-            name, field, schema
-        ):
-            model = getattr(types, name)
-            payload = example(schema, allow_null=False)
-            payload[field] = None
-            Draft202012Validator({**SPEC, **schema}).validate(payload)
-            decoded = model.model_validate(payload)
-            assert getattr(decoded, field) is None
-            assert type(None) in get_args(model.model_fields[field].annotation)
-            assert model.model_fields[field].is_required()
-            del payload[field]
-            with pytest.raises(ValidationError):
-                model.model_validate(payload)
-      tests/test_native_operations.py: |
-        """Exercise every documented native operation through the installed wire contract."""
+        ```
 
-        import inspect
-        import json
-        import re
+        If you need to set or update the access token after initializing the SDK, you can use:
 
-        import httpx
-        import pytest
+        ```py
+        sdk.set_access_token("YOUR_ACCESS_TOKEN")
+        ```
 
-        from harbor_client.validation import async_client, sync_client
-        from test_contract import SPEC, example
+        ## Setting a Custom Timeout<a id="setting-a-custom-timeout"></a>
 
+        You can set a custom timeout for the SDK's HTTP requests as follows:
 
-        def snake(name):
-            return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+        ```py
+        from harbor_client import HarborAPIClient
 
+        sdk = HarborAPIClient(timeout=10)
+        ```
 
-        OPERATIONS = [
-            (path, verb, operation)
-            for path, methods in SPEC["paths"].items()
-            for verb, operation in methods.items()
-            if isinstance(operation, dict) and "operationId" in operation
-        ]
+        # Sample Usage<a id="sample-usage"></a>
 
+        Below is a comprehensive example demonstrating how to authenticate and call a simple endpoint:
 
-        def arguments(operation, method):
-            signature = inspect.signature(method)
-            values = {}
-            for parameter in operation.get("parameters", []):
-                name = parameter.get("x-fern-parameter-name", parameter["name"])
-                name = name.replace("-", "_")
-                required_argument = (
-                    name in signature.parameters
-                    and signature.parameters[name].default is inspect.Parameter.empty
-                )
-                if parameter["in"] not in {"path", "query", "header"} or not (
-                    parameter.get("required") or required_argument
-                ):
-                    continue
-                if parameter["in"] == "header" and not required_argument:
-                    continue
-                if name not in signature.parameters:
-                    name += "_"
-                values[name] = example(parameter["schema"], allow_null=False)
-            body = (
-                operation.get("requestBody", {})
-                .get("content", {})
-                .get("application/json", {})
-                .get("schema")
-            )
-            if body:
-                body_values = example(body, allow_null=False)
-                if "request" in signature.parameters:
-                    values["request"] = body_values
-                else:
-                    values.update(body_values)
-            return values
+        ```py
+        from harbor_client import HarborAPIClient
+        from harbor_client.types import JobsListRequestScope, JobsListRequestAccess, JobsListRequestArchive, JobsListRequestSort
 
-
-        def terminal_page(value):
-            if isinstance(value, dict):
-                return {
-                    key: "" if key == "next_page_token" else terminal_page(item)
-                    for key, item in value.items()
-                }
-            if isinstance(value, list):
-                return [terminal_page(item) for item in value]
-            return value
-
-
-        @pytest.mark.parametrize(
-            "path,verb,operation", OPERATIONS, ids=[op[2]["operationId"] for op in OPERATIONS]
+        client = HarborAPIClient(
+            harbor_api_version="YOUR_HARBOR_API_VERSION",
         )
-        @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
-        async def test_every_native_operation_serializes_auth_and_decodes_its_response(
-            path, verb, operation, asynchronous
-        ):
-            status, response = next(
-                (int(code), response)
-                for code, response in operation["responses"].items()
-                if code.startswith("2")
-            )
-            payload = terminal_page(
-                example(response["content"]["application/json"]["schema"], allow_null=True)
-            )
-            seen = []
-            namespace, name = operation["operationId"].split(".", 1)
-
-            def handler(request):
-                seen.append(request)
-                assert request.method.lower() == verb
-                assert request.headers["authorization"] == "Bearer opaque-explicit-key"
-                assert request.headers["harbor-api-version"] == SPEC["info"]["version"]
-                return httpx.Response(
-                    status,
-                    content=json.dumps(payload),
-                    headers={"content-type": "application/json"},
-                )
-
-            if asynchronous:
-                async with async_client(
-                    token="opaque-explicit-key", transport=httpx.MockTransport(handler)
-                ) as client:
-                    method = getattr(getattr(client, snake(namespace)), snake(name))
-                    result = method(**arguments(operation, method))
-                    if "x-fern-pagination" in operation:
-                        await anext(result.iter_pages())
-                    else:
-                        await result
-            else:
-                with sync_client(
-                    token="opaque-explicit-key", transport=httpx.MockTransport(handler)
-                ) as client:
-                    method = getattr(getattr(client, snake(namespace)), snake(name))
-                    result = method(**arguments(operation, method))
-                    if "x-fern-pagination" in operation:
-                        next(result.iter_pages())
-            assert len(seen) == 1
-            # The checked transport validates the complete body against the source schema.
-            if seen[0].content:
-                assert isinstance(json.loads(seen[0].content), dict)
-
-
-        ERRORS = [
-            (path, verb, operation, int(code), response)
-            for path, verb, operation in OPERATIONS
-            for code, response in operation["responses"].items()
-            if code.isdigit() and int(code) >= 400
-        ]
-
-
-        @pytest.mark.parametrize(
-            "path,verb,operation,status,response",
-            ERRORS,
-            ids=[f"{case[2]['operationId']}-{case[3]}" for case in ERRORS],
+        response = client.jobs.list(
+            page_size="page_size",
+            page_token="page_token",
+            offset="offset",
+            search="search",
+            agents="agents",
+            providers="providers",
+            models="models",
+            date_="date",
+            scope="my",
+            shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
+            datasets="datasets",
+            access="owned",
+            owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
+            date_from="date_from",
+            date_to="date_to",
+            created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
+            archive="current",
+            sort="importance",
         )
-        @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
-        async def test_every_documented_error_remains_a_native_sdk_http_error(
-            path, verb, operation, status, response, asynchronous
-        ):
-            from harbor_client.core.api_error import ApiError
+        for item in response:
+            print(item)
+        # alternatively, you can paginate page-by-page<a id="alternatively-you-can-paginate-page-by-page"></a>
+        for page in response.iter_pages():
+            print(page)
+        ```
 
-            media, content = next(iter(response["content"].items()))
-            payload = example(content["schema"], allow_null=False)
-            seen = []
-            namespace, name = operation["operationId"].split(".", 1)
+        # Async Usage<a id="async-usage"></a>
 
-            def handler(request):
-                seen.append(request)
-                assert request.method.lower() == verb
-                assert request.headers["authorization"] == "Bearer opaque-explicit-key"
-                return httpx.Response(
-                    status, content=json.dumps(payload), headers={"content-type": media}
-                )
+        The SDK includes an Async Client for making asynchronous API requests. This is useful for applications that need non-blocking operations, like web servers or apps with a graphical user interface.
 
-            with pytest.raises(ApiError) as error:
-                if asynchronous:
-                    async with async_client(
-                        token="opaque-explicit-key", transport=httpx.MockTransport(handler)
-                    ) as client:
-                        method = getattr(getattr(client, snake(namespace)), snake(name))
-                        result = method(
-                            **arguments(operation, method), request_options={"max_retries": 0}
-                        )
-                        if "x-fern-pagination" in operation:
-                            await anext(result.iter_pages())
-                        else:
-                            await result
-                else:
-                    with sync_client(
-                        token="opaque-explicit-key", transport=httpx.MockTransport(handler)
-                    ) as client:
-                        method = getattr(getattr(client, snake(namespace)), snake(name))
-                        result = method(
-                            **arguments(operation, method), request_options={"max_retries": 0}
-                        )
-                        if "x-fern-pagination" in operation:
-                            next(result.iter_pages())
-            assert error.value.status_code == status
-            assert len(seen) == 1
-      tests/test_pagination.py: |
-        """Fern owns cursor traversal; the checked pool preserves pages and async isolation."""
-
-        import ast
+        ```py
         import asyncio
-        from contextlib import aclosing
-        from contextvars import ContextVar
-        import inspect
-        import json
-        from pathlib import Path
-        from threading import Event, get_ident
+        from harbor_client import AsyncHarborAPIClient
+        from harbor_client.types import JobsListRequestScope, JobsListRequestAccess, JobsListRequestArchive, JobsListRequestSort
 
-        import httpx
-        import pytest
-
-        from harbor_client.types.leaderboard_summary_page import LeaderboardSummaryPage
-        from harbor_client.validation import async_client, sync_client
-        from test_contract import SPEC, UUID, example, response_fixture
-
-        pytestmark = pytest.mark.unit
-        PACKAGE = Path(__file__).resolve().parents[1]
-        CURSORS = {
-            path: operation
-            for path, methods in SPEC["paths"].items()
-            for operation in methods.values()
-            if isinstance(operation, dict) and "x-fern-pagination" in operation
-        }
-
-
-        def resolve(schema):
-            while "$ref" in schema:
-                schema = SPEC["components"]["schemas"][schema["$ref"].rsplit("/", 1)[-1]]
-            return schema
-
-
-        def value_at(value, path):
-            for part in path.removeprefix("$response.").split("."):
-                value = value[part]
-            return value
-
-
-        def put(value, path, replacement):
-            parts = path.removeprefix("$response.").split(".")
-            for part in parts[:-1]:
-                value = value[part]
-            value[parts[-1]] = replacement
-
-
-        def item_for(path):
-            schema = resolve(
-                SPEC["paths"][path]["get"]["responses"]["200"]["content"]["application/json"][
-                    "schema"
-                ]
-            )
-            for part in (
-                CURSORS[path]["x-fern-pagination"]["results"]
-                .removeprefix("$response.")
-                .split(".")
-            ):
-                schema = resolve(schema["properties"][part])
-            return example(schema["items"])
-
-
-        def methods():
-            found = {}
-            for file in (PACKAGE / "src/harbor_client").glob("*/client.py"):
-                for node in ast.walk(ast.parse(file.read_text())):
-                    if (
-                        not isinstance(node, ast.FunctionDef)
-                        or not isinstance(node.returns, ast.Subscript)
-                        or ast.unparse(node.returns.value) != "SyncPager"
-                    ):
-                        continue
-                    for call in ast.walk(node):
-                        if (
-                            isinstance(call, ast.Call)
-                            and isinstance(call.func, ast.Name)
-                            and call.func.id == "Serializer"
-                        ):
-                            for value in ast.walk(call.args[0]):
-                                if (
-                                    isinstance(value, ast.Constant)
-                                    and isinstance(value.value, str)
-                                    and value.value in CURSORS
-                                ):
-                                    found[value.value] = (file.parent.name, node.name)
-            return found
-
-
-        METHODS = methods()
-
-
-        def arguments(operation, method):
-            result = {}
-            signature = inspect.signature(method)
-            for param in operation.get("parameters", []):
-                if param.get("in") not in {"query", "path"} or not param.get("required"):
-                    continue
-                name = param.get("x-fern-parameter-name", param["name"])
-                if name == "status" and "status_filter" in signature.parameters:
-                    name = "status_filter"
-                elif name not in signature.parameters:
-                    name += "_"
-                result[name] = (
-                    json.dumps([UUID]) if name.endswith("_ids") else example(param["schema"])
-                )
-            return result
-
-
-        def test_every_cursor_endpoint_has_exact_native_metadata_and_a_pager_method():
-            expected = {
-                path
-                for path, methods in SPEC["paths"].items()
-                for operation in methods.values()
-                if isinstance(operation, dict)
-                and any(
-                    param.get("in") == "query" and param.get("name") == "page_token"
-                    for param in operation.get("parameters", [])
-                )
-            }
-            assert set(CURSORS) == set(METHODS) == expected
-            assert {operation["operationId"] for operation in CURSORS.values()} == {
-                "apiKeys.list",
-                "jobs.list",
-                "jobs.listTasks",
-                "trials.list",
-                "packages.listVersionFiles",
-                "packages.listVersionCatalog",
-                "packages.listVersions",
-                "leaderboards.list",
-                "leaderboards.listRows",
-                "leaderboards.listTrials",
-                "secrets.list",
-            }
-            assert all(
-                operation["x-fern-pagination"]["cursor"] == "$request.page_token"
-                for operation in CURSORS.values()
-            )
-            for path, operation in CURSORS.items():
-                assert (
-                    operation["x-fern-pagination"]
-                    == SPEC["paths"][path]["get"]["x-fern-pagination"]
-                )
-
-
-        @pytest.mark.parametrize("path", sorted(CURSORS))
-        @pytest.mark.parametrize("empty", [False, True], ids=["nonempty", "empty"])
-        @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
-        async def test_every_native_pager_exposes_one_page_with_original_metadata(
-            path, empty, asynchronous
-        ):
-            payload = response_fixture(path)
-            info = CURSORS[path]["x-fern-pagination"]
-            item = item_for(path)
-            put(payload, info["results"], [] if empty else [item])
-            put(payload, info["next_cursor"], "opaque+/cursor==")
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                assert request.url.path.endswith(
-                    path.format(
-                        **arguments(
-                            CURSORS[path],
-                            getattr(getattr(client, METHODS[path][0]), METHODS[path][1]),
-                        )
-                    )
-                )
-                assert request.method == "GET"
-                assert request.url.params["page_token"] == "incoming+/cursor=="
-                return httpx.Response(200, json=payload, headers={"X-Page": "first"})
-
-            transport = httpx.MockTransport(handler)
-            resource, method_name = METHODS[path]
-            if asynchronous:
-                async with async_client(token="test", transport=transport) as client:
-                    method = getattr(getattr(client, resource), method_name)
-                    pager = method(
-                        **arguments(CURSORS[path], method), page_token="incoming+/cursor=="
-                    )
-                    async with aclosing(pager.iter_pages_with_response()) as batches:
-                        batch = await anext(batches)
-                    body = pager.last_response.body
-            else:
-                with sync_client(token="test", transport=transport) as client:
-                    method = getattr(getattr(client, resource), method_name)
-                    pager = method(
-                        **arguments(CURSORS[path], method), page_token="incoming+/cursor=="
-                    )
-                    batches = pager.iter_pages_with_response()
-                    batch = next(batches)
-                    batches.close()
-                    body = pager.last_response.body
-            assert len(requests) == 1
-            assert batch.status_code == 200
-            assert batch.headers["x-page"] == "first"
-            assert len(batch.data) == (0 if empty else 1)
-            assert body == payload
-
-
-        @pytest.mark.parametrize(
-            "empty_position", [0, 1, 2], ids=["first", "middle", "terminal"]
-        )
-        @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
-        async def test_native_cursor_iteration_preserves_opaque_tokens_through_empty_batches(
-            empty_position, asynchronous
-        ):
-            path = "/v1/api-keys"
-            item = item_for(path)
-            tokens = [None, "opaque+/cursor==", "next?&=cursor"]
-            calls = []
-
-            def handler(request):
-                position = len(calls)
-                calls.append(request.url.params.get("page_token"))
-                assert position < 3, "Fetched beyond the terminal empty cursor"
-                return httpx.Response(
-                    200,
-                    json={
-                        "api_keys": [] if position == empty_position else [item],
-                        "total_size": 2,
-                        "next_page_token": tokens[position + 1] if position < 2 else "",
-                    },
-                )
-
-            transport = httpx.MockTransport(handler)
-            if asynchronous:
-                async with async_client(token="test", transport=transport) as client:
-                    values = [item async for item in client.api_keys.list()]
-            else:
-                with sync_client(token="test", transport=transport) as client:
-                    values = list(client.api_keys.list())
-            assert len(values) == 2
-            assert calls == tokens
-
-
-        async def test_native_async_pages_use_workers_and_propagate_context_and_rotating_auth():
-            tag = ContextVar("pager_test_scope", default="missing")
-            tag.set("active")
-            caller = get_ident()
-            token = ["first"]
-            headers = []
-            threads = []
-
-            def handler(request):
-                assert tag.get() == "active"
-                threads.append(get_ident())
-                headers.append(request.headers["authorization"])
-                return httpx.Response(
-                    200,
-                    json={
-                        "api_keys": [],
-                        "next_page_token": "opaque" if len(headers) == 1 else "",
-                        "total_size": 0,
-                    },
-                )
-
-            async with async_client(
-                token=lambda: token[0], transport=httpx.MockTransport(handler)
-            ) as client:
-                batches = client.api_keys.list().iter_pages()
-                assert await anext(batches) == []
-                token[0] = "second"
-                assert await anext(batches) == []
-                with pytest.raises(StopAsyncIteration):
-                    await anext(batches)
-            assert all(thread != caller for thread in threads)
-            assert headers == ["Bearer first", "Bearer second"]
-
-
-        async def test_concurrent_native_pagers_keep_their_own_response_metadata(monkeypatch):
-            first_id, second_id = UUID, "22222222-2222-4222-8222-222222222222"
-            started, release = Event(), Event()
-            original = LeaderboardSummaryPage.model_validate
-
-            def validate(cls, value, *args, **kwargs):
-                if value["leaderboards"][0]["id"] == first_id:
-                    started.set()
-                    if not release.wait(5):
-                        raise RuntimeError("First page decode was not released")
-                return original(value, *args, **kwargs)
-
-            monkeypatch.setattr(LeaderboardSummaryPage, "model_validate", classmethod(validate))
-            requests = []
-
-            class Pool(httpx.MockTransport):
-                closes = 0
-
-                def close(self):
-                    self.closes += 1
-
-            def handler(request):
-                requests.append(request)
-                first = request.url.params["package"] == "org/first"
-                return httpx.Response(
-                    200,
-                    json={
-                        "leaderboards": [
-                            {
-                                **example(
-                                    SPEC["components"]["schemas"]["LeaderboardSummary"],
-                                    allow_null=False,
-                                ),
-                                "id": first_id if first else second_id,
-                                "package_id": first_id,
-                                "package": "org/first" if first else "org/second",
-                                "name": "main",
-                                "title": "Board",
-                                "visibility": "public",
-                                "created_at": "2026-11-01T00:00:00Z",
-                            }
-                        ],
-                        "next_page_token": "",
-                        "total_size": 11 if first else 22,
-                    },
-                )
-
-            pool = Pool(handler)
-            async with async_client(token="test", transport=pool) as client:
-                first = client.leaderboards.list(package="org/first")
-                second = client.leaderboards.list(package="org/second")
-                async with asyncio.TaskGroup() as group:
-                    task = group.create_task(anext(first.iter_pages()))
-                    try:
-                        assert await asyncio.to_thread(started.wait, 5)
-                        second_batch = await anext(second.iter_pages())
-                    finally:
-                        release.set()
-                assert (
-                    task.result()[0].id
-                    == first.last_response.body["leaderboards"][0]["id"]
-                    == first_id
-                )
-                assert (
-                    second_batch[0].id
-                    == second.last_response.body["leaderboards"][0]["id"]
-                    == second_id
-                )
-                assert first.last_response.body["total_size"] == 11
-                assert second.last_response.body["total_size"] == 22
-            assert len(requests) == 2 and pool.closes == 1
-      tests/test_sdk.py: |
-        """Behavior of the Fern 6.17.0 SDK, without live API calls."""
-
-        import ast
-        from pathlib import Path
-        import re
-        from typing import get_args, get_origin
-
-        import httpx
-        import pytest
-        from pydantic import TypeAdapter, ValidationError
-
-        from harbor_client import AsyncHarborAPIClient, HarborAPIClient
-        from harbor_client.net.transport.api_error import ApiError
-        from harbor_client.net.transport.pagination import SyncPager, AsyncPager
-        from harbor_client.types import (
-            HostedAgentConfig,
-            SecretsPreflightRequestConfig,
-            SubmitJobRequestConfig,
-            JobPage,
-            TaskVersionDetail,
-            TrialDetail,
+        sdk = AsyncHarborAPIClient(
+            harbor_api_version="YOUR_HARBOR_API_VERSION",
+            timeout=10
         )
 
-        pytestmark = pytest.mark.unit
-        ROOT = Path(__file__).resolve().parents[1]
-        PACKAGE = ROOT
-        VERSION = "2026-09-10.preview"
 
-
-        def test_every_documented_resource_can_be_loaded_without_a_network_request():
-            from harbor_client.validation import _schema
-
-            schema = _schema()
-            groups = {
-                operation["operationId"].split(".", 1)[0]
-                for methods in schema["paths"].values()
-                for operation in methods.values()
-                if isinstance(operation, dict) and "operationId" in operation
-            }
-            with httpx.Client(
-                transport=httpx.MockTransport(
-                    lambda request: pytest.fail("Resource loading sent a request")
-                )
-            ) as http:
-                clients = [
-                    HarborAPIClient(harbor_api_version=VERSION, httpx_client=http),
-                    AsyncHarborAPIClient(harbor_api_version=VERSION, httpx_client=http),
-                ]
-                for group in groups:
-                    name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", group).lower()
-                    for client in clients:
-                        assert getattr(client, name) is getattr(client, name)
-
-
-        def test_generation_provenance_and_all_routes_generated():
-            from harbor_client.validation import _schema
-
-            schema = _schema()
-            expected = {
-                (method.upper(), path)
-                for path, methods in schema["paths"].items()
-                for method in methods
-                if method in {"get", "post", "put", "patch", "delete", "head", "options"}
-            }
-            generated = set()
-            for path in (PACKAGE / "src/harbor_client").glob("*/client.py"):
-                for function in ast.walk(ast.parse(path.read_text())):
-                    if not isinstance(function, ast.FunctionDef):
-                        continue
-                    calls = [n for n in ast.walk(function) if isinstance(n, ast.Call)]
-                    serializers = [
-                        c
-                        for c in calls
-                        if isinstance(c.func, ast.Name) and c.func.id == "Serializer"
-                    ]
-                    methods = [
-                        c.args[0].value
-                        for c in calls
-                        if isinstance(c.func, ast.Attribute) and c.func.attr == "set_method"
-                    ]
-                    for serializer in serializers:
-                        route = serializer.args[0].values[-1].value
-                        generated.update((method, route) for method in methods)
-            assert generated == expected
-            assert expected
-
-
-        def test_sync_read_preserves_cursor_and_reuses_caller_session():
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                assert request.url.path == "/functions/v1/api/v1/jobs"
-                assert request.headers["Harbor-API-Version"] == VERSION
-                return httpx.Response(
-                    200, json={"items": [], "total": 0, "next_page_token": "next/+=token"}
-                )
-
-            with httpx.Client(transport=httpx.MockTransport(handler)) as http:
-                client = HarborAPIClient(harbor_api_version=VERSION, httpx_client=http)
-                for cursor in ["opaque/+=token", "next/+=token"]:
-                    pager = client.jobs.list(
-                        scope="my",
-                        page_token=cursor,
-                        request_options={
-                            "additional_headers": {"Authorization": "Bearer active"}
-                        },
-                    )
-                    assert isinstance(pager, SyncPager)
-                    assert next(pager.iter_pages()) == []
-                    page = JobPage.model_validate(pager.last_response.body)
-                    assert page.total == 0 and page.next_page_token == "next/+=token"
-                assert not http.is_closed
-            assert http.is_closed
-            assert [r.url.params["page_token"] for r in requests] == [
-                "opaque/+=token",
-                "next/+=token",
-            ]
-            assert all(r.headers["authorization"] == "Bearer active" for r in requests)
-
-
-        def test_typed_write_resolves_protected_credentials_per_request():
-            requests = []
-            token = ["first"]
-
-            def handler(request):
-                requests.append(request)
-                assert request.url.path.endswith("/v1/api-keys/key/revoke")
-                assert not request.content
-                return httpx.Response(200, json=True)
-
-            with httpx.Client(transport=httpx.MockTransport(handler)) as http:
-                client = HarborAPIClient(
-                    harbor_api_version=VERSION, token=lambda: token[0], httpx_client=http
-                )
-                assert client.api_keys.revoke(key_id="key") is True
-                token[0] = "refreshed"
-                assert client.api_keys.revoke(key_id="key") is True
-            assert [r.headers["authorization"] for r in requests] == [
-                "Bearer first",
-                "Bearer refreshed",
-            ]
-
-
-        async def test_async_resource_wrapper_and_borrowed_pool():
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                return httpx.Response(
-                    200, json={"items": [], "total": 0, "next_page_token": ""}
-                )
-
-            # Fern's async resource methods dispatch sync transport work to worker
-            # threads. A borrowed sync HTTPX pool works with both generated clients.
-            with httpx.Client(transport=httpx.MockTransport(handler)) as http:
-                client = AsyncHarborAPIClient(harbor_api_version=VERSION, httpx_client=http)
-                for _ in range(2):
-                    pager = client.jobs.list()
-                    assert isinstance(pager, AsyncPager)
-                    assert await anext(pager.iter_pages()) == []
-                assert not http.is_closed
-            assert http.is_closed and len(requests) == 2
-
-
-        @pytest.mark.parametrize(
-            "payload",
-            [
-                {"items": [], "next_page_token": ""},
-                {"items": [], "total": "invalid", "next_page_token": ""},
-            ],
+        async def main():
+          response_iterator = await sdk.jobs.list(
+            page_size="page_size",
+            page_token="page_token",
+            offset="offset",
+            search="search",
+            agents="agents",
+            providers="providers",
+            models="models",
+            date_="date",
+            scope="my",
+            shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
+            datasets="datasets",
+            access="owned",
+            owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
+            date_from="date_from",
+            date_to="date_to",
+            created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
+            archive="current",
+            sort="importance"
         )
-        def test_invalid_success_response_is_rejected(payload):
-            with httpx.Client(
-                transport=httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
-            ) as http:
-                client = HarborAPIClient(harbor_api_version=VERSION, httpx_client=http)
-                with pytest.raises(ValidationError):
-                    list(client.jobs.list())
-
-
-        @pytest.mark.parametrize(
-            "write,expected",
-            [(False, 3), (True, 1)],
-        )
-        def test_only_reads_should_retry(write, expected):
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                return httpx.Response(503, json={})
-
-            with httpx.Client(transport=httpx.MockTransport(handler)) as http:
-                client = HarborAPIClient(
-                    harbor_api_version=VERSION,
-                    token="test",
-                    httpx_client=http,
-                    retry={"attempts": 2, "delay_ms": 0, "jitter_ms": 0},
-                )
-                with pytest.raises(ApiError):
-                    if write:
-                        client.api_keys.revoke(key_id="key")
-                    else:
-                        list(client.jobs.list())
-            assert len(requests) == expected
-
-
-        def test_post_retries_can_be_disabled_per_request():
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                return httpx.Response(503, json={})
-
-            with httpx.Client(transport=httpx.MockTransport(handler)) as http:
-                client = HarborAPIClient(
-                    harbor_api_version=VERSION, token="test", httpx_client=http
-                )
-                with pytest.raises(ApiError):
-                    client.api_keys.revoke(key_id="key", request_options={"max_retries": 0})
-            assert len(requests) == 1
-
-
-        def test_required_nullable_and_optional_fields_now_stay_distinct():
-            description = TaskVersionDetail.model_fields["description"]
-            assert description.is_required()
-            assert TypeAdapter(description.annotation).validate_python(None) is None
-            assert TypeAdapter(description.annotation).validate_python("") == ""
-            assert not TaskVersionDetail.model_fields["required_env"].is_required()
-            assert not HostedAgentConfig.model_fields["name"].is_required()
-
-
-        @pytest.mark.parametrize(
-            "config",
-            [
-                SubmitJobRequestConfig,
-                SecretsPreflightRequestConfig,
-            ],
-        )
-        def test_hosted_configs_reuse_the_named_agent_schema(config):
-            annotation = config.model_fields["agents"].annotation
-            assert get_origin(annotation) is list
-            assert get_args(annotation) == (HostedAgentConfig,)
-
-
-        @pytest.mark.parametrize(
-            "config",
-            [
-                SubmitJobRequestConfig,
-                SecretsPreflightRequestConfig,
-            ],
-        )
-        @pytest.mark.parametrize("field", ["secret_bindings", "secret_tags"])
-        @pytest.mark.parametrize("value", [None, [], "value"])
-        def test_forbidden_properties_should_be_rejected(config, field, value):
-            mode = "direct" if "Direct" in config.__name__ else "gateway"
-            config.model_validate({"agents": [{"name": "oracle"}], "credential_mode": mode})
-            with pytest.raises(ValidationError):
-                config.model_validate(
-                    {"agents": [{"name": "oracle", field: value}], "credential_mode": mode}
-                )
-
-
-        def test_null_only_should_reject_non_null():
-            field = TrialDetail.model_fields["step_results"]
-            with pytest.raises(ValidationError):
-                TypeAdapter(field.annotation).validate_python({"unexpected": True})
-
-
-        def test_token_should_reach_identity_dependent_public_reads():
-            requests = []
-
-            def handler(request):
-                requests.append(request)
-                return httpx.Response(
-                    200, json={"items": [], "total": 0, "next_page_token": ""}
-                )
-
-            with httpx.Client(transport=httpx.MockTransport(handler)) as http:
-                client = HarborAPIClient(
-                    harbor_api_version=VERSION, token="test", httpx_client=http
-                )
-                list(client.jobs.list(scope="my"))
-            assert requests[0].headers.get("authorization") == "Bearer test"
-      tests/test_transfers.py: |
-        """Exercise workflow boundaries, streaming, recovery, and credential isolation."""
-
-        import hashlib
-        import io
-        import tarfile
-
-        import httpx
-        import pytest
-
-        from harbor_client.transfers import (
-            AsyncStorageTransfers,
-            StorageTransferError,
-            StorageTransfers,
-            UploadFile,
-        )
-
-        pytestmark = pytest.mark.unit
-
-
-        def grant(method="GET", **extra):
-            return {
-                "protocol": "http",
-                "method": method,
-                "url": "https://storage.invalid/object?token=secret",
-                "headers": {"x-signed-capability": "object-only"},
-                "expires_at": "2099-01-01T00:00:00Z",
-                **extra,
-            }
-
-
-        class Api:
-            def __init__(self):
-                self.calls = []
-                self.download = grant(size_bytes=5)
-                self.state = "pending"
-                self.storage = self
-                self.packages = self
-                self.jobs = self
-                self.trials = self
-
-            def create_upload(self, *, request):
-                self.calls.append(("prepare", request))
-                return {
-                    "id": "upload",
-                    "state": self.state,
-                    "files": [
-                        {**file, "id": str(index), "upload": grant("PUT")}
-                        for index, file in enumerate(request["files"])
-                    ],
-                }
-
-            def complete_upload(self, **request):
-                self.calls.append(("complete", request))
-                return {
-                    "id": "upload",
-                    "state": "completed",
-                    "result": {"resource_id": "resource"},
-                }
-
-            def get_artifact_download(self, **request):
-                self.calls.append(("download", request))
-                return self.download
-
-            download_file = get_artifact_download
-            download_archive = get_artifact_download
-
-            def copy(self, **request):
-                self.calls.append(("copy", request.copy()))
-                return {
-                    "complete": len([call for call in self.calls if call[0] == "copy"]) >= 2,
-                    "n_copied": 1,
-                }
-
-
-        class AsyncApi:
-            def __init__(self, api):
-                self.api = api
-                self.storage = self
-                self.packages = self
-                self.jobs = self
-                self.trials = self
-
-            def __getattr__(self, name):
-                async def call(**kwargs):
-                    return getattr(self.api, name)(**kwargs)
-
-                return call
-
-
-        def safe_headers(request):
-            assert request.headers.get("authorization") is None
-            assert request.headers.get("apikey") is None
-            assert request.headers.get("cookie") is None
-            assert request.headers.get("Harbor-API-Version") is None
-            assert request.headers["x-signed-capability"] == "object-only"
-
-
-        def test_upload_drives_prepare_transfer_complete_without_provider_sdk(tmp_path):
-            source = tmp_path / "data"
-            source.write_bytes(b"bytes")
-            api = Api()
-            seen = []
-
-            def handler(request):
-                safe_headers(request)
-                seen.append(request.read())
-                return httpx.Response(200)
-
-            client = StorageTransfers(api, transport=httpx.MockTransport(handler))
-            assert (
-                client.upload(
-                    kind="task",
-                    request_id="same-on-retry",
-                    metadata={"name": "task"},
-                    files=[UploadFile("dist.tar.gz", source, "archive")],
-                )["state"]
-                == "completed"
-            )
-            assert seen == [b"bytes"]
-            assert [call[0] for call in api.calls] == ["prepare", "complete"]
-            assert api.calls[0][1]["files"][0] == {
-                "path": "dist.tar.gz",
-                "role": "archive",
-                "size_bytes": 5,
-                "sha256": hashlib.sha256(b"bytes").hexdigest(),
-            }
-
-
-        def test_failed_upload_never_publishes_and_does_not_leak_signed_url(tmp_path):
-            source = tmp_path / "data"
-            source.write_bytes(b"bytes")
-            api = Api()
-            client = StorageTransfers(
-                api,
-                transport=httpx.MockTransport(
-                    lambda request: httpx.Response(403, text="token=secret")
-                ),
-            )
-            with pytest.raises(StorageTransferError) as caught:
-                client.upload(
-                    kind="task",
-                    request_id="retry",
-                    metadata={},
-                    files=[UploadFile("file", source)],
-                )
-            assert caught.value.upload_id == "upload"
-            assert caught.value.status_code == 403
-            assert "secret" not in str(caught.value)
-            assert [call[0] for call in api.calls] == ["prepare"]
-            # If a transfer succeeded but its response was lost, callers can directly
-            # retry the API's verification/publication step without re-PUTing bytes.
-            assert client.complete_upload("upload")["state"] == "completed"
-
-
-        @pytest.mark.parametrize("state", ["verified", "completed"])
-        def test_verified_upload_does_not_replay_put(tmp_path, state):
-            source = tmp_path / "data"
-            source.write_bytes(b"bytes")
-            api = Api()
-            api.state = state
-
-            def handler(request):
-                pytest.fail("A completed upload must not replay a signed PUT")
-
-            client = StorageTransfers(api, transport=httpx.MockTransport(handler))
-            assert (
-                client.upload(
-                    kind="task",
-                    request_id="retry",
-                    metadata={},
-                    files=[UploadFile("file", source)],
-                )["state"]
-                == "completed"
-            )
-
-
-        def test_download_isolated_stream_and_atomic_replacement(tmp_path):
-            api = Api()
-
-            def handler(request):
-                safe_headers(request)
-                return httpx.Response(200, stream=httpx.ByteStream(b"bytes"))
-
-            target = tmp_path / "artifact"
-            target.write_bytes(b"old")
-            client = StorageTransfers(api, transport=httpx.MockTransport(handler))
-            assert (
-                client.download(
-                    kind="trial", resource_id="id", role="archive", destination=target
-                )
-                == target
-            )
-            assert target.read_bytes() == b"bytes"
-            api.download["size_bytes"] = 100
-            with pytest.raises(StorageTransferError, match="size"):
-                client.download(
-                    kind="trial", resource_id="id", role="archive", destination=target
-                )
-            assert target.read_bytes() == b"bytes"
-            assert list(tmp_path.iterdir()) == [target]
-
-
-        def archive_bytes(*, symlink=False):
-            output = io.BytesIO()
-            with tarfile.open(fileobj=output, mode="w:gz") as archive:
-                info = tarfile.TarInfo("folder/file.txt")
-                if symlink:
-                    info.type = tarfile.SYMTYPE
-                    info.linkname = "/etc/passwd"
-                    archive.addfile(info)
-                else:
-                    info.size = 5
-                    archive.addfile(info, io.BytesIO(b"bytes"))
-            return output.getvalue()
-
-
-        @pytest.mark.parametrize("symlink", [False, True])
-        def test_bundled_package_download_never_extracts_links(tmp_path, symlink):
-            data = archive_bytes(symlink=symlink)
-            api = Api()
-            api.download = grant(size_bytes=len(data), archive_member="folder/file.txt")
-            client = StorageTransfers(
-                api,
-                transport=httpx.MockTransport(
-                    lambda request: httpx.Response(200, stream=httpx.ByteStream(data))
-                ),
-            )
-            target = tmp_path / "file"
-            if symlink:
-                with pytest.raises(StorageTransferError, match="regular file"):
-                    client.download(
-                        kind="task",
-                        resource_id="id",
-                        role="file",
-                        path="folder/file.txt",
-                        destination=target,
-                    )
-                assert not target.exists()
-            else:
-                client.download(
-                    kind="task",
-                    resource_id="id",
-                    role="file",
-                    path="folder/file.txt",
-                    destination=target,
-                )
-                assert target.read_bytes() == b"bytes"
-
-
-        def test_copy_overwrite_only_on_first_pass():
-            api = Api()
-            rounds = []
-            result = StorageTransfers(api).copy(
-                kind="job", source_id="source", overwrite=True, on_round=rounds.append
-            )
-            assert result["complete"] and result["n_copied"] == 2
-            assert [item["n_copied"] for item in rounds] == [1, 1]
-            assert [call[1]["overwrite"] for call in api.calls] == [True, False]
-            assert all(call[1]["source_job_id"] == "source" for call in api.calls)
-            with pytest.raises(ValueError):
-                StorageTransfers(api).copy(kind="job", source_id="source", max_passes=0)
-
-
-        def test_copy_returns_incomplete_when_bounded_or_unable_to_progress():
-            assert not StorageTransfers(Api()).copy(
-                kind="trial", source_id="source", max_passes=1
-            )["complete"]
-
-            class NoProgressApi(Api):
-                def copy(self, **request):
-                    result = super().copy(**request)
-                    return {**result, "n_copied": 0}
-
-            api = NoProgressApi()
-            result = StorageTransfers(api).copy(kind="trial", source_id="source")
-            assert not result["complete"] and result["n_copied"] == 0
-            assert len(api.calls) == 1
-
-
-        def test_empty_dataset_upload_still_completes():
-            api = Api()
-            receipt = StorageTransfers(api).upload(
-                kind="dataset", request_id="empty", metadata={"tasks": []}, files=[]
-            )
-            assert receipt["state"] == "completed"
-            assert [name for name, _ in api.calls] == ["prepare", "complete"]
-
-
-        @pytest.mark.parametrize("asynchronous", [False, True])
-        async def test_optional_trajectory_transfer_failure_still_verifies_archive(
-            tmp_path, asynchronous
-        ):
-            source = tmp_path / "input"
-            source.write_bytes(b"bytes")
-            api = Api()
-            calls = []
-
-            def handler(request):
-                calls.append(request.method)
-                return httpx.Response(200 if len(calls) == 1 else 503)
-
-            args = {
-                "kind": "trial",
-                "request_id": "retry",
-                "metadata": {},
-                "files": [
-                    UploadFile("archive", source, "archive"),
-                    UploadFile("trajectory", source, "trajectory", optional=True),
-                ],
-            }
-            if asynchronous:
-                client = AsyncStorageTransfers(
-                    AsyncApi(api), transport=httpx.MockTransport(handler)
-                )
-                receipt = await client.upload(**args)
-            else:
-                receipt = StorageTransfers(api, transport=httpx.MockTransport(handler)).upload(
-                    **args
-                )
-            assert receipt["state"] == "completed"
-            assert len(calls) == 2
-            assert api.calls[0][1]["files"][1]["optional"] is True
-            assert [name for name, _ in api.calls] == ["prepare", "complete"]
-
-
-        @pytest.mark.parametrize("asynchronous", [False, True])
-        async def test_racing_put_conflict_always_reaches_authoritative_verification(
-            tmp_path, asynchronous
-        ):
-            class VerifyApi(Api):
-                def complete_upload(self, **request):
-                    super().complete_upload(**request)
-                    raise RuntimeError("Backend verification rejected existing bytes")
-
-            source = tmp_path / "input"
-            source.write_bytes(b"bytes")
-            api = VerifyApi()
-            transport = httpx.MockTransport(lambda request: httpx.Response(409))
-            args = {
-                "kind": "trial",
-                "request_id": "retry",
-                "metadata": {},
-                "files": [UploadFile("archive", source, "archive")],
-            }
-            with pytest.raises(RuntimeError, match="verification rejected"):
-                if asynchronous:
-                    await AsyncStorageTransfers(AsyncApi(api), transport=transport).upload(
-                        **args
-                    )
-                else:
-                    StorageTransfers(api, transport=transport).upload(**args)
-            assert [name for name, _ in api.calls] == ["prepare", "complete"]
-
-
-        @pytest.mark.parametrize(
-            "kind,role,path,attribution,expected",
-            [
-                (
-                    "task",
-                    "archive",
-                    None,
-                    {"transfer_id": "transfer", "dataset_version_id": "dataset"},
-                    {
-                        "version_id": "id",
-                        "transfer_id": "transfer",
-                        "dataset_version_id": "dataset",
-                    },
-                ),
-                (
-                    "task",
-                    "file",
-                    "instruction.md",
-                    {},
-                    {"version_id": "id", "file": "instruction.md"},
-                ),
-                (
-                    "dataset",
-                    "file",
-                    "metric.py",
-                    {"transfer_id": "transfer"},
-                    {"version_id": "id", "file": "metric.py", "transfer_id": "transfer"},
-                ),
-                ("job", "log", None, {}, {"job_id": "id", "artifact_type": "log"}),
-                (
-                    "trial",
-                    "trajectory",
-                    None,
-                    {},
-                    {"trial_id": "id", "artifact_type": "trajectory"},
-                ),
-            ],
-        )
-        def test_download_uses_resource_methods_and_preserves_attribution(
-            tmp_path, kind, role, path, attribution, expected
-        ):
-            api = Api()
-            client = StorageTransfers(
-                api,
-                transport=httpx.MockTransport(
-                    lambda request: httpx.Response(200, stream=httpx.ByteStream(b"bytes"))
-                ),
-            )
-            client.download(
-                kind=kind,
-                resource_id="id",
-                role=role,
-                path=path,
-                destination=tmp_path / "new" / "file",
-                **attribution,
-            )
-            assert api.calls == [("download", expected)]
-
-
-        async def test_async_upload_download_and_copy(tmp_path):
-            source = tmp_path / "input"
-            source.write_bytes(b"bytes")
-            api = Api()
-
-            async def handler(request):
-                safe_headers(request)
-                if request.method == "PUT":
-                    assert await request.aread() == b"bytes"
-                    assert request.headers["Content-Length"] == "5"
-                    return httpx.Response(200)
-                return httpx.Response(200, stream=httpx.ByteStream(b"bytes"))
-
-            client = AsyncStorageTransfers(
-                AsyncApi(api), transport=httpx.MockTransport(handler)
-            )
-            assert (
-                await client.upload(
-                    kind="trial",
-                    request_id="retry",
-                    metadata={},
-                    files=[UploadFile("archive", source, "archive")],
-                )
-            )["state"] == "completed"
-            target = tmp_path / "output"
-            await client.download(
-                kind="trial", resource_id="id", role="archive", destination=target
-            )
-            assert target.read_bytes() == b"bytes"
-            assert (await client.copy(kind="trial", source_id="id", overwrite=True))["complete"]
-            assert [request["overwrite"] for name, request in api.calls if name == "copy"] == [
-                True,
-                False,
-            ]
-
-
-        @pytest.mark.parametrize(
-            "url",
-            [
-                "http://storage.invalid/",
-                "https://user:password@storage.invalid/",
-                "https://storage.invalid/#fragment",
-            ],
-        )
-        def test_rejects_unsafe_transfer_urls(tmp_path, url):
-            api = Api()
-            api.download["url"] = url
-            with pytest.raises(StorageTransferError, match="HTTPS"):
-                StorageTransfers(api).download(
-                    kind="trial",
-                    resource_id="id",
-                    role="archive",
-                    destination=tmp_path / "output",
-                )
-            assert list(tmp_path.iterdir()) == []
-
-
-        def test_tus_resume_uses_library_offsets_and_preserves_session_url(
-            tmp_path, monkeypatch
-        ):
-            pytest.importorskip("tusclient")
-            import requests
-            from tusclient.uploader import uploader as tus_uploader
-
-            class TusApi(Api):
-                def create_upload(self, *, request):
-                    session = super().create_upload(request=request)
-                    assert request["protocol"] == "tus"
-                    session["files"][0]["upload"] = {
-                        "protocol": "tus",
-                        "url": "https://storage.invalid/tus",
-                        "headers": {"x-signature": "capability"},
-                        "metadata": {"objectName": "api-allocated-key"},
-                        "chunk_size": 2.0,
-                    }
-                    return session
-
-            calls = []
-            uploaded = bytearray()
-            fail = True
-
-            def wire(_self, method, url, **kwargs):
-                headers = kwargs["headers"]
-                assert headers["x-signature"] == "capability"
-                assert "Authorization" not in headers
-                assert headers["Tus-Resumable"] == "1.0.0"
-                calls.append((method.lower(), url))
-                response = requests.Response()
-                response._content = b""
-                if method.lower() == "post":
-                    assert headers["upload-length"] == "5"
-                    assert headers["upload-metadata"].startswith("objectName ")
-                    response.status_code = 201
-                    response.headers["Location"] = "/tus/session"
-                elif method.lower() == "head":
-                    response.status_code = 200
-                    response.headers["Upload-Offset"] = str(len(uploaded))
-                else:
-                    assert method.lower() == "patch"
-                    assert int(headers["upload-offset"]) == len(uploaded)
-                    if fail and len(uploaded) >= 2:
-                        raise requests.Timeout("response may contain secret signed URL")
-                    uploaded.extend(kwargs["data"])
-                    response.status_code = 204
-                    response.headers["Upload-Offset"] = str(len(uploaded))
-                return response
-
-            monkeypatch.setattr(requests.Session, "request", wire)
-            monkeypatch.setattr(tus_uploader.time, "sleep", lambda _seconds: None)
-            source = tmp_path / "archive"
-            source.write_bytes(b"bytes")
-            api = TusApi()
-            resume_urls = {}
-            client = StorageTransfers(api, resume_urls=resume_urls)
-            arguments = {
-                "kind": "task",
-                "request_id": "same",
-                "metadata": {},
-                "files": [UploadFile("dist.tar.gz", source, "archive")],
-                "protocol": "tus",
-            }
-
-            with pytest.raises(
-                StorageTransferError, match="Resumable storage transfer failed"
-            ) as failure:
-                client.upload(**arguments)
-            assert "secret" not in str(failure.value)
-            assert failure.value.upload_id == "upload"
-            assert uploaded == b"by"
-            assert resume_urls == {"upload/0": "https://storage.invalid/tus/session"}
-            assert [name for name, _ in api.calls] == ["prepare"]
-
-            fail = False
-            assert client.upload(**arguments)["state"] == "completed"
-            assert uploaded == b"bytes"
-            assert sum(method == "post" for method, _ in calls) == 1
-            assert [name for name, _ in api.calls] == ["prepare", "prepare", "complete"]
-
-
-        def test_generated_sdk_negotiates_transfers_without_forwarding_harbor_credentials(
-            tmp_path,
-        ):
-            from harbor_client import HarborAPIClient
-            from harbor_client.validation import ContractTransport
-
-            resource_id = "00000000-0000-4000-8000-000000000001"
-            upload_id = "00000000-0000-4000-8000-000000000002"
-            file_id = "00000000-0000-4000-8000-000000000003"
-            request_id = "00000000-0000-4000-8000-000000000004"
-            receipt = {
-                "id": upload_id,
-                "kind": "job",
-                "resource_id": resource_id,
-                "state": "completed",
-                "result": {"id": resource_id},
-            }
-            metadata = {
-                "job_id": resource_id,
-                "job_name": "Example",
-                "config": {},
-                "finished_at": "2026-11-11T00:00:00Z",
-            }
-            payload = b"job bytes"
-            source = tmp_path / "input"
-            source.write_bytes(payload)
-            target = tmp_path / "output"
-            calls = []
-
-            def api_wire(request):
-                import json
-
-                assert request.headers["authorization"] == "Bearer harbor-test-token"
-                assert request.headers["Harbor-API-Version"] == "2026-09-10.preview"
-                route = request.url.path.removeprefix("/functions/v1/api")
-                calls.append(route)
-                body = json.loads(request.read()) if request.content else {}
-                if route == "/v1/storage/uploads":
-                    assert body["request_id"] == request_id
-                    assert body["metadata"] == metadata
-                    expected = body["files"][0]
-                    assert expected["sha256"] == hashlib.sha256(payload).hexdigest()
-                    return httpx.Response(
-                        200,
-                        json={
-                            **receipt,
-                            "state": "pending",
-                            "result": None,
-                            "expires_at": "2099-01-01T00:00:00Z",
-                            "files": [{**expected, "id": file_id, "upload": grant("PUT")}],
-                        },
-                    )
-                if route == f"/v1/storage/uploads/{upload_id}/complete":
-                    assert not body
-                    return httpx.Response(200, json=receipt)
-                if route == f"/v1/jobs/{resource_id}/artifacts":
-                    assert request.url.params["artifact_type"] == "archive"
-                    assert not body
-                    return httpx.Response(
-                        200, json=grant(size_bytes=len(payload), version="object-version")
-                    )
-                assert route == f"/v1/jobs/{resource_id}/copy"
-                assert body == {}
-                return httpx.Response(
-                    200,
-                    json={
-                        "job_id": file_id,
-                        "job_name": "Copied example",
-                        "already_existed": False,
-                        "overwritten": False,
-                        "n_trials": 0,
-                        "n_trials_skipped": 0,
-                        "n_objects_total": 1,
-                        "n_objects_done": 0,
-                        "n_objects": 1,
-                        "n_copied": 1,
-                        "n_already_copied": 0,
-                        "n_failed": 0,
-                        "n_remaining": 0,
-                        "complete": True,
-                    },
-                )
-
-            def storage_wire(request):
-                safe_headers(request)
-                calls.append(request.method)
-                if request.method == "PUT":
-                    assert request.read() == payload
-                    return httpx.Response(200)
-                return httpx.Response(200, stream=httpx.ByteStream(payload))
-
-            with httpx.Client(
-                transport=ContractTransport(httpx.MockTransport(api_wire))
-            ) as http:
-                client = HarborAPIClient(
-                    harbor_api_version="2026-09-10.preview",
-                    token="harbor-test-token",
-                    httpx_client=http,
-                )
-                client.transfers.transport = httpx.MockTransport(storage_wire)
-                result = client.transfers.upload(
-                    kind="job",
-                    request_id=request_id,
-                    metadata=metadata,
-                    files=[UploadFile("job.tar.gz", source, "archive")],
-                )
-                assert result.state == "completed"
-                client.transfers.download(
-                    kind="job", resource_id=resource_id, role="archive", destination=target
-                )
-                assert target.read_bytes() == payload
-                assert client.transfers.copy(kind="job", source_id=resource_id).complete
-            assert calls == [
-                "/v1/storage/uploads",
-                "PUT",
-                f"/v1/storage/uploads/{upload_id}/complete",
-                f"/v1/jobs/{resource_id}/artifacts",
-                "GET",
-                f"/v1/jobs/{resource_id}/copy",
-            ]
-
-
-        def test_retry_upload_only_transfers_missing_files_then_verifies_entire_session(
-            tmp_path,
-        ):
-            uploaded = set()
-            seen = []
-            interrupted = True
-
-            class ResumeApi(Api):
-                def create_upload(self, *, request):
-                    session = super().create_upload(request=request)
-                    session["files"] = [
-                        file for file in session["files"] if file["path"] not in uploaded
-                    ]
-                    for file in session["files"]:
-                        file["upload"]["url"] = (
-                            f"https://storage.invalid/{file['path']}?token=secret"
-                        )
-                    return session
-
-            def handler(request):
-                name = request.url.path.lstrip("/")
-                seen.append(name)
-                if interrupted and name == "second":
-                    return httpx.Response(503)
-                uploaded.add(name)
-                return httpx.Response(200)
-
-            files = []
-            for name in ("first", "second"):
-                source = tmp_path / name
-                source.write_bytes(name.encode())
-                files.append(UploadFile(name, source))
-            api = ResumeApi()
-            helper = StorageTransfers(api, transport=httpx.MockTransport(handler))
-            arguments = {
-                "kind": "dataset",
-                "request_id": "same",
-                "metadata": {},
-                "files": files,
-            }
-            with pytest.raises(StorageTransferError):
-                helper.upload(**arguments)
-            assert [name for name, _ in api.calls] == ["prepare"]
-            assert uploaded == {"first"}
-
-            interrupted = False
-            assert helper.upload(**arguments)["state"] == "completed"
-            assert seen == ["first", "second", "second"]
-            assert uploaded == {"first", "second"}
-            # An empty set of missing descriptors still requires server verification.
-            assert helper.upload(**arguments)["state"] == "completed"
-            assert seen == ["first", "second", "second"]
-            assert [name for name, _ in api.calls] == [
-                "prepare",
-                "prepare",
-                "complete",
-                "prepare",
-                "complete",
-            ]
+          for page in response_iterator:
+            print(page)
+
+        asyncio.run(main())
+        ```
+
+        ## Services<a id="services"></a>
+
+        The SDK provides various services to interact with the API.
+
+        <details> 
+        <summary>Below is a list of all available services:</summary>
+
+        | Name          |
+        | :------------ |
+        | organizations |
+        | packages      |
+        | jobs          |
+        | trials        |
+        | account       |
+        | api_keys      |
+        | agents        |
+        | leaderboards  |
+        | secrets       |
+        | storage       |
+
+        </details>
+
+        ## Models<a id="models"></a>
+
+        The SDK includes several models that represent the data structures used in API requests and responses. These models help in organizing and managing the data efficiently.
+
+        <details> 
+        <summary>Below is a list of all available models:</summary>
+
+        | Name                                           | Description |
+        | :--------------------------------------------- | :---------- |
+        | OrganizationDetail                             |             |
+        | OrganizationsEnsureRequest                     |             |
+        | EnsureOrganizationResponse                     |             |
+        | PackagesSetVisibilityRequest                   |             |
+        | SetPackageVisibilityResponse                   |             |
+        | PackagesUpdateOrganizationAccessRequest        |             |
+        | UpdatePackageAccessResponse                    |             |
+        | PackageAccess                                  |             |
+        | PackageVersionFilePage                         |             |
+        | PackageTag                                     |             |
+        | TagPackageVersionRequest                       |             |
+        | TagPackageVersionResponse                      |             |
+        | ReserveTemporaryPackageRequest                 |             |
+        | ReserveTemporaryTaskResponse                   |             |
+        | PackageVersionCatalogPage                      |             |
+        | PackagesListVersionCatalogRequestType          |             |
+        | PackagesListVersionCatalogRequestIncludeYanked |             |
+        | RegistryPackage                                |             |
+        | RegistryPackageVersionPage                     |             |
+        | PackagesListVersionsRequestIncludeYanked       |             |
+        | StorageDownload                                |             |
+        | JobSharing                                     |             |
+        | UpdateJobSharingRequest                        |             |
+        | JobTrialStatusItem                             |             |
+        | JobArtifactType                                |             |
+        | SubmitJobRequest                               |             |
+        | SubmitJobResponse                              |             |
+        | JobDetail                                      |             |
+        | JobsRenameRequest                              |             |
+        | RenameJobResponse                              |             |
+        | DeleteJobsRequest                              |             |
+        | DeleteJobsResponse                             |             |
+        | JobsTransferRequest                            |             |
+        | TransferJobResponse                            |             |
+        | JobsCopyRequest                                |             |
+        | StorageCopyResult                              |             |
+        | CancelJobWithIdRequest                         |             |
+        | JobPage                                        |             |
+        | JobsListRequestScope                           |             |
+        | JobsListRequestAccess                          |             |
+        | JobsListRequestArchive                         |             |
+        | JobsListRequestSort                            |             |
+        | JobTaskPage                                    |             |
+        | JobsListTasksRequestSortBy                     |             |
+        | JobsListTasksRequestSortOrder                  |             |
+        | ResultJobCreate                                |             |
+        | CreatedResultJob                               |             |
+        | JobOverview                                    |             |
+        | JobsGetOverviewRequestForceCombined            |             |
+        | EvaluationComparison                           |             |
+        | TrialDetail                                    |             |
+        | TrialArtifactType                              |             |
+        | CancelTrialsResponse                           |             |
+        | RetryTrialsResponse                            |             |
+        | TrialsCopyRequest                              |             |
+        | JobTrialPage                                   |             |
+        | TrialsListRequestFailedOnly                    |             |
+        | TrialsListRequestAttempts                      |             |
+        | TrialsListRequestSortBy                        |             |
+        | TrialsListRequestSortOrder                     |             |
+        | ResultTrialCreate                              |             |
+        | CreatedResultTrial                             |             |
+        | AccountIdentity                                |             |
+        | MyOrganizationsItem                            |             |
+        | ApiKeyMetadataPage                             |             |
+        | ApiKeyCreate                                   |             |
+        | ApiKeyCreated                                  |             |
+        | HostedAgentCatalog                             |             |
+        | LeaderboardDetail                              |             |
+        | LeaderboardsUpdateRequest                      |             |
+        | UpdateLeaderboardResponse                      |             |
+        | LeaderboardRowDetail                           |             |
+        | LeaderboardRowsPage                            |             |
+        | LeaderboardSummaryPage                         |             |
+        | LeaderboardsCreateRequest                      |             |
+        | CreateLeaderboardResponse                      |             |
+        | LeaderboardTrialLinkPage                       |             |
+        | SecretMetadataPage                             |             |
+        | SecretsListRequestStatusFilter                 |             |
+        | SecretsUpsertRequest                           |             |
+        | SecretWriteResult                              |             |
+        | SecretsRevokeRequest                           |             |
+        | SecretsRevokeResponse                          |             |
+        | SecretsPreflightRequest                        |             |
+        | SecretPreflight                                |             |
+        | SecretsListRegistryCredentialsResponse         |             |
+        | SecretsListRegistryCredentialsRequestStatus    |             |
+        | RegistryCredentialUpsertEncoded                |             |
+        | RegistryCredential                             |             |
+        | RegistryCredentialRevokeResult                 |             |
+        | SecretsRevokeRegistryCredentialRequestPurge    |             |
+        | StorageUploadSession                           |             |
+        | StorageUploadReceipt                           |             |
+        | PackageNameReference                           |             |
+        | PackageAccessOrganizationSummary               |             |
+        | PackageOrganizationGrant                       |             |
+        | PackagePublicGrant                             |             |
+        | PackageAccessGrantCreator                      |             |
+        | TaskVersionDetail                              |             |
+        | DatasetVersionDetail                           |             |
+        | ResolvedTaskStep                               |             |
+        | DatasetVersionFile                             |             |
+        | DatasetVersionRevisionSummary                  |             |
+        | TaskVersionManifest                            |             |
+        | DatasetVersionManifest                         |             |
+        | RegistryVersionFile                            |             |
+        | UnavailableDatasetTaskDependency               |             |
+        | AvailableDatasetTaskDependency                 |             |
+        | PackageVersionSummary                          |             |
+        | RegistryPackageVersion                         |             |
+        | JobOwnerOrganization                           |             |
+        | JobShareOrganizationSummary                    |             |
+        | JobCreator                                     |             |
+        | HostedDiffSelectors                            |             |
+        | HostedAgentConfig                              |             |
+        | HostedSubmissionEnvironmentConfig              |             |
+        | HostedSubmissionTaskConfig                     |             |
+        | HostedSubmissionDatasetConfig                  |             |
+        | HostedSubmissionRetryConfig                    |             |
+        | HostedVerifierConfig                           |             |
+        | MetricConfig                                   |             |
+        | HostedGithubAgentSource                        |             |
+        | HostedSecretSelection                          |             |
+        | HostedSubmissionCredentialProxyPolicyRule      |             |
+        | HostedSubmissionCredentialProxyRequestMatch    |             |
+        | CredentialProxyHeaderTransform                 |             |
+        | HostedSubmissionCredentialProxyPathMatch       |             |
+        | ArtifactConfig                                 |             |
+        | HostedJobTrialRegradeSource                    |             |
+        | OwnerOrganization                              |             |
+        | SelectedSecret                                 |             |
+        | AgentSource                                    |             |
+        | AgentSourceManifest                            |             |
+        | AgentSourceRuntime                             |             |
+        | EvaluationJobReference                         |             |
+        | EvaluationSummary                              |             |
+        | JobManualPauseSummary                          |             |
+        | JobCancellationSummary                         |             |
+        | JobOverviewStatistics                          |             |
+        | JobCircuitState                                |             |
+        | JobBucketCircuitState                          |             |
+        | EvaluationSummaryRow                           |             |
+        | JobPackageRunTarget                            |             |
+        | JobPathRunTarget                               |             |
+        | EvaluationMetricSet                            |             |
+        | JobSummary                                     |             |
+        | JobTaskSummary                                 |             |
+        | JobRewardMetricSet                             |             |
+        | EvaluationComparisonTask                       |             |
+        | EvaluationComparisonAgentModel                 |             |
+        | EvaluationComparisonCell                       |             |
+        | EvaluationUserSummary                          |             |
+        | JobShareOwnerOrganization                      |             |
+        | TrialAgentInfo                                 |             |
+        | TrialVerifierResult                            |             |
+        | TrialExceptionInfo                             |             |
+        | TrialPhaseTiming                               |             |
+        | TrialModelInfo                                 |             |
+        | CancelTrialsByIdRequest                        |             |
+        | CancelTrialsByFilterRequest                    |             |
+        | CancelAllJobTrialsRequest                      |             |
+        | RetryTrialsByIdRequest                         |             |
+        | RetryTrialsByFilterRequest                     |             |
+        | RetryAllJobTrialsRequest                       |             |
+        | JobTrialSummary                                |             |
+        | ResultModelUsage                               |             |
+        | ApiKeyMetadata                                 |             |
+        | LeaderboardDefinition                          |             |
+        | LeaderboardReadColumnDefinition                |             |
+        | LeaderboardReadRankingRule                     |             |
+        | CreateLeaderboardRowInput                      |             |
+        | LeaderboardWriteColumnDefinition               |             |
+        | LeaderboardWriteRankingRule                    |             |
+        | LeaderboardMutationRecord                      |             |
+        | LeaderboardMutationRow                         |             |
+        | LeaderboardChangeSummary                       |             |
+        | LeaderboardRankedRow                           |             |
+        | LeaderboardSummary                             |             |
+        | LeaderboardTrialLink                           |             |
+        | SecretMetadata                                 |             |
+        | HostedLocalTaskRequirements                    |             |
+        | HostedPreflightEnvironmentConfig               |             |
+        | HostedTaskConfig                               |             |
+        | HostedDatasetConfig                            |             |
+        | HostedRetryConfig                              |             |
+        | CredentialProxyPolicyRule                      |             |
+        | CredentialProxyRequestMatch                    |             |
+        | CredentialProxyPathMatch                       |             |
+        | HostedTaskEnvironmentRequirement               |             |
+        | RegistryCredentialSummary                      |             |
+        | StorageTaskUploadCreate                        |             |
+        | StorageDatasetUploadCreate                     |             |
+        | StorageJobUploadCreate                         |             |
+        | StorageTrialUploadCreate                       |             |
+        | StorageUploadFileInput                         |             |
+        | StorageTaskUploadMetadata                      |             |
+        | TaskPublishStep                                |             |
+        | StoragePublicationFile                         |             |
+        | StorageDatasetUploadMetadata                   |             |
+        | DatasetPublishTaskReference                    |             |
+        | StorageJobUploadMetadata                       |             |
+        | StorageUploadFile                              |             |
+        | StorageTaskUploadResult                        |             |
+        | StorageDatasetUploadResult                     |             |
+        | StorageResultUploadResult                      |             |
+        | StorageHttpTransfer                            |             |
+        | StorageTusTransfer                             |             |
+        | BadRequestEncoded                              |             |
+        | InvalidPageSizeEncoded                         |             |
+        | InvalidPageTokenEncoded                        |             |
+        | RegistryCredentialReplacementRequiredEncoded   |             |
+        | RegistryCredentialReplacementStaleEncoded      |             |
+        | ExistingRegistryCredential                     |             |
+        | UnauthorizedEncoded                            |             |
+        | NotFoundEncoded                                |             |
+        | InternalServerErrorEncoded                     |             |
+        | ForbiddenEncoded                               |             |
+        | ConflictEncoded                                |             |
+        | TooManyRequestsEncoded                         |             |
+        | ServiceUnavailableEncoded                      |             |
+        | SecretReplacementRequiredEncoded               |             |
+        | SecretReplacementStaleEncoded                  |             |
+        | ExistingSecretSummary                          |             |
+
+        </details>
+
+        ### Using Union Types<a id="using-union-types"></a>
+
+        Union types allow you to specify that a variable can have more than one type. This is particularly useful when a function can accept multiple types of inputs. The Union type hint is used for this purpose.
+
+        #### Example Function with Union Types<a id="example-function-with-union-types"></a>
+
+        You can call service method with an instance of `TypeA`, `TypeB`, or a dictionary that can be converted to an instance of either type.
+
+        ```python
+        # Model Definition<a id="model-definition"></a>
+        ParamType = Union[TypeA, TypeB]
+
+        # Service Method<a id="service-method"></a>
+        def service_method(param: ParamType):
+        ...
+
+        ## Usage<a id="usage"></a>
+        type_a = TypeA(key="value")
+        type_b = TypeB(key="value")
+
+        sdk.service.service_method(type_a)
+        sdk.service.service_method(type_b)
+        sdk.service.service_method({"key": "value"})
+        ```
+
+        You cannot create an instance of a `Union` type itself. Instead, pass an instance of one of the types in the `Union`, or a dictionary that can be converted to one of those types.
+      pyproject.toml: |+
+        [project.optional-dependencies]
+        tus = ["tuspy>=1.1.0,<2"]
+
+        [tool.setuptools.package-data]
+        harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
+
+        [build-system]
+        requires = ["setuptools>=61.0"]
+        build-backend = "setuptools.build_meta"
+
+        [project]
+        name = "harbor-framework-client"
+        version = "0.1.0"
+        description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
+        readme = "PyPI_README.md"
+        requires-python = ">=3.12"
+        dependencies = [
+            "requests>=2.31.0",
+            "pydantic>=2.14.0,<3",
+            "httpx>=0.27.0",
+            "jsonschema>=4.23.0"
+        ]
+
+    status: unresolved
 dismissals:
   - patch_id: patch-1ca0ca5e
     original_commit: 1ca0ca5efc2d21a821fc189acd0fad4c40c5d374
