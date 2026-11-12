@@ -23,4 +23,3 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/harbor-framework/harbor-client"
-
