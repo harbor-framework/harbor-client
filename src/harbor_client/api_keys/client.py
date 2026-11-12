@@ -108,6 +108,7 @@ class ApiKeysClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[ApiKeyMetadata]
         """
+        self = self._for_one_call()
 
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
@@ -143,9 +144,6 @@ class ApiKeysClient(BaseService):
                     else construct_lenient(ApiKeyMetadataPage, response)
                 )
                 current_page = parsed_response.api_keys
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -363,7 +361,11 @@ class AsyncApiKeysClient(ApiKeysClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
