@@ -32,6 +32,8 @@ generation:
 targets:
   - language: python
     generatorVersion: 6.17.0
+    generation:
+      pydanticVersion: ">=2.14.0,<3"
     output:
       delivery: github
       github:

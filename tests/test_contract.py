@@ -80,6 +80,15 @@ def response_fixture(path, method="get"):
     return data
 
 
+def submit_request(config):
+    schema = SPEC["paths"]["/v1/jobs/submit"]["post"]["requestBody"]["content"][
+        "application/json"
+    ]["schema"]
+    payload = example(schema, allow_null=False)
+    payload.update(config=config, idempotency_key="test")
+    return payload
+
+
 @pytest.mark.parametrize(
     "operation", ["submit", "preflight-direct", "preflight-gateway"]
 )
@@ -95,15 +104,13 @@ def test_checked_operations_reject_forbidden_fields_before_network(
     with sync_client(token="key", transport=httpx.MockTransport(handler)) as client:
         with pytest.raises((ContractError, ModelValidationError, TypeError)) as error:
             if operation == "submit":
-                client.jobs.submit(
-                    config=config,
-                    idempotency_key="test",
-                    relay_inference=False,
-                    session_id=None,
-                )
+                client.jobs.submit(**submit_request(config))
             else:
                 config["credential_mode"] = operation.removeprefix("preflight-")
                 client.secrets.preflight(config=config)
+    if isinstance(error.value, TypeError):
+        # Fern wraps Pydantic errors; reject unrelated signature errors.
+        assert field in str(error.value)
     assert "sensitive-value" not in str(error.value)
 
 
@@ -117,10 +124,9 @@ def test_open_agent_config_stays_open_and_valid_submission_works():
 
     with sync_client(token="key", transport=httpx.MockTransport(handler)) as client:
         client.jobs.submit(
-            config={"agents": [{"name": "oracle", "future_field": {"allowed": True}}]},
-            idempotency_key="test",
-            relay_inference=False,
-            session_id=None,
+            **submit_request(
+                {"agents": [{"name": "oracle", "future_field": {"allowed": True}}]}
+            )
         )
     assert sent[0]["config"]["agents"][0]["future_field"] == {"allowed": True}
 
