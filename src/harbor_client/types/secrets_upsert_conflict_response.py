@@ -34,6 +34,5 @@ SecretsUpsertConflictResponse = Union[
 ]
 # TypeAdapter for runtime validation of SecretsUpsertConflictResponse
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 SecretsUpsertConflictResponse_adapter = TypeAdapter(SecretsUpsertConflictResponse)

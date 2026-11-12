@@ -49,7 +49,6 @@ EvaluationComparisonCellAvgRewardOne = typing.Union[
 EvaluationComparisonCellAvgReward = Union[float, str]
 # TypeAdapter for runtime validation of EvaluationComparisonCellAvgReward
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 EvaluationComparisonCellAvgReward_adapter = TypeAdapter(
     EvaluationComparisonCellAvgReward

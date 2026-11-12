@@ -12,7 +12,6 @@ from .utils.base_model import BaseModel
 HostedSubmissionTaskConfigRef = Union[str, float]
 # TypeAdapter for runtime validation of HostedSubmissionTaskConfigRef
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 HostedSubmissionTaskConfigRef_adapter = TypeAdapter(HostedSubmissionTaskConfigRef)
 

@@ -126,8 +126,8 @@ class JobOverview(BaseModel):
     finished_at: Optional[str]
     visibility: Optional[JobOverviewVisibility]
     created_by: Optional[str]
-    created_by_user: JobCreator
-    owner_organization: JobOwnerOrganization
+    created_by_user: Optional[JobCreator]
+    owner_organization: Optional[JobOwnerOrganization]
     access_relation: Optional[JobOverviewAccessRelation]
     can_operate: bool
     can_manage_access: bool
@@ -155,7 +155,6 @@ JobOverviewNTotalTrialsOne = typing.Union[
 JobOverviewNTotalTrials = Union[float, str]
 # TypeAdapter for runtime validation of JobOverviewNTotalTrials
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 JobOverviewNTotalTrials_adapter = TypeAdapter(JobOverviewNTotalTrials)
 

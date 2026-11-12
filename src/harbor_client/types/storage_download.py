@@ -55,7 +55,6 @@ StorageDownloadSizeBytesOne = typing.Union[
 StorageDownloadSizeBytes = Union[float, str]
 # TypeAdapter for runtime validation of StorageDownloadSizeBytes
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 StorageDownloadSizeBytes_adapter = TypeAdapter(StorageDownloadSizeBytes)
 

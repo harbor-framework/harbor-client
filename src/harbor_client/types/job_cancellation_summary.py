@@ -23,7 +23,7 @@ class JobCancellationSummary(BaseModel):
 
     requested_at: str
     running_count: JobCancellationSummaryRunningCount
-    requested_by_user: JobCreator
+    requested_by_user: Optional[JobCreator]
 
 
 JobCancellationSummaryRunningCountOne = typing.Union[
@@ -36,7 +36,6 @@ JobCancellationSummaryRunningCountOne = typing.Union[
 JobCancellationSummaryRunningCount = Union[float, str]
 # TypeAdapter for runtime validation of JobCancellationSummaryRunningCount
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 JobCancellationSummaryRunningCount_adapter = TypeAdapter(
     JobCancellationSummaryRunningCount
