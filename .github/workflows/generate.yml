@@ -42,7 +42,7 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --retry 3 "$API_SPEC_URL" -o "$RUNNER_TEMP/openapi.json"
-          python3 -c 'import json, os; d=json.load(open(os.environ["RUNNER_TEMP"] + "/openapi.json")); assert d.get("openapi") and d.get("paths"), "Invalid OpenAPI document"'
+          jq -e '(.openapi | type == "string") and (.paths | type == "object" and length > 0)' "$RUNNER_TEMP/openapi.json" > /dev/null
           if cmp -s fern/openapi.json "$RUNNER_TEMP/openapi.json" && [[ "$FORCE" != true ]]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -73,6 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           cp fern/openapi.json "$RUNNER_TEMP/generated-openapi.json"
+          git restore fern/openapi.json
           gh pr checkout "$PR_URL"
           cp "$RUNNER_TEMP/generated-openapi.json" fern/openapi.json
           gzip -n -c fern/openapi.json > src/harbor_client/_openapi.json.gz
