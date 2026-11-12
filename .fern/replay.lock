@@ -18,14 +18,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: 298766301eb2735994bc9ae8c648f36e4d1823fc
+  - commit_sha: 1da09a6eca8ef4e207db71275a68c024aaae489c
+    tree_hash: ad589ac78d310aa1327ea0e6f3ebbc1b6867c8e3
+    timestamp: 2026-11-12T22:28:45.005Z
+    cli_version: 5.199.0
+    generator_versions:
+      python: 6.17.0
+current_generation: 1da09a6eca8ef4e207db71275a68c024aaae489c
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:e47c4c86073da007f525456c4e1e7759a9dcc20353aa14fa10eb4fc15d97c656
+    content_hash: sha256:0b454dd4817fffaaf019fd62d4a903fd8da754aec0292b08eab6304848804e7e
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 298766301eb2735994bc9ae8c648f36e4d1823fc
+    base_generation: 1da09a6eca8ef4e207db71275a68c024aaae489c
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -91,7 +97,36 @@ patches:
       - src/harbor_client/types/trials_list_bad_request_response.py
       - src/harbor_client/types/utils/base_model.py
       - src/harbor_client/types/utils/cast_models.py
-    patch_content: |+
+    patch_content: |
+      diff --git a/pyproject.toml b/pyproject.toml
+      index 2567a0d..5d5af50 100644
+      --- a/pyproject.toml
+      +++ b/pyproject.toml
+      @@ -7,12 +7,21 @@ name = "harbor-client"
+       version = "0.1.1"
+       description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
+       readme = "PyPI_README.md"
+      -requires-python = ">=3.9"
+      +requires-python = ">=3.12"
+       dependencies = [
+           "requests>=2.31.0",
+      -    "pydantic>=2.0.0,<3.0.0",
+      -    "httpx>=0.21.2"
+      +    "pydantic>=2.14.0,<3",
+      +    "httpx>=0.27.0",
+      +    "jsonschema>=4.23.0"
+      +
+       ]
+       
+      +[project.optional-dependencies]
+      +tus = ["tuspy>=1.1.0,<2"]
+      +
+      +[tool.setuptools.package-data]
+      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
+      +
+      +
+       [project.urls]
+       Repository = "https://github.com/harbor-framework/harbor-client"
       diff --git a/src/harbor_client/api_keys/client.py b/src/harbor_client/api_keys/client.py
       index cd20bb2..d641f1f 100644
       --- a/src/harbor_client/api_keys/client.py
@@ -228,6 +263,108 @@ patches:
            max_retries: int
            additional_headers: typing.Dict[str, typing.Any]
            additional_query_parameters: typing.Dict[str, typing.Any]
+      diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
+      index 6210c51..de073cf 100644
+      --- a/src/harbor_client/jobs/client.py
+      +++ b/src/harbor_client/jobs/client.py
+      @@ -907,7 +907,7 @@ class JobsClient(BaseService):
+               reason: Union[str, None] = SENTINEL,
+               finish_running: Union[bool, None] = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> Any:
+      +    ) -> Optional[Any]:
+               """cancel
+       
+               :param request_body: The request body.
+      @@ -1026,6 +1026,7 @@ class JobsClient(BaseService):
+               :return: The parsed response data.
+               :rtype: SyncPager[JobSummary]
+               """
+      +        self = self._for_one_call()
+       
+               Validator(str).is_optional().validate(page_size, "page_size")
+               Validator(str).is_optional().validate(page_token, "page_token")
+      @@ -1100,9 +1101,6 @@ class JobsClient(BaseService):
+                       )
+                       current_page = parsed_response.items
+       
+      -                if not current_page:
+      -                    break
+      -
+                       yield current_page
+       
+                       next_cursor = parsed_response.next_page_token
+      @@ -1160,6 +1158,7 @@ class JobsClient(BaseService):
+               :return: The parsed response data.
+               :rtype: SyncPager[JobTaskSummary]
+               """
+      +        self = self._for_one_call()
+       
+               Validator(str).validate(job_id, "job_id")
+               Validator(str).is_optional().validate(page_size, "page_size")
+      @@ -1218,9 +1217,6 @@ class JobsClient(BaseService):
+                       )
+                       current_page = parsed_response.items
+       
+      -                if not current_page:
+      -                    break
+      -
+                       yield current_page
+       
+                       next_cursor = parsed_response.next_page_token
+      @@ -1623,7 +1619,7 @@ class RawJobsClient:
+               reason: Union[str, None] = SENTINEL,
+               finish_running: Union[bool, None] = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[Any]:
+      +    ) -> HttpResponse[Optional[Any]]:
+               data = JobsClient.cancel(
+                   self._client,
+                   job_id=job_id,
+      @@ -1987,7 +1983,7 @@ class AsyncJobsClient(JobsClient):
+               reason: Union[str, None] = SENTINEL,
+               finish_running: Union[bool, None] = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> Awaitable[Any]:  # type: ignore[override]
+      +    ) -> Awaitable[Optional[Any]]:  # type: ignore[override]
+               return to_async(super().cancel)(
+                   job_id=job_id,
+                   **dict[str, Any](
+      @@ -2057,7 +2053,11 @@ class AsyncJobsClient(JobsClient):
+               )
+       
+               async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+                       yield page
+       
+               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      @@ -2102,7 +2102,11 @@ class AsyncJobsClient(JobsClient):
+               )
+       
+               async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+                       yield page
+       
+               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      @@ -2369,7 +2373,7 @@ class AsyncRawJobsClient:
+               reason: Union[str, None] = SENTINEL,
+               finish_running: Union[bool, None] = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[Any]:
+      +    ) -> HttpResponse[Optional[Any]]:
+               data = await AsyncJobsClient.cancel(
+                   self._client,
+                   job_id=job_id,
       diff --git a/src/harbor_client/leaderboards/client.py b/src/harbor_client/leaderboards/client.py
       index 3f02570..1ba8e14 100644
       --- a/src/harbor_client/leaderboards/client.py
@@ -467,6 +604,41 @@ patches:
        
                        next_cursor = parsed_response.next_page_token
       @@ -935,7 +933,11 @@ class AsyncSecretsClient(SecretsClient):
+               )
+       
+               async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+                       yield page
+       
+               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
+      index 60a1347..6553258 100644
+      --- a/src/harbor_client/trials/client.py
+      +++ b/src/harbor_client/trials/client.py
+      @@ -561,6 +561,7 @@ class TrialsClient(BaseService):
+               :return: The parsed response data.
+               :rtype: SyncPager[JobTrialSummary]
+               """
+      +        self = self._for_one_call()
+       
+               Validator(str).validate(job_ids, "job_ids")
+               Validator(str).is_optional().validate(page_size, "page_size")
+      @@ -631,9 +632,6 @@ class TrialsClient(BaseService):
+                       )
+                       current_page = parsed_response.items
+       
+      -                if not current_page:
+      -                    break
+      -
+                       yield current_page
+       
+                       next_cursor = parsed_response.next_page_token
+      @@ -1203,7 +1201,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
                async def _paginate():
@@ -1139,6 +1311,18 @@ patches:
        
        StorageUploadSessionResult_adapter = TypeAdapter(StorageUploadSessionResult)
        
+      diff --git a/src/harbor_client/types/submit_job_request.py b/src/harbor_client/types/submit_job_request.py
+      index 3a9954c..9a890d9 100644
+      --- a/src/harbor_client/types/submit_job_request.py
+      +++ b/src/harbor_client/types/submit_job_request.py
+      @@ -110,7 +110,6 @@ SubmitJobRequestRegrade = Union[
+       ]
+       # TypeAdapter for runtime validation of SubmitJobRequestRegrade
+       # This allows validation of Union types which are not directly instantiable
+      -from pydantic import TypeAdapter
+       
+       SubmitJobRequestRegrade_adapter = TypeAdapter(SubmitJobRequestRegrade)
+       
       diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
       index 39be587..5619d1d 100644
       --- a/src/harbor_client/types/trial_detail.py
@@ -1203,184 +1387,6 @@ patches:
                    # Pydantic models: use model_validate() for each item. Validated one at a time so the
                    # failing element's index reaches the error message.
                    if hasattr(element_type, "model_validate"):
-      diff --git a/pyproject.toml b/pyproject.toml
-      index 2567a0d..5d5af50 100644
-      --- a/pyproject.toml
-      +++ b/pyproject.toml
-      @@ -7,12 +7,21 @@ name = "harbor-client"
-       version = "0.1.1"
-       description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
-       readme = "PyPI_README.md"
-      -requires-python = ">=3.9"
-      +requires-python = ">=3.12"
-       dependencies = [
-           "requests>=2.31.0",
-      -    "pydantic>=2.0.0,<3.0.0",
-      -    "httpx>=0.21.2"
-      +    "pydantic>=2.14.0,<3",
-      +    "httpx>=0.27.0",
-      +    "jsonschema>=4.23.0"
-      +
-       ]
-       
-      +[project.optional-dependencies]
-      +tus = ["tuspy>=1.1.0,<2"]
-      +
-      +[tool.setuptools.package-data]
-      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
-      +
-      +
-       [project.urls]
-       Repository = "https://github.com/harbor-framework/harbor-client"
-      diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 6210c51..de073cf 100644
-      --- a/src/harbor_client/jobs/client.py
-      +++ b/src/harbor_client/jobs/client.py
-      @@ -907,7 +907,7 @@ class JobsClient(BaseService):
-               reason: Union[str, None] = SENTINEL,
-               finish_running: Union[bool, None] = SENTINEL,
-               request_options: Optional[RequestOptions] = None,
-      -    ) -> Any:
-      +    ) -> Optional[Any]:
-               """cancel
-       
-               :param request_body: The request body.
-      @@ -1026,6 +1026,7 @@ class JobsClient(BaseService):
-               :return: The parsed response data.
-               :rtype: SyncPager[JobSummary]
-               """
-      +        self = self._for_one_call()
-       
-               Validator(str).is_optional().validate(page_size, "page_size")
-               Validator(str).is_optional().validate(page_token, "page_token")
-      @@ -1100,9 +1101,6 @@ class JobsClient(BaseService):
-                       )
-                       current_page = parsed_response.items
-       
-      -                if not current_page:
-      -                    break
-      -
-                       yield current_page
-       
-                       next_cursor = parsed_response.next_page_token
-      @@ -1160,6 +1158,7 @@ class JobsClient(BaseService):
-               :return: The parsed response data.
-               :rtype: SyncPager[JobTaskSummary]
-               """
-      +        self = self._for_one_call()
-       
-               Validator(str).validate(job_id, "job_id")
-               Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -1218,9 +1217,6 @@ class JobsClient(BaseService):
-                       )
-                       current_page = parsed_response.items
-       
-      -                if not current_page:
-      -                    break
-      -
-                       yield current_page
-       
-                       next_cursor = parsed_response.next_page_token
-      @@ -1623,7 +1619,7 @@ class RawJobsClient:
-               reason: Union[str, None] = SENTINEL,
-               finish_running: Union[bool, None] = SENTINEL,
-               request_options: Optional[RequestOptions] = None,
-      -    ) -> HttpResponse[Any]:
-      +    ) -> HttpResponse[Optional[Any]]:
-               data = JobsClient.cancel(
-                   self._client,
-                   job_id=job_id,
-      @@ -1987,7 +1983,7 @@ class AsyncJobsClient(JobsClient):
-               reason: Union[str, None] = SENTINEL,
-               finish_running: Union[bool, None] = SENTINEL,
-               request_options: Optional[RequestOptions] = None,
-      -    ) -> Awaitable[Any]:  # type: ignore[override]
-      +    ) -> Awaitable[Optional[Any]]:  # type: ignore[override]
-               return to_async(super().cancel)(
-                   job_id=job_id,
-                   **dict[str, Any](
-      @@ -2057,7 +2053,11 @@ class AsyncJobsClient(JobsClient):
-               )
-       
-               async def _paginate():
-      -            for page in sync_pager.iter_pages():
-      +            pages = sync_pager.iter_pages()
-      +            while True:
-      +                page = await to_async(next)(pages, None)
-      +                if page is None:
-      +                    return
-                       yield page
-       
-               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2102,7 +2102,11 @@ class AsyncJobsClient(JobsClient):
-               )
-       
-               async def _paginate():
-      -            for page in sync_pager.iter_pages():
-      +            pages = sync_pager.iter_pages()
-      +            while True:
-      +                page = await to_async(next)(pages, None)
-      +                if page is None:
-      +                    return
-                       yield page
-       
-               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2369,7 +2373,7 @@ class AsyncRawJobsClient:
-               reason: Union[str, None] = SENTINEL,
-               finish_running: Union[bool, None] = SENTINEL,
-               request_options: Optional[RequestOptions] = None,
-      -    ) -> HttpResponse[Any]:
-      +    ) -> HttpResponse[Optional[Any]]:
-               data = await AsyncJobsClient.cancel(
-                   self._client,
-                   job_id=job_id,
-      diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index 60a1347..6553258 100644
-      --- a/src/harbor_client/trials/client.py
-      +++ b/src/harbor_client/trials/client.py
-      @@ -561,6 +561,7 @@ class TrialsClient(BaseService):
-               :return: The parsed response data.
-               :rtype: SyncPager[JobTrialSummary]
-               """
-      +        self = self._for_one_call()
-       
-               Validator(str).validate(job_ids, "job_ids")
-               Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -631,9 +632,6 @@ class TrialsClient(BaseService):
-                       )
-                       current_page = parsed_response.items
-       
-      -                if not current_page:
-      -                    break
-      -
-                       yield current_page
-       
-                       next_cursor = parsed_response.next_page_token
-      @@ -1203,7 +1201,11 @@ class AsyncTrialsClient(TrialsClient):
-               )
-       
-               async def _paginate():
-      -            for page in sync_pager.iter_pages():
-      +            pages = sync_pager.iter_pages()
-      +            while True:
-      +                page = await to_async(next)(pages, None)
-      +                if page is None:
-      +                    return
-                       yield page
-       
-               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      diff --git a/src/harbor_client/types/submit_job_request.py b/src/harbor_client/types/submit_job_request.py
-      index 3a9954c..9a890d9 100644
-      --- a/src/harbor_client/types/submit_job_request.py
-      +++ b/src/harbor_client/types/submit_job_request.py
-      @@ -110,7 +110,6 @@ SubmitJobRequestRegrade = Union[
-       ]
-       # TypeAdapter for runtime validation of SubmitJobRequestRegrade
-       # This allows validation of Union types which are not directly instantiable
-      -from pydantic import TypeAdapter
-       
-       SubmitJobRequestRegrade_adapter = TypeAdapter(SubmitJobRequestRegrade)
-       
     theirs_snapshot:
       pyproject.toml: |
         [build-system]
@@ -16587,7 +16593,7 @@ patches:
     original_commit: 61a37708c2a4e72346405c1176c431715170524c
     original_message: Use native Fern generation PRs and persistent Replay history
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 298766301eb2735994bc9ae8c648f36e4d1823fc
+    base_generation: 1da09a6eca8ef4e207db71275a68c024aaae489c
     files:
       - build_support.py
     patch_content: |
@@ -16662,7 +16668,7 @@ patches:
     original_commit: 9207ea73939830aa30b829ca3b32cfd39be19450
     original_message: Keep regenerated models and examples lint clean
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 298766301eb2735994bc9ae8c648f36e4d1823fc
+    base_generation: 1da09a6eca8ef4e207db71275a68c024aaae489c
     files:
       - examples/sample.py
       - src/harbor_client/types/submit_job_request.py

@@ -907,7 +907,7 @@ class JobsClient(BaseService):
         reason: Union[str, None] = SENTINEL,
         finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Any:
+    ) -> Optional[Any]:
         """cancel
 
         :param request_body: The request body.
@@ -1026,6 +1026,7 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobSummary]
         """
+        self = self._for_one_call()
 
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
@@ -1100,9 +1101,6 @@ class JobsClient(BaseService):
                 )
                 current_page = parsed_response.items
 
-                if not current_page:
-                    break
-
                 yield current_page
 
                 next_cursor = parsed_response.next_page_token
@@ -1160,6 +1158,7 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobTaskSummary]
         """
+        self = self._for_one_call()
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -1217,9 +1216,6 @@ class JobsClient(BaseService):
                     else construct_lenient(JobTaskPage, response)
                 )
                 current_page = parsed_response.items
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -1623,7 +1619,7 @@ class RawJobsClient:
         reason: Union[str, None] = SENTINEL,
         finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[Any]:
+    ) -> HttpResponse[Optional[Any]]:
         data = JobsClient.cancel(
             self._client,
             job_id=job_id,
@@ -1987,7 +1983,7 @@ class AsyncJobsClient(JobsClient):
         reason: Union[str, None] = SENTINEL,
         finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[Any]:  # type: ignore[override]
+    ) -> Awaitable[Optional[Any]]:  # type: ignore[override]
         return to_async(super().cancel)(
             job_id=job_id,
             **dict[str, Any](
@@ -2057,7 +2053,11 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2102,7 +2102,11 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2369,7 +2373,7 @@ class AsyncRawJobsClient:
         reason: Union[str, None] = SENTINEL,
         finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[Any]:
+    ) -> HttpResponse[Optional[Any]]:
         data = await AsyncJobsClient.cancel(
             self._client,
             job_id=job_id,
