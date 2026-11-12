@@ -28,6 +28,7 @@ StorageUploadSessionResult = Union[
 ]
 # TypeAdapter for runtime validation of StorageUploadSessionResult
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 StorageUploadSessionResult_adapter = TypeAdapter(StorageUploadSessionResult)
 

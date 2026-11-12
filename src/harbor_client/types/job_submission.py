@@ -11,8 +11,8 @@ from .selected_secret import SelectedSecret
 from .agent_source import AgentSource
 
 
-class SubmitJobResponse(BaseModel):
-    """SubmitJobResponse
+class JobSubmission(BaseModel):
+    """JobSubmission
 
     :param job_id: job_id
     :type job_id: str
@@ -34,8 +34,6 @@ class SubmitJobResponse(BaseModel):
     :type selected_secrets: List[SelectedSecret]
     :param agent_sources: agent_sources
     :type agent_sources: List[AgentSource]
-    :param session_id: session_id
-    :type session_id: str
     """
 
     job_id: Optional[str]
@@ -48,4 +46,3 @@ class SubmitJobResponse(BaseModel):
     warnings: List[str]
     selected_secrets: List[SelectedSecret]
     agent_sources: List[AgentSource]
-    session_id: Optional[str]

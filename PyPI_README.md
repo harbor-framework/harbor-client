@@ -1,10 +1,10 @@
-# HarborApiClient Python SDK 0.1.0<a id="harborapiclient-python-sdk-010"></a>
+# HarborApiClient Python SDK 1.0.0<a id="harborapiclient-python-sdk-100"></a>
 
 Welcome to the HarborApiClient SDK documentation. This guide will help you get started with integrating and using the HarborApiClient SDK in your project.
 
 ## Versions<a id="versions"></a>
 
-- SDK version: `0.1.0`
+- SDK version: `1.0.0`
 
 ## About the API<a id="about-the-api"></a>
 
@@ -131,13 +131,13 @@ response = client.jobs.list(
     models="models",
     date_="date",
     scope="my",
-    shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
+    shared_with_organization_id="ec8faFba-Ccf0-6D9d-6324-47302758AdCA",
     datasets="datasets",
     access="owned",
-    owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
+    owner_organization_id="da7fba55-C1F4-2B3a-3CbD-A4b50daAfeBa",
     date_from="date_from",
     date_to="date_to",
-    created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
+    created_by="0FFFDdc1-27Fa-Dc39-CD81-dA6F5CB26a8E",
     archive="current",
     sort="importance",
 )
@@ -174,13 +174,13 @@ async def main():
     models="models",
     date_="date",
     scope="my",
-    shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
+    shared_with_organization_id="ec8faFba-Ccf0-6D9d-6324-47302758AdCA",
     datasets="datasets",
     access="owned",
-    owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
+    owner_organization_id="da7fba55-C1F4-2B3a-3CbD-A4b50daAfeBa",
     date_from="date_from",
     date_to="date_to",
-    created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
+    created_by="0FFFDdc1-27Fa-Dc39-CD81-dA6F5CB26a8E",
     archive="current",
     sort="importance"
 )
@@ -247,8 +247,8 @@ The SDK includes several models that represent the data structures used in API r
 | JobTrialStatusItem                             |             |
 | JobArtifactType                                |             |
 | SubmitJobRequest                               |             |
-| SubmitJobResponse                              |             |
-| JobDetail                                      |             |
+| JobSubmission                                  |             |
+| ResultJob                                      |             |
 | JobsRenameRequest                              |             |
 | RenameJobResponse                              |             |
 | DeleteJobsRequest                              |             |
@@ -257,7 +257,7 @@ The SDK includes several models that represent the data structures used in API r
 | TransferJobResponse                            |             |
 | JobsCopyRequest                                |             |
 | StorageCopyResult                              |             |
-| CancelJobWithIdRequest                         |             |
+| CancelHostedJobRequest                         |             |
 | JobPage                                        |             |
 | JobsListRequestScope                           |             |
 | JobsListRequestAccess                          |             |
@@ -273,7 +273,9 @@ The SDK includes several models that represent the data structures used in API r
 | EvaluationComparison                           |             |
 | TrialDetail                                    |             |
 | TrialArtifactType                              |             |
+| CancelTrialsRequest                            |             |
 | CancelTrialsResponse                           |             |
+| RetryTrialsRequest                             |             |
 | RetryTrialsResponse                            |             |
 | TrialsCopyRequest                              |             |
 | JobTrialPage                                   |             |
@@ -340,21 +342,21 @@ The SDK includes several models that represent the data structures used in API r
 | HostedSubmissionTaskConfig                     |             |
 | HostedSubmissionDatasetConfig                  |             |
 | HostedSubmissionRetryConfig                    |             |
-| HostedVerifierConfig                           |             |
-| MetricConfig                                   |             |
 | HostedGithubAgentSource                        |             |
 | HostedSecretSelection                          |             |
 | HostedSubmissionCredentialProxyPolicyRule      |             |
 | HostedSubmissionCredentialProxyRequestMatch    |             |
 | CredentialProxyHeaderTransform                 |             |
 | HostedSubmissionCredentialProxyPathMatch       |             |
-| ArtifactConfig                                 |             |
 | HostedJobTrialRegradeSource                    |             |
 | OwnerOrganization                              |             |
 | SelectedSecret                                 |             |
 | AgentSource                                    |             |
 | AgentSourceManifest                            |             |
 | AgentSourceRuntime                             |             |
+| JobSummary                                     |             |
+| JobTaskSummary                                 |             |
+| JobRewardMetricSet                             |             |
 | EvaluationJobReference                         |             |
 | EvaluationSummary                              |             |
 | JobManualPauseSummary                          |             |
@@ -366,9 +368,6 @@ The SDK includes several models that represent the data structures used in API r
 | JobPackageRunTarget                            |             |
 | JobPathRunTarget                               |             |
 | EvaluationMetricSet                            |             |
-| JobSummary                                     |             |
-| JobTaskSummary                                 |             |
-| JobRewardMetricSet                             |             |
 | EvaluationComparisonTask                       |             |
 | EvaluationComparisonAgentModel                 |             |
 | EvaluationComparisonCell                       |             |
@@ -379,12 +378,6 @@ The SDK includes several models that represent the data structures used in API r
 | TrialExceptionInfo                             |             |
 | TrialPhaseTiming                               |             |
 | TrialModelInfo                                 |             |
-| CancelTrialsByIdRequest                        |             |
-| CancelTrialsByFilterRequest                    |             |
-| CancelAllJobTrialsRequest                      |             |
-| RetryTrialsByIdRequest                         |             |
-| RetryTrialsByFilterRequest                     |             |
-| RetryAllJobTrialsRequest                       |             |
 | JobTrialSummary                                |             |
 | ResultModelUsage                               |             |
 | ApiKeyMetadata                                 |             |

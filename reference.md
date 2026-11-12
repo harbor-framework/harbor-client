@@ -341,13 +341,13 @@
 
 `POST /v1/trials/cancel`
 
-Cancel the latest active attempts. Send {job_id: null, trial_ids: [...], soft: false} for IDs across jobs, or select a job with explicit filters or all: true.
+Cancel the latest active attempts. Send trial_ids alone to select trials across jobs. An optional job_id asserts that every trial belongs to that job. For job-scoped selection, send job_id with filters or all: true. The server resolves jobs and validates the batch before making changes. The response includes counts by job.
 
 ### `client.trials.retry`
 
 `POST /v1/trials/retry`
 
-Retry the latest terminal attempts. Send {job_id: null, trial_ids: [...]} for IDs across jobs, or select a job with explicit filters or all: true.
+Retry the latest terminal attempts. Send trial_ids alone to select trials across jobs. An optional job_id asserts that every trial belongs to that job. For job-scoped selection, send job_id with filters or all: true. The server resolves jobs and validates the batch before making changes. The response includes counts by job.
 
 ### `client.trials.copy`
 

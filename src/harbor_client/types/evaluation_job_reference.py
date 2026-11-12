@@ -37,6 +37,7 @@ EvaluationJobReferenceNPlannedTrialsOne = typing.Union[
 EvaluationJobReferenceNPlannedTrials = Union[float, str]
 # TypeAdapter for runtime validation of EvaluationJobReferenceNPlannedTrials
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 EvaluationJobReferenceNPlannedTrials_adapter = TypeAdapter(
     EvaluationJobReferenceNPlannedTrials

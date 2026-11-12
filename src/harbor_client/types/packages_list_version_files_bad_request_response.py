@@ -34,6 +34,7 @@ PackagesListVersionFilesBadRequestResponse = Union[
 ]
 # TypeAdapter for runtime validation of PackagesListVersionFilesBadRequestResponse
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 PackagesListVersionFilesBadRequestResponse_adapter = TypeAdapter(
     PackagesListVersionFilesBadRequestResponse

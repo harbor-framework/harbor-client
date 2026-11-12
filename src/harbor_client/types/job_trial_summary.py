@@ -96,7 +96,7 @@ class JobTrialSummary(BaseModel):
     cache_tokens: Optional[JobTrialSummaryCacheTokens]
     cost_usd: Optional[JobTrialSummaryCostUsd]
     id: str
-    config_values: Dict[str, Optional[str]]
+    config_values: Dict[str, str]
     name: str
     reward: Optional[JobTrialSummaryReward]
     evals: Dict[str, JobRewardMetricSet]
@@ -113,7 +113,7 @@ class JobTrialSummary(BaseModel):
     max_retries: Optional[int] = Field(default=None)
     is_paused: bool
     paused_at: Optional[str]
-    paused_by_user: Optional[JobCreator]
+    paused_by_user: JobCreator
     attempt: int
     n_attempts: int
     is_scored: bool
@@ -131,6 +131,7 @@ JobTrialSummaryInputTokensOne = typing.Union[
 JobTrialSummaryInputTokens = Union[float, str]
 # TypeAdapter for runtime validation of JobTrialSummaryInputTokens
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 JobTrialSummaryInputTokens_adapter = TypeAdapter(JobTrialSummaryInputTokens)
 
