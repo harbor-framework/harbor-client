@@ -36,5 +36,5 @@ class PackagePublicGrant(BaseModel):
     source_package_type: PackagePublicGrantSourcePackageType
     is_direct: bool
     created_by: Optional[str]
-    created_by_user: Optional[PackageAccessGrantCreator]
+    created_by_user: PackageAccessGrantCreator
     created_at: str
