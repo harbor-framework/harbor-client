@@ -12,7 +12,13 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-python-sdk: 6.17.0
-current_generation: f17fd1794fd91e32f30e8ca6639e3357306d1ae6
+  - commit_sha: 298766301eb2735994bc9ae8c648f36e4d1823fc
+    tree_hash: 7f377b936d7330eb00a1e3b7c6109b8e9fdd8189
+    timestamp: 2026-11-12T22:26:12.546Z
+    cli_version: 5.199.0
+    generator_versions:
+      python: 6.17.0
+current_generation: 298766301eb2735994bc9ae8c648f36e4d1823fc
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:a362279133f3eb5b82b7a1fca929fd72b0bc9280414557cd2b2cf94d4ba188bf
@@ -21567,13 +21573,13 @@ patches:
                 "prepare",
                 "complete",
             ]
-    status: resolving
+    status: unresolved
   - id: patch-61a37708
     content_hash: sha256:a8507d3e2ddb75985567cbe7f85d2c698de5af1b15d986bd12f4c74e9adbd15a
     original_commit: 61a37708c2a4e72346405c1176c431715170524c
     original_message: Use native Fern generation PRs and persistent Replay history
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: f17fd1794fd91e32f30e8ca6639e3357306d1ae6
+    base_generation: 298766301eb2735994bc9ae8c648f36e4d1823fc
     files:
       - build_support.py
     patch_content: |
@@ -21643,3 +21649,176 @@ patches:
       -        super().run()
       -        generate_export_stubs(Path(self.build_lib) / "harbor_client")
     user_owned: true
+  - id: patch-9207ea73
+    content_hash: sha256:d89dce7fc4de5b615c0cb8581a87d767c4237463e726e543f7d259c83936c86b
+    original_commit: 9207ea73939830aa30b829ca3b32cfd39be19450
+    original_message: Keep regenerated models and examples lint clean
+    original_author: Sam Vance <samvance243@gmail.com>
+    base_generation: 298766301eb2735994bc9ae8c648f36e4d1823fc
+    files:
+      - examples/sample.py
+      - src/harbor_client/types/submit_job_request.py
+    patch_content: |+
+      diff --git a/src/harbor_client/types/submit_job_request.py b/src/harbor_client/types/submit_job_request.py
+      index 3a9954c..9a890d9 100644
+      --- a/src/harbor_client/types/submit_job_request.py
+      +++ b/src/harbor_client/types/submit_job_request.py
+      @@ -110,7 +110,6 @@ SubmitJobRequestRegrade = Union[
+       ]
+       # TypeAdapter for runtime validation of SubmitJobRequestRegrade
+       # This allows validation of Union types which are not directly instantiable
+      -from pydantic import TypeAdapter
+       
+       SubmitJobRequestRegrade_adapter = TypeAdapter(SubmitJobRequestRegrade)
+       
+    theirs_snapshot:
+      examples/sample.py: |
+        from harbor_client import HarborAPIClient
+
+        client = HarborAPIClient(
+            harbor_api_version="YOUR_HARBOR_API_VERSION",
+        )
+        response = client.jobs.list(
+            page_size="page_size",
+            page_token="page_token",
+            offset="offset",
+            search="search",
+            agents="agents",
+            providers="providers",
+            models="models",
+            date_="date",
+            scope="my",
+            shared_with_organization_id="ec8faFba-Ccf0-6D9d-6324-47302758AdCA",
+            datasets="datasets",
+            access="owned",
+            owner_organization_id="da7fba55-C1F4-2B3a-3CbD-A4b50daAfeBa",
+            date_from="date_from",
+            date_to="date_to",
+            created_by="0FFFDdc1-27Fa-Dc39-CD81-dA6F5CB26a8E",
+            archive="current",
+            sort="importance",
+        )
+        for item in response:
+            print(item)
+        # alternatively, you can paginate page-by-page
+        for page in response.iter_pages():
+            print(page)
+      src/harbor_client/types/submit_job_request.py: |
+        from __future__ import annotations
+        import typing
+        from typing import Union
+        from typing import List
+        from pydantic import Field
+        from typing import Optional
+        from typing import Any
+        from typing import Annotated
+        from pydantic import TypeAdapter
+        from typing import Dict
+        from .utils.base_model import BaseModel
+        from .hosted_diff_selectors import HostedDiffSelectors
+        from .hosted_agent_config import HostedAgentConfig
+        from .hosted_submission_environment_config import HostedSubmissionEnvironmentConfig
+        from .hosted_submission_task_config import HostedSubmissionTaskConfig
+        from .hosted_submission_dataset_config import HostedSubmissionDatasetConfig
+        from .hosted_submission_retry_config import HostedSubmissionRetryConfig
+        from .hosted_job_trial_regrade_source import HostedJobTrialRegradeSource
+
+
+        class SubmitJobRequest(BaseModel):
+            """SubmitJobRequest
+
+            :param config: config
+            :type config: SubmitJobRequestConfig
+            :param regrade: regrade, defaults to None
+            :type regrade: SubmitJobRequestRegrade, optional
+            :param organization_id: organization_id, defaults to None
+            :type organization_id: str, optional
+            :param job_secrets: job_secrets, defaults to None
+            :type job_secrets: Dict[str, Any], optional
+            :param job_credentials: job_credentials, defaults to None
+            :type job_credentials: Dict[str, Any], optional
+            :param registry_credentials: registry_credentials, defaults to None
+            :type registry_credentials: Dict[str, Any], optional
+            :param dry_run: dry_run, defaults to None
+            :type dry_run: bool, optional
+            """
+
+            config: SubmitJobRequestConfig
+            regrade: Optional[SubmitJobRequestRegrade] = Field(default=None)
+            organization_id: Optional[str] = Field(default=None)
+            job_secrets: Optional[Dict[str, Any]] = Field(default=None)
+            job_credentials: Optional[Dict[str, Any]] = Field(default=None)
+            registry_credentials: Optional[Dict[str, Any]] = Field(default=None)
+            dry_run: Optional[bool] = Field(default=None)
+
+
+        SubmitJobRequestConfigCredentialMode = typing.Union[
+            typing.Literal["gateway", "direct"], typing.Any
+        ]
+
+
+        class SubmitJobRequestConfig(BaseModel):
+            """SubmitJobRequestConfig
+
+            :param diff: diff, defaults to None
+            :type diff: HostedDiffSelectors, optional
+            :param install_only: install_only, defaults to None
+            :type install_only: bool, optional
+            :param static_outbound_ip: static_outbound_ip, defaults to None
+            :type static_outbound_ip: bool, optional
+            :param credential_mode: credential_mode, defaults to None
+            :type credential_mode: SubmitJobRequestConfigCredentialMode, optional
+            :param agents: agents
+            :type agents: List[HostedAgentConfig]
+            :param environment: environment, defaults to None
+            :type environment: HostedSubmissionEnvironmentConfig, optional
+            :param tasks: tasks, defaults to None
+            :type tasks: List[HostedSubmissionTaskConfig], optional
+            :param datasets: datasets, defaults to None
+            :type datasets: List[HostedSubmissionDatasetConfig], optional
+            :param retry: retry, defaults to None
+            :type retry: HostedSubmissionRetryConfig, optional
+            :param n_attempts: n_attempts, defaults to None
+            :type n_attempts: float, optional
+            :param n_concurrent_trials: n_concurrent_trials, defaults to None
+            :type n_concurrent_trials: float, optional
+            """
+
+            diff: Optional[HostedDiffSelectors] = Field(default=None)
+            install_only: Optional[bool] = Field(default=None)
+            static_outbound_ip: Optional[bool] = Field(default=None)
+            credential_mode: Optional[SubmitJobRequestConfigCredentialMode] = Field(
+                default=None
+            )
+            agents: List[HostedAgentConfig]
+            environment: Optional[HostedSubmissionEnvironmentConfig] = Field(default=None)
+            tasks: Optional[List[HostedSubmissionTaskConfig]] = Field(default=None)
+            datasets: Optional[List[HostedSubmissionDatasetConfig]] = Field(default=None)
+            retry: Optional[HostedSubmissionRetryConfig] = Field(default=None)
+            n_attempts: Optional[float] = Field(default=None)
+            n_concurrent_trials: Optional[float] = Field(default=None)
+
+
+        class SubmitJobRequestRegradeSourceTrialId(BaseModel):
+            """SubmitJobRequestRegradeSourceTrialId
+
+            :param source_trial_id: source_trial_id
+            :type source_trial_id: str
+            """
+
+            source_trial_id: str
+
+
+        # Union type for SubmitJobRequestRegrade
+        # Pydantic will attempt to validate against each type in order
+        SubmitJobRequestRegrade = Union[
+            SubmitJobRequestRegradeSourceTrialId, HostedJobTrialRegradeSource
+        ]
+        # TypeAdapter for runtime validation of SubmitJobRequestRegrade
+        # This allows validation of Union types which are not directly instantiable
+
+        SubmitJobRequestRegrade_adapter = TypeAdapter(SubmitJobRequestRegrade)
+
+
+        # Rebuild model to resolve forward references from submodels
+        SubmitJobRequest.model_rebuild()

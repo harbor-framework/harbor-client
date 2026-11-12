@@ -110,7 +110,6 @@ SubmitJobRequestRegrade = Union[
 ]
 # TypeAdapter for runtime validation of SubmitJobRequestRegrade
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 SubmitJobRequestRegrade_adapter = TypeAdapter(SubmitJobRequestRegrade)
 
