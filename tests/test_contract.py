@@ -119,8 +119,6 @@ def test_open_agent_config_stays_open_and_valid_submission_works():
         client.jobs.submit(
             config={"agents": [{"name": "oracle", "future_field": {"allowed": True}}]},
             idempotency_key="test",
-            relay_inference=False,
-            session_id=None,
         )
     assert sent[0]["config"]["agents"][0]["future_field"] == {"allowed": True}
 
