@@ -25,7 +25,7 @@
       "sdkName": "HarborAPIClient",
       "apiName": "api",
       "organizationName": "harbor",
-      "sdkVersion": "0.1.0"
+      "sdkVersion": "1.0.0"
     },
     "api": {
       "baseUrl": "https://api.harborframework.com/functions/v1/api",

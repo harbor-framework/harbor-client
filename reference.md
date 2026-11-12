@@ -258,6 +258,8 @@
 
 `GET /v1/jobs`
 
+List jobs (SDK generation verification)
+
 **Parameters:**
 
 - `page_size`
