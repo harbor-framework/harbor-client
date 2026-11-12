@@ -29,8 +29,8 @@ jobs:
           node --input-type=module -e 'import { status } from "@fern-api/replay"; const s=status(process.cwd()); if (!s.initialized || s.unresolvedCount > 0) process.exit(1);'
       - run: uv venv
       - run: uv pip install -r requirements-dev.txt '.[tus]'
-      - run: .venv/bin/ruff check .
-      - run: .venv/bin/ruff format --check .
+      - run: .venv/bin/ruff check . src/harbor_client/validation.py src/harbor_client/transfers.py
+      - run: .venv/bin/ruff format --check . src/harbor_client/validation.py src/harbor_client/transfers.py
       - run: .venv/bin/ty check
       - run: .venv/bin/pytest tests
       - run: uv build

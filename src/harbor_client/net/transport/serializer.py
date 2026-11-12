@@ -263,7 +263,7 @@ class Serializer:
             prefix = "" if (explode and isinstance(data, dict)) else f"{key}="
             query_param = f"{prefix}{self._serialize_value(data=data, explode=explode, separator=separator)}"
         elif style == "spaceDelimited":
-            separator = f"&{key}=" if explode else "%20"
+            separator = f"&{key}=" if explode else f"%20"
             query_param = f"{key}={self._serialize_value(data=data, explode=explode, separator=separator)}"
         elif style == "pipeDelimited":
             separator = f"&{key}=" if explode else "|"

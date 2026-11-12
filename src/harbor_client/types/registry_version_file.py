@@ -38,6 +38,7 @@ RegistryVersionFileSizeBytesOne = typing.Union[
 RegistryVersionFileSizeBytes = Union[float, str]
 # TypeAdapter for runtime validation of RegistryVersionFileSizeBytes
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 RegistryVersionFileSizeBytes_adapter = TypeAdapter(RegistryVersionFileSizeBytes)
 
