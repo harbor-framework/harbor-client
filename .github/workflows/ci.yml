@@ -1,0 +1,41 @@
+name: SDK checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v8
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Reject unresolved native Replay patches
+        run: |
+          node --input-type=module -e 'import { status } from "@fern-api/replay"; const s=status(process.cwd()); if (!s.initialized || s.unresolvedCount > 0) process.exit(1);'
+      - run: uv venv
+      - run: uv pip install -r requirements-dev.txt '.[tus]'
+      - run: uv run --no-project ruff check .
+      - run: uv run --no-project ruff format --check .
+      - run: uv run --no-project ty check
+      - run: uv run --no-project pytest tests
+      - run: uv run --no-project python -m build
+      - name: Verify the built distribution independently
+        run: |
+          uv venv wheel-check
+          uv pip install --python wheel-check/bin/python dist/*.whl
+          cd "${RUNNER_TEMP}"
+          "${GITHUB_WORKSPACE}/wheel-check/bin/python" -c 'from harbor_client import HarborAPIClient, AsyncHarborAPIClient; import importlib.resources; assert importlib.resources.files("harbor_client").joinpath("types/__init__.pyi").is_file()'

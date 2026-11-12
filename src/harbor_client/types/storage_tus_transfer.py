@@ -47,7 +47,6 @@ StorageTusTransferChunkSizeOne = typing.Union[
 StorageTusTransferChunkSize = Union[float, str]
 # TypeAdapter for runtime validation of StorageTusTransferChunkSize
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 StorageTusTransferChunkSize_adapter = TypeAdapter(StorageTusTransferChunkSize)
 

@@ -14,6 +14,5 @@ RetryTrialsRequest = Union[
 ]
 # TypeAdapter for runtime validation of RetryTrialsRequest
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 RetryTrialsRequest_adapter = TypeAdapter(RetryTrialsRequest)

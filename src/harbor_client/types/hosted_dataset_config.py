@@ -13,7 +13,6 @@ from .utils.base_model import BaseModel
 HostedDatasetConfigRef = Union[str, float]
 # TypeAdapter for runtime validation of HostedDatasetConfigRef
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 HostedDatasetConfigRef_adapter = TypeAdapter(HostedDatasetConfigRef)
 
