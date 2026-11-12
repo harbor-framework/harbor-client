@@ -19,3 +19,16 @@ Commit necessary edits to generated files normally: Fern Replay detects them on 
 The SDK retains regression tests for all documented operations, pagination, wire validation, pooling, and signed transfers. Static export stubs are derived from Fern's model registry during the standard package build; there is no separate SDK assembly or patch-generation command.
 
 Generation and release are separate. There is no automatic registry publication in this repository.
+
+## Ownership of custom code
+
+Fern owns generated resource clients, models, imports and formatting. Project lint and formatting checks cover tests, packaging support and the two handwritten helper modules; they do not rewrite generated source.
+
+The remaining customizations have behavioral regression tests:
+
+- `validation.py` enforces JSON Schema constraints the generator does not preserve.
+- `transfers.py` orchestrates signed byte transfers and resumable uploads over generated endpoint methods.
+- Replay preserves pagination, URL encoding, connection lifetime and model-fidelity fixes until the generator provides them.
+- `setup.py` derives static export stubs during package builds. Packaging metadata includes these stubs and the validation contract.
+
+Avoid cosmetic edits to generated files. When an upstream fix replaces a customization, verify its regression tests and retire the obsolete patch through Fern's Replay tools.
