@@ -114,7 +114,7 @@ class TrialDetail(BaseModel):
     hosted_error_code: Optional[str]
     hosted_phase: Optional[str]
     job_created_by: Optional[str]
-    job_created_by_user: Optional[EvaluationUserSummary]
+    job_created_by_user: EvaluationUserSummary
     owner_organization: Optional[JobShareOwnerOrganization]
     access_relation: Optional[TrialDetailAccessRelation]
     can_operate: bool
@@ -136,4 +136,4 @@ class TrialDetail(BaseModel):
     agent_setup: TrialPhaseTiming
     agent_execution: TrialPhaseTiming
     verifier: TrialPhaseTiming
-    step_results: None
+    step_results: Optional[Any]

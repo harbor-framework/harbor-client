@@ -31,6 +31,7 @@ JobRewardMetricSetMetricsItemValueOne = typing.Union[
 JobRewardMetricSetMetricsItemValue = Union[float, str]
 # TypeAdapter for runtime validation of JobRewardMetricSetMetricsItemValue
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 JobRewardMetricSetMetricsItemValue_adapter = TypeAdapter(
     JobRewardMetricSetMetricsItemValue

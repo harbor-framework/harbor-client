@@ -97,8 +97,8 @@ class JobSummary(BaseModel):
     id: str
     name: Optional[str]
     created_by: str
-    created_by_user: Optional[JobCreator]
-    owner_organization: Optional[JobOwnerOrganization]
+    created_by_user: JobCreator
+    owner_organization: JobOwnerOrganization
     started_at: Optional[str]
     finished_at: Optional[str]
     n_total_trials: int
@@ -144,6 +144,7 @@ JobSummaryInputTokensOne = typing.Union[
 JobSummaryInputTokens = Union[float, str]
 # TypeAdapter for runtime validation of JobSummaryInputTokens
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 JobSummaryInputTokens_adapter = TypeAdapter(JobSummaryInputTokens)
 
