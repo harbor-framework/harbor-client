@@ -13,6 +13,7 @@ from pydantic import ValidationError as ModelValidationError
 
 from harbor_client.net.transport.api_error import ApiError
 from harbor_client.validation import (
+    _schema,
     ContractError,
     ContractTransport,
     async_client,
@@ -21,7 +22,7 @@ from harbor_client.validation import (
 
 pytestmark = pytest.mark.unit
 ROOT = Path(__file__).resolve().parents[1]
-from harbor_client.validation import _schema
+
 SPEC = _schema()
 UUID = "00000000-0000-4000-8000-000000000001"
 BASE = "https://api.harborframework.com/functions/v1/api"

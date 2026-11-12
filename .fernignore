@@ -10,7 +10,13 @@ ruff.toml
 ty.toml
 pytest.ini
 setup.py
-build_support.py
 LICENSE
 src/harbor_client/validation.py
 src/harbor_client/transfers.py
+.gitignore
+package.json
+package-lock.json
+MANIFEST.in
+fern/
+README.md
+src/harbor_client/_openapi.json.gz

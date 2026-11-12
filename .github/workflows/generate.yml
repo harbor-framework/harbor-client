@@ -1,0 +1,88 @@
+name: Generate SDK
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Regenerate even when the API document is unchanged
+        type: boolean
+        default: false
+  schedule:
+    - cron: "17 8 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "fern/**"
+      - ".github/workflows/generate.yml"
+permissions:
+  contents: read
+concurrency:
+  group: sdk-generation
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      API_SPEC_URL: https://api.harborframework.com/functions/v1/api/v1/2026-09-10.preview/openapi.json
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+      - uses: fern-api/setup-fern-cli@d07601425e9c9ede8745d71ca75c4c462d98755d # v1
+        with:
+          version: 5.199.0
+      - name: Read the authoritative public API document
+        id: spec
+        env:
+          FORCE: ${{ inputs.force || github.event_name == 'push' }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 3 "$API_SPEC_URL" -o "$RUNNER_TEMP/openapi.json"
+          python3 -c 'import json, os; d=json.load(open(os.environ["RUNNER_TEMP"] + "/openapi.json")); assert d.get("openapi") and d.get("paths"), "Invalid OpenAPI document"'
+          if cmp -s fern/openapi.json "$RUNNER_TEMP/openapi.json" && [[ "$FORCE" != true ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            cp "$RUNNER_TEMP/openapi.json" fern/openapi.json
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Generate and replay through Fern's native GitHub publisher
+        if: steps.spec.outputs.changed == 'true'
+        id: fern
+        env:
+          FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! fern generate --target python --version AUTO --force > "$RUNNER_TEMP/fern.log" 2>&1; then
+            echo "::error::Fern generation failed. Inspect the authenticated Fern build; private build logs were not uploaded."
+            exit 1
+          fi
+          pr_url=$(grep -Eo 'https://github.com/harbor-framework/harbor-client/pull/[0-9]+' "$RUNNER_TEMP/fern.log" | tail -1 || true)
+          if [[ -z "$pr_url" ]]; then
+            echo "::error::Fern did not return a regeneration PR; the contract snapshot has not been updated."
+            exit 1
+          fi
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+      - name: Attach the exact validation contract to Fern's PR
+        if: steps.spec.outputs.changed == 'true'
+        env:
+          PR_URL: ${{ steps.fern.outputs.pr_url }}
+        run: |
+          set -euo pipefail
+          cp fern/openapi.json "$RUNNER_TEMP/generated-openapi.json"
+          gh pr checkout "$PR_URL"
+          cp "$RUNNER_TEMP/generated-openapi.json" fern/openapi.json
+          gzip -n -c fern/openapi.json > src/harbor_client/_openapi.json.gz
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fern/openapi.json src/harbor_client/_openapi.json.gz
+          if ! git diff --cached --quiet; then
+            git commit -m "Sync the generated SDK's validation contract"
+            git push
+          fi
+          # Token-authenticated pushes do not trigger another pull_request run.
+          gh workflow run ci.yml --ref "$(git branch --show-current)"
+          echo "SDK update: $PR_URL" >> "$GITHUB_STEP_SUMMARY"

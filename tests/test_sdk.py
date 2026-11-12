@@ -1,8 +1,6 @@
 """Behavior of the Fern 6.17.0 SDK, without live API calls."""
 
 import ast
-import hashlib
-import json
 from pathlib import Path
 import re
 from typing import get_args, get_origin
@@ -31,6 +29,7 @@ VERSION = "2026-09-10.preview"
 
 def test_every_documented_resource_can_be_loaded_without_a_network_request():
     from harbor_client.validation import _schema
+
     schema = _schema()
     groups = {
         operation["operationId"].split(".", 1)[0]
@@ -55,6 +54,7 @@ def test_every_documented_resource_can_be_loaded_without_a_network_request():
 
 def test_generation_provenance_and_all_routes_generated():
     from harbor_client.validation import _schema
+
     schema = _schema()
     expected = {
         (method.upper(), path)

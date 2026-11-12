@@ -1,6 +1,7 @@
 name: SDK checks
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches: [main]
 permissions:
@@ -12,13 +13,13 @@ jobs:
       matrix:
         python: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           python-version: ${{ matrix.python }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "22"
           cache: npm
@@ -28,11 +29,11 @@ jobs:
           node --input-type=module -e 'import { status } from "@fern-api/replay"; const s=status(process.cwd()); if (!s.initialized || s.unresolvedCount > 0) process.exit(1);'
       - run: uv venv
       - run: uv pip install -r requirements-dev.txt '.[tus]'
-      - run: uv run --no-project ruff check .
-      - run: uv run --no-project ruff format --check .
-      - run: uv run --no-project ty check
-      - run: uv run --no-project pytest tests
-      - run: uv run --no-project python -m build
+      - run: .venv/bin/ruff check .
+      - run: .venv/bin/ruff format --check .
+      - run: .venv/bin/ty check
+      - run: .venv/bin/pytest tests
+      - run: uv build
       - name: Verify the built distribution independently
         run: |
           uv venv wheel-check

@@ -1,2 +1,2 @@
 [src]
-include = ["src/harbor_client/validation.py", "build_support.py", "setup.py"]
+include = ["src/harbor_client/validation.py", "setup.py"]
