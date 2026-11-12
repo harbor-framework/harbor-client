@@ -22,7 +22,7 @@ Generation and release are separate. After an SDK update is reviewed and merged,
 
 One-time PyPI setup: register `harbor-framework/harbor-client`, workflow `release.yml`, and environment `pypi` as the trusted publisher for `harbor-framework-client`. No PyPI API token is needed. Configure GitHub's `pypi` environment to restrict release deployments to the intended tags.
 
-Fern 6.17.0's SDK Config publishing preview emitted compile/test jobs but no publish job. The release workflow therefore uses the official PyPA action, following Fern's documented publishing fallback. Generation and Replay still use Fern's native publisher.
+Fern 6.17.0's SDK Config publishing preview emitted compile/test jobs but no publish job. The release workflow therefore uses the official PyPA action, following [Fern's documented publishing fallback](https://buildwithfern.com/learn/sdks/generators/python/publishing#path-2-manual-ci-workflow-update). Generation and Replay still use Fern's native publisher.
 
 ## Ownership of custom code
 

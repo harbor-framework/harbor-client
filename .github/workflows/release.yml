@@ -3,6 +3,13 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/release.yml"
+      - ".github/workflows/ci.yml"
+      - "pyproject.toml"
+      - "setup.py"
+      - "MANIFEST.in"
 permissions:
   contents: read
 concurrency:
@@ -14,10 +21,6 @@ jobs:
   distribution:
     needs: verify
     runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
@@ -41,6 +44,30 @@ jobs:
           PYCODE
       - run: uv build
       - run: uvx twine check dist/*
+  publish:
+    if: github.event_name == 'release'
+    needs: distribution
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: "3.12"
+          enable-cache: false
+      # Rebuild and test within this job so unpublished distributions never
+      # need to be uploaded as public Actions artifacts.
+      - run: uv build
+      - run: uvx twine check dist/*
+      - name: Test the exact wheel that will be published
+        run: |
+          uv venv
+          wheels=(dist/*.whl)
+          uv pip install -r requirements-dev.txt "${wheels[0]}[tus]"
+          cd "${RUNNER_TEMP}"
+          "${GITHUB_WORKSPACE}/.venv/bin/python" -m pytest "${GITHUB_WORKSPACE}/tests" -o pythonpath= -q
       - name: Publish the verified release to PyPI
-        if: github.event_name == 'release'
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
