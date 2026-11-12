@@ -1,6 +1,6 @@
 # Harbor API Python SDK
 
-Install the independently versioned `harbor-client` package and use `HarborAPIClient` or `AsyncHarborAPIClient`. A package release has not been published yet; development consumers pin this repository to a commit.
+Install the independently versioned `harbor-framework-client` package and use `HarborAPIClient` or `AsyncHarborAPIClient`. A package release has not been published yet; development consumers pin this repository to a commit.
 
 ```python
 from harbor_client.validation import sync_client

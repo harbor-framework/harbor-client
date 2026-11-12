@@ -42,5 +42,5 @@ targets:
         branch: main
         workflows: false
     package:
-      packageName: harbor-client
+      packageName: harbor-framework-client
       moduleName: harbor_client
