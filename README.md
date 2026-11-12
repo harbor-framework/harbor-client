@@ -16,6 +16,8 @@ The API implementation owns the public OpenAPI document. This repository keeps i
 
 For an unmerged API candidate, commit its OpenAPI document to `fern/openapi.json` on an SDK preview branch and run the workflow with `spec_ref` set to that branch. Alternatively supply `spec_url` for an HTTPS document. `sdk_branch` selects the base branch for Fern's update PR; it defaults to `main`. The workflow uses the same pinned SDK profile and attaches the exact selected contract. No API deployment is needed. Whitespace or object-key ordering changes alone do not trigger regeneration. The scheduled source URL can be changed through the `OPENAPI_SPEC_URL` repository variable.
 
+Review Fern's proposed version and changelog before merging. In the pinned publisher, AUTO can classify preserved Replay customizations as removals. Use `sdk_version` to rerun generation with the intended version when needed; this uses Fern's version flag and updates all generated version metadata together. No custom versioning engine is used.
+
 Commit necessary edits to generated files normally: Fern Replay detects them on the next regeneration. Resolve conflicts with `npx fern-replay resolve .`; do not edit the lockfile by hand or accept unresolved patches. `.fernignore` protects the fully owned validation/transfer helpers, packaging support, tests, and CI. It does not freeze generated resource clients or models.
 
 The SDK retains regression tests for all documented operations, pagination, wire validation, pooling, and signed transfers. Static export stubs are derived from Fern's model registry during the standard package build; there is no separate SDK assembly or patch-generation command.

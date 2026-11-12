@@ -14,6 +14,10 @@ on:
         description: SDK branch to receive the generated update PR
         type: string
         default: main
+      sdk_version:
+        description: Fern SDK version override; AUTO computes the version for review
+        type: string
+        default: AUTO
       force:
         description: Regenerate even when the API document is unchanged
         type: boolean
@@ -104,9 +108,10 @@ jobs:
         id: fern
         env:
           FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
+          SDK_VERSION: ${{ inputs.sdk_version || 'AUTO' }}
         run: |
           set -euo pipefail
-          if ! fern generate --target python --version AUTO --force > "$RUNNER_TEMP/fern.log" 2>&1; then
+          if ! fern generate --target python --version "$SDK_VERSION" --force > "$RUNNER_TEMP/fern.log" 2>&1; then
             echo "::error::Fern generation failed. Inspect the authenticated Fern build; private build logs were not uploaded."
             exit 1
           fi
