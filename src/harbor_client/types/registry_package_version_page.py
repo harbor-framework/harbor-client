@@ -20,6 +20,6 @@ class RegistryPackageVersionPage(BaseModel):
     :type next_page_token: str
     """
 
-    package: Optional[RegistryPackage]
+    package: RegistryPackage
     versions: List[RegistryPackageVersion]
     next_page_token: str
