@@ -5001,7 +5001,9 @@
           "cursor": "$request.page_token",
           "next_cursor": "$response.next_page_token",
           "results": "$response.items"
-        }
+        },
+        "summary": "List jobs (SDK generation verification)",
+        "description": "SDK generation verification: the jobs listing wire contract is unchanged."
       }
     },
     "/v1/jobs/{job_id}/tasks": {
