@@ -44,6 +44,7 @@ JobTrialStatusItemPendingOne = typing.Union[
 JobTrialStatusItemPending = Union[float, str]
 # TypeAdapter for runtime validation of JobTrialStatusItemPending
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 JobTrialStatusItemPending_adapter = TypeAdapter(JobTrialStatusItemPending)
 

@@ -30,5 +30,6 @@ BadRequestErrorBody = Union[
 ]
 # TypeAdapter for runtime validation of BadRequestErrorBody
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 BadRequestErrorBody_adapter = TypeAdapter(BadRequestErrorBody)
