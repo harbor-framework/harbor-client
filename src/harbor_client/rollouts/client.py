@@ -11,16 +11,22 @@ from ..types import (
     BadRequestEncoded,
     CancelTrialRequest,
     ConflictEncoded,
-    FilterValuesResponse,
     ForbiddenEncoded,
     InternalServerErrorEncoded,
     NotFoundEncoded,
     RetryRolloutResponse,
     RolloutResponse,
+    RolloutsGetFiltersRequestAttempts,
+    RolloutsGetFiltersRequestFailedOnly,
     RolloutsGetFiltersRequestField,
+    RolloutsGetFiltersRequestTerminal,
     RolloutsListBadRequestResponse,
+    RolloutsListRequestAttempts,
+    RolloutsListRequestFailedOnly,
     RolloutsListRequestSort,
+    RolloutsListRequestTerminal,
     RunState,
+    TrialFilterValuesResponse,
     TrialPage,
     TrialSummary,
     UnauthorizedEncoded,
@@ -191,6 +197,10 @@ class RolloutsClient(BaseService):
         *,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: RolloutsListRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+        terminal: RolloutsListRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -202,6 +212,7 @@ class RolloutsClient(BaseService):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         sort: RolloutsListRequestSort = SENTINEL,
@@ -213,6 +224,14 @@ class RolloutsClient(BaseService):
         :type task: List[str], optional
         :param state: state, defaults to None
         :type state: RunState, optional
+        :param attempts: attempts, defaults to None
+        :type attempts: RolloutsListRequestAttempts, optional
+        :param error_type: error_type, defaults to None
+        :type error_type: List[str], optional
+        :param failed_only: failed_only, defaults to None
+        :type failed_only: RolloutsListRequestFailedOnly, optional
+        :param terminal: terminal, defaults to None
+        :type terminal: RolloutsListRequestTerminal, optional
         :param name: name, defaults to None
         :type name: str, optional
         :param q: q, defaults to None
@@ -235,6 +254,8 @@ class RolloutsClient(BaseService):
         :type created_before: str, optional
         :param job_id: job_id, defaults to None
         :type job_id: str, optional
+        :param job_ids: job_ids, defaults to None
+        :type job_ids: List[str], optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
@@ -251,6 +272,16 @@ class RolloutsClient(BaseService):
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
+        Validator(RolloutsListRequestAttempts).is_optional().validate(
+            attempts, "attempts"
+        )
+        Validator(str).is_array().is_optional().validate(error_type, "error_type")
+        Validator(RolloutsListRequestFailedOnly).is_optional().validate(
+            failed_only, "failed_only"
+        )
+        Validator(RolloutsListRequestTerminal).is_optional().validate(
+            terminal, "terminal"
+        )
         Validator(str).is_optional().validate(name, "name")
         Validator(str).is_optional().validate(q, "q")
         Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -266,6 +297,7 @@ class RolloutsClient(BaseService):
         Validator(str).is_optional().validate(created_after, "created_after")
         Validator(str).is_optional().validate(created_before, "created_before")
         Validator(str).is_optional().validate(job_id, "job_id")
+        Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
         Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
@@ -287,6 +319,10 @@ class RolloutsClient(BaseService):
                     )
                     .add_query("task", task)
                     .add_query("state", state)
+                    .add_query("attempts", attempts)
+                    .add_query("error_type", error_type)
+                    .add_query("failed_only", failed_only)
+                    .add_query("terminal", terminal)
                     .add_query("name", name)
                     .add_query("q", q)
                     .add_query("agent_name", agent_name)
@@ -298,6 +334,7 @@ class RolloutsClient(BaseService):
                     .add_query("created_after", created_after)
                     .add_query("created_before", created_before)
                     .add_query("job_id", job_id)
+                    .add_query("job_ids", job_ids)
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
                     .add_query("sort", sort)
@@ -333,6 +370,10 @@ class RolloutsClient(BaseService):
         field: RolloutsGetFiltersRequestField,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+        terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -344,9 +385,10 @@ class RolloutsClient(BaseService):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> FilterValuesResponse:
+    ) -> TrialFilterValuesResponse:
         """get_filters
 
         :param field: field
@@ -355,6 +397,14 @@ class RolloutsClient(BaseService):
         :type task: List[str], optional
         :param state: state, defaults to None
         :type state: RunState, optional
+        :param attempts: attempts, defaults to None
+        :type attempts: RolloutsGetFiltersRequestAttempts, optional
+        :param error_type: error_type, defaults to None
+        :type error_type: List[str], optional
+        :param failed_only: failed_only, defaults to None
+        :type failed_only: RolloutsGetFiltersRequestFailedOnly, optional
+        :param terminal: terminal, defaults to None
+        :type terminal: RolloutsGetFiltersRequestTerminal, optional
         :param name: name, defaults to None
         :type name: str, optional
         :param q: q, defaults to None
@@ -377,18 +427,30 @@ class RolloutsClient(BaseService):
         :type created_before: str, optional
         :param job_id: job_id, defaults to None
         :type job_id: str, optional
+        :param job_ids: job_ids, defaults to None
+        :type job_ids: List[str], optional
         :param limit: limit, defaults to None
         :type limit: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: FilterValuesResponse
+        :rtype: TrialFilterValuesResponse
         """
 
         Validator(RolloutsGetFiltersRequestField).validate(field, "field")
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
+        Validator(RolloutsGetFiltersRequestAttempts).is_optional().validate(
+            attempts, "attempts"
+        )
+        Validator(str).is_array().is_optional().validate(error_type, "error_type")
+        Validator(RolloutsGetFiltersRequestFailedOnly).is_optional().validate(
+            failed_only, "failed_only"
+        )
+        Validator(RolloutsGetFiltersRequestTerminal).is_optional().validate(
+            terminal, "terminal"
+        )
         Validator(str).is_optional().validate(name, "name")
         Validator(str).is_optional().validate(q, "q")
         Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -404,6 +466,7 @@ class RolloutsClient(BaseService):
         Validator(str).is_optional().validate(created_after, "created_after")
         Validator(str).is_optional().validate(created_before, "created_before")
         Validator(str).is_optional().validate(job_id, "job_id")
+        Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
         Validator(str).is_optional().validate(limit, "limit")
 
         resolved_config = self._get_resolved_config(
@@ -421,6 +484,10 @@ class RolloutsClient(BaseService):
             )
             .add_query("task", task)
             .add_query("state", state)
+            .add_query("attempts", attempts)
+            .add_query("error_type", error_type)
+            .add_query("failed_only", failed_only)
+            .add_query("terminal", terminal)
             .add_query("name", name)
             .add_query("q", q)
             .add_query("agent_name", agent_name)
@@ -432,6 +499,7 @@ class RolloutsClient(BaseService):
             .add_query("created_after", created_after)
             .add_query("created_before", created_before)
             .add_query("job_id", job_id)
+            .add_query("job_ids", job_ids)
             .add_query("field", field)
             .add_query("limit", limit)
             .add_error(401, UnauthorizedEncoded)
@@ -447,9 +515,9 @@ class RolloutsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                FilterValuesResponse.model_validate(response)
+                TrialFilterValuesResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(FilterValuesResponse, response)
+                else construct_lenient(TrialFilterValuesResponse, response)
             )
         )
 
@@ -718,6 +786,10 @@ class RawRolloutsClient:
         *,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: RolloutsListRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+        terminal: RolloutsListRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -729,6 +801,7 @@ class RawRolloutsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         sort: RolloutsListRequestSort = SENTINEL,
@@ -742,6 +815,10 @@ class RawRolloutsClient:
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -753,6 +830,7 @@ class RawRolloutsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "page_size": page_size,
                         "page_token": page_token,
                         "sort": sort,
@@ -770,6 +848,10 @@ class RawRolloutsClient:
         field: RolloutsGetFiltersRequestField,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+        terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -781,9 +863,10 @@ class RawRolloutsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[FilterValuesResponse]:
+    ) -> HttpResponse[TrialFilterValuesResponse]:
         data = RolloutsClient.get_filters(
             self._client,
             field=field,
@@ -793,6 +876,10 @@ class RawRolloutsClient:
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -804,6 +891,7 @@ class RawRolloutsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL
@@ -902,6 +990,10 @@ class AsyncRolloutsClient(RolloutsClient):
         *,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: RolloutsListRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+        terminal: RolloutsListRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -913,6 +1005,7 @@ class AsyncRolloutsClient(RolloutsClient):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         sort: RolloutsListRequestSort = SENTINEL,
@@ -925,6 +1018,10 @@ class AsyncRolloutsClient(RolloutsClient):
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -936,6 +1033,7 @@ class AsyncRolloutsClient(RolloutsClient):
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "page_size": page_size,
                         "page_token": page_token,
                         "sort": sort,
@@ -962,6 +1060,10 @@ class AsyncRolloutsClient(RolloutsClient):
         field: RolloutsGetFiltersRequestField,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+        terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -973,9 +1075,10 @@ class AsyncRolloutsClient(RolloutsClient):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+    ) -> Awaitable[TrialFilterValuesResponse]:  # type: ignore[override]
         return to_async(super().get_filters)(
             field=field,
             **dict[str, Any](
@@ -984,6 +1087,10 @@ class AsyncRolloutsClient(RolloutsClient):
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -995,6 +1102,7 @@ class AsyncRolloutsClient(RolloutsClient):
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL
@@ -1076,6 +1184,10 @@ class AsyncRawRolloutsClient:
         *,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: RolloutsListRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+        terminal: RolloutsListRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -1087,6 +1199,7 @@ class AsyncRawRolloutsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         sort: RolloutsListRequestSort = SENTINEL,
@@ -1100,6 +1213,10 @@ class AsyncRawRolloutsClient:
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -1111,6 +1228,7 @@ class AsyncRawRolloutsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "page_size": page_size,
                         "page_token": page_token,
                         "sort": sort,
@@ -1128,6 +1246,10 @@ class AsyncRawRolloutsClient:
         field: RolloutsGetFiltersRequestField,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+        terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -1139,9 +1261,10 @@ class AsyncRawRolloutsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[FilterValuesResponse]:
+    ) -> HttpResponse[TrialFilterValuesResponse]:
         data = await AsyncRolloutsClient.get_filters(
             self._client,
             field=field,
@@ -1151,6 +1274,10 @@ class AsyncRawRolloutsClient:
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -1162,6 +1289,7 @@ class AsyncRawRolloutsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL

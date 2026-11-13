@@ -9,7 +9,7 @@ from harbor_client.validation import (
     async_client,
     sync_client,
 )
-from test_contract import BASE, SPEC, response_fixture
+from test_contract import BASE, SPEC, example, response_fixture
 from test_native_operations import arguments, snake
 
 ARRAY_FILTERS = [
@@ -30,6 +30,9 @@ FILTER_IDS = [f"{case[2]['operationId']}-{case[3]['name']}" for case in ARRAY_FI
 async def test_native_array_filters_preserve_every_repeated_value(
     path, verb, operation, parameter, asynchronous, values
 ):
+    item_schema = parameter["schema"]["items"]
+    if item_schema.get("pattern"):
+        values = [example(item_schema, allow_null=False)] * len(values)
     payload = response_fixture(path, verb)
     seen = []
 

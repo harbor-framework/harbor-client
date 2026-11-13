@@ -2657,6 +2657,58 @@
             "required": false
           },
           {
+            "name": "attempts",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "latest"
+              ],
+              "description": "All readable attempts by default; latest selects the newest readable attempt per logical trial before applying other filters.",
+              "default": "all"
+            },
+            "required": false
+          },
+          {
+            "name": "error_type",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "failed_only",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Select trials with a recorded error when true."
+            },
+            "required": false
+          },
+          {
+            "name": "terminal",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials."
+            },
+            "required": false
+          },
+          {
             "name": "name",
             "in": "query",
             "schema": {
@@ -2774,6 +2826,21 @@
             "required": false
           },
           {
+            "name": "job_ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+              },
+              "minItems": 1,
+              "maxItems": 100,
+              "description": "Restrict to these jobs; combined with job_id by intersection."
+            },
+            "required": false
+          },
+          {
             "name": "page_size",
             "in": "query",
             "schema": {
@@ -2832,7 +2899,9 @@
                     "n_output_tokens",
                     "-n_output_tokens",
                     "cost_usd",
-                    "-cost_usd"
+                    "-cost_usd",
+                    "error_type",
+                    "-error_type"
                   ]
                 }
               ]
@@ -3074,6 +3143,58 @@
             "required": false
           },
           {
+            "name": "attempts",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "latest"
+              ],
+              "description": "All readable attempts by default; latest selects the newest readable attempt per logical trial before applying other filters.",
+              "default": "all"
+            },
+            "required": false
+          },
+          {
+            "name": "error_type",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "failed_only",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Select trials with a recorded error when true."
+            },
+            "required": false
+          },
+          {
+            "name": "terminal",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials."
+            },
+            "required": false
+          },
+          {
             "name": "name",
             "in": "query",
             "schema": {
@@ -3191,6 +3312,21 @@
             "required": false
           },
           {
+            "name": "job_ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+              },
+              "minItems": 1,
+              "maxItems": 100,
+              "description": "Restrict to these jobs; combined with job_id by intersection."
+            },
+            "required": false
+          },
+          {
             "name": "page_size",
             "in": "query",
             "schema": {
@@ -3249,7 +3385,9 @@
                     "n_output_tokens",
                     "-n_output_tokens",
                     "cost_usd",
-                    "-cost_usd"
+                    "-cost_usd",
+                    "error_type",
+                    "-error_type"
                   ]
                 }
               ]
@@ -3384,6 +3522,58 @@
             "required": false
           },
           {
+            "name": "attempts",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "latest"
+              ],
+              "description": "All readable attempts by default; latest selects the newest readable attempt per logical trial before applying other filters.",
+              "default": "all"
+            },
+            "required": false
+          },
+          {
+            "name": "error_type",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "failed_only",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Select trials with a recorded error when true."
+            },
+            "required": false
+          },
+          {
+            "name": "terminal",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials."
+            },
+            "required": false
+          },
+          {
             "name": "name",
             "in": "query",
             "schema": {
@@ -3501,12 +3691,28 @@
             "required": false
           },
           {
+            "name": "job_ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+              },
+              "minItems": 1,
+              "maxItems": 100,
+              "description": "Restrict to these jobs; combined with job_id by intersection."
+            },
+            "required": false
+          },
+          {
             "name": "field",
             "in": "query",
             "schema": {
               "type": "string",
               "enum": [
                 "state",
+                "error_type",
                 "task",
                 "agent_name",
                 "agent_version",
@@ -3547,11 +3753,11 @@
         ],
         "responses": {
           "200": {
-            "description": "FilterValuesResponse",
+            "description": "TrialFilterValuesResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FilterValuesResponse"
+                  "$ref": "#/components/schemas/TrialFilterValuesResponse"
                 }
               }
             }
@@ -3639,6 +3845,58 @@
             "required": false
           },
           {
+            "name": "attempts",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "latest"
+              ],
+              "description": "All readable attempts by default; latest selects the newest readable attempt per logical trial before applying other filters.",
+              "default": "all"
+            },
+            "required": false
+          },
+          {
+            "name": "error_type",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "failed_only",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Select trials with a recorded error when true."
+            },
+            "required": false
+          },
+          {
+            "name": "terminal",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials."
+            },
+            "required": false
+          },
+          {
             "name": "name",
             "in": "query",
             "schema": {
@@ -3756,12 +4014,28 @@
             "required": false
           },
           {
+            "name": "job_ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+              },
+              "minItems": 1,
+              "maxItems": 100,
+              "description": "Restrict to these jobs; combined with job_id by intersection."
+            },
+            "required": false
+          },
+          {
             "name": "field",
             "in": "query",
             "schema": {
               "type": "string",
               "enum": [
                 "state",
+                "error_type",
                 "task",
                 "agent_name",
                 "agent_version",
@@ -3802,11 +4076,11 @@
         ],
         "responses": {
           "200": {
-            "description": "FilterValuesResponse",
+            "description": "TrialFilterValuesResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FilterValuesResponse"
+                  "$ref": "#/components/schemas/TrialFilterValuesResponse"
                 }
               }
             }
@@ -19320,6 +19594,57 @@
         },
         "required": [
           "trial"
+        ],
+        "additionalProperties": false
+      },
+      "TrialFilterValuesResponse": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "state",
+              "error_type",
+              "task",
+              "agent_name",
+              "agent_version",
+              "model_name",
+              "model_provider",
+              "reasoning_effort",
+              "source"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "value",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "truncated": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "field",
+          "values"
         ],
         "additionalProperties": false
       },

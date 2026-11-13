@@ -40,6 +40,8 @@ TrialsListRequestSort = typing.Union[
         "-n_output_tokens",
         "cost_usd",
         "-cost_usd",
+        "error_type",
+        "-error_type",
     ],
     typing.Any,
 ]
