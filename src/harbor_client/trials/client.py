@@ -259,10 +259,23 @@ class TrialsClient(BaseService):
     def cancel(
         self,
         *,
-        request: CancelTrialsRequest,
+        job_id: Union[str, None] = SENTINEL,
+        trial_ids: Union[List[str], None] = SENTINEL,
+        search: Union[str, None] = SENTINEL,
+        agents: Union[List[str], None] = SENTINEL,
+        agent_version: Union[str, None] = SENTINEL,
+        providers: Union[List[str], None] = SENTINEL,
+        models: Union[List[str], None] = SENTINEL,
+        tasks: Union[List[str], None] = SENTINEL,
+        exceptions: Union[List[str], None] = SENTINEL,
+        failed_only: Union[bool, None] = SENTINEL,
+        config_filters: Union[dict, None] = SENTINEL,
+        all_: Union[bool, None] = SENTINEL,
+        reason: Union[str, None] = SENTINEL,
+        finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> CancelTrialsResponse:
-        """Cancel the latest active attempts. Send {job_id: null, trial_ids: [...], soft: false} for IDs across jobs, or select a job with explicit filters or all: true.
+        """Cancel the latest active attempts. Send trial_ids alone to select trials across jobs. An optional job_id asserts that every trial belongs to that job. For job-scoped selection, send job_id with filters or all: true. The server resolves jobs and validates the batch before making changes. The response includes counts by job.
 
         :param request_body: The request body.
         :type request_body: CancelTrialsRequest
@@ -277,7 +290,30 @@ class TrialsClient(BaseService):
             self._cancel_config, request_options
         )
 
-        request_body = request
+        request_body = CancelTrialsRequest(
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "job_id": job_id,
+                        "trial_ids": trial_ids,
+                        "search": search,
+                        "agents": agents,
+                        "agent_version": agent_version,
+                        "providers": providers,
+                        "models": models,
+                        "tasks": tasks,
+                        "exceptions": exceptions,
+                        "failed_only": failed_only,
+                        "config_filters": config_filters,
+                        "all_": all_,
+                        "reason": reason,
+                        "finish_running": finish_running,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            )
+        )
         Validator(CancelTrialsRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
@@ -312,10 +348,21 @@ class TrialsClient(BaseService):
     def retry(
         self,
         *,
-        request: RetryTrialsRequest,
+        job_id: Union[str, None] = SENTINEL,
+        trial_ids: Union[List[str], None] = SENTINEL,
+        search: Union[str, None] = SENTINEL,
+        agents: Union[List[str], None] = SENTINEL,
+        agent_version: Union[str, None] = SENTINEL,
+        providers: Union[List[str], None] = SENTINEL,
+        models: Union[List[str], None] = SENTINEL,
+        tasks: Union[List[str], None] = SENTINEL,
+        exceptions: Union[List[str], None] = SENTINEL,
+        failed_only: Union[bool, None] = SENTINEL,
+        config_filters: Union[dict, None] = SENTINEL,
+        all_: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> RetryTrialsResponse:
-        """Retry the latest terminal attempts. Send {job_id: null, trial_ids: [...]} for IDs across jobs, or select a job with explicit filters or all: true.
+        """Retry the latest terminal attempts. Send trial_ids alone to select trials across jobs. An optional job_id asserts that every trial belongs to that job. For job-scoped selection, send job_id with filters or all: true. The server resolves jobs and validates the batch before making changes. The response includes counts by job.
 
         :param request_body: The request body.
         :type request_body: RetryTrialsRequest
@@ -328,7 +375,28 @@ class TrialsClient(BaseService):
 
         resolved_config = self._get_resolved_config(self._retry_config, request_options)
 
-        request_body = request
+        request_body = RetryTrialsRequest(
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "job_id": job_id,
+                        "trial_ids": trial_ids,
+                        "search": search,
+                        "agents": agents,
+                        "agent_version": agent_version,
+                        "providers": providers,
+                        "models": models,
+                        "tasks": tasks,
+                        "exceptions": exceptions,
+                        "failed_only": failed_only,
+                        "config_filters": config_filters,
+                        "all_": all_,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            )
+        )
         Validator(RetryTrialsRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
@@ -493,7 +561,6 @@ class TrialsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobTrialSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(job_ids, "job_ids")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -563,6 +630,9 @@ class TrialsClient(BaseService):
                     else construct_lenient(JobTrialPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -715,22 +785,90 @@ class RawTrialsClient:
     def cancel(
         self,
         *,
-        request: CancelTrialsRequest,
+        job_id: Union[str, None] = SENTINEL,
+        trial_ids: Union[List[str], None] = SENTINEL,
+        search: Union[str, None] = SENTINEL,
+        agents: Union[List[str], None] = SENTINEL,
+        agent_version: Union[str, None] = SENTINEL,
+        providers: Union[List[str], None] = SENTINEL,
+        models: Union[List[str], None] = SENTINEL,
+        tasks: Union[List[str], None] = SENTINEL,
+        exceptions: Union[List[str], None] = SENTINEL,
+        failed_only: Union[bool, None] = SENTINEL,
+        config_filters: Union[dict, None] = SENTINEL,
+        all_: Union[bool, None] = SENTINEL,
+        reason: Union[str, None] = SENTINEL,
+        finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[CancelTrialsResponse]:
         data = TrialsClient.cancel(
-            self._client, request=request, request_options=request_options
+            self._client,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "job_id": job_id,
+                        "trial_ids": trial_ids,
+                        "search": search,
+                        "agents": agents,
+                        "agent_version": agent_version,
+                        "providers": providers,
+                        "models": models,
+                        "tasks": tasks,
+                        "exceptions": exceptions,
+                        "failed_only": failed_only,
+                        "config_filters": config_filters,
+                        "all_": all_,
+                        "reason": reason,
+                        "finish_running": finish_running,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     def retry(
         self,
         *,
-        request: RetryTrialsRequest,
+        job_id: Union[str, None] = SENTINEL,
+        trial_ids: Union[List[str], None] = SENTINEL,
+        search: Union[str, None] = SENTINEL,
+        agents: Union[List[str], None] = SENTINEL,
+        agent_version: Union[str, None] = SENTINEL,
+        providers: Union[List[str], None] = SENTINEL,
+        models: Union[List[str], None] = SENTINEL,
+        tasks: Union[List[str], None] = SENTINEL,
+        exceptions: Union[List[str], None] = SENTINEL,
+        failed_only: Union[bool, None] = SENTINEL,
+        config_filters: Union[dict, None] = SENTINEL,
+        all_: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[RetryTrialsResponse]:
         data = TrialsClient.retry(
-            self._client, request=request, request_options=request_options
+            self._client,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "job_id": job_id,
+                        "trial_ids": trial_ids,
+                        "search": search,
+                        "agents": agents,
+                        "agent_version": agent_version,
+                        "providers": providers,
+                        "models": models,
+                        "tasks": tasks,
+                        "exceptions": exceptions,
+                        "failed_only": failed_only,
+                        "config_filters": config_filters,
+                        "all_": all_,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
@@ -907,20 +1045,88 @@ class AsyncTrialsClient(TrialsClient):
     def cancel(
         self,
         *,
-        request: CancelTrialsRequest,
+        job_id: Union[str, None] = SENTINEL,
+        trial_ids: Union[List[str], None] = SENTINEL,
+        search: Union[str, None] = SENTINEL,
+        agents: Union[List[str], None] = SENTINEL,
+        agent_version: Union[str, None] = SENTINEL,
+        providers: Union[List[str], None] = SENTINEL,
+        models: Union[List[str], None] = SENTINEL,
+        tasks: Union[List[str], None] = SENTINEL,
+        exceptions: Union[List[str], None] = SENTINEL,
+        failed_only: Union[bool, None] = SENTINEL,
+        config_filters: Union[dict, None] = SENTINEL,
+        all_: Union[bool, None] = SENTINEL,
+        reason: Union[str, None] = SENTINEL,
+        finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> Awaitable[CancelTrialsResponse]:  # type: ignore[override]
         return to_async(super().cancel)(
-            request=request, request_options=request_options
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "job_id": job_id,
+                        "trial_ids": trial_ids,
+                        "search": search,
+                        "agents": agents,
+                        "agent_version": agent_version,
+                        "providers": providers,
+                        "models": models,
+                        "tasks": tasks,
+                        "exceptions": exceptions,
+                        "failed_only": failed_only,
+                        "config_filters": config_filters,
+                        "all_": all_,
+                        "reason": reason,
+                        "finish_running": finish_running,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
 
     def retry(
         self,
         *,
-        request: RetryTrialsRequest,
+        job_id: Union[str, None] = SENTINEL,
+        trial_ids: Union[List[str], None] = SENTINEL,
+        search: Union[str, None] = SENTINEL,
+        agents: Union[List[str], None] = SENTINEL,
+        agent_version: Union[str, None] = SENTINEL,
+        providers: Union[List[str], None] = SENTINEL,
+        models: Union[List[str], None] = SENTINEL,
+        tasks: Union[List[str], None] = SENTINEL,
+        exceptions: Union[List[str], None] = SENTINEL,
+        failed_only: Union[bool, None] = SENTINEL,
+        config_filters: Union[dict, None] = SENTINEL,
+        all_: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
-        return to_async(super().retry)(request=request, request_options=request_options)
+        return to_async(super().retry)(
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "job_id": job_id,
+                        "trial_ids": trial_ids,
+                        "search": search,
+                        "agents": agents,
+                        "agent_version": agent_version,
+                        "providers": providers,
+                        "models": models,
+                        "tasks": tasks,
+                        "exceptions": exceptions,
+                        "failed_only": failed_only,
+                        "config_filters": config_filters,
+                        "all_": all_,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
+        )
 
     def copy(
         self,
@@ -997,11 +1203,7 @@ class AsyncTrialsClient(TrialsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1101,22 +1303,90 @@ class AsyncRawTrialsClient:
     async def cancel(
         self,
         *,
-        request: CancelTrialsRequest,
+        job_id: Union[str, None] = SENTINEL,
+        trial_ids: Union[List[str], None] = SENTINEL,
+        search: Union[str, None] = SENTINEL,
+        agents: Union[List[str], None] = SENTINEL,
+        agent_version: Union[str, None] = SENTINEL,
+        providers: Union[List[str], None] = SENTINEL,
+        models: Union[List[str], None] = SENTINEL,
+        tasks: Union[List[str], None] = SENTINEL,
+        exceptions: Union[List[str], None] = SENTINEL,
+        failed_only: Union[bool, None] = SENTINEL,
+        config_filters: Union[dict, None] = SENTINEL,
+        all_: Union[bool, None] = SENTINEL,
+        reason: Union[str, None] = SENTINEL,
+        finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[CancelTrialsResponse]:
         data = await AsyncTrialsClient.cancel(
-            self._client, request=request, request_options=request_options
+            self._client,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "job_id": job_id,
+                        "trial_ids": trial_ids,
+                        "search": search,
+                        "agents": agents,
+                        "agent_version": agent_version,
+                        "providers": providers,
+                        "models": models,
+                        "tasks": tasks,
+                        "exceptions": exceptions,
+                        "failed_only": failed_only,
+                        "config_filters": config_filters,
+                        "all_": all_,
+                        "reason": reason,
+                        "finish_running": finish_running,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def retry(
         self,
         *,
-        request: RetryTrialsRequest,
+        job_id: Union[str, None] = SENTINEL,
+        trial_ids: Union[List[str], None] = SENTINEL,
+        search: Union[str, None] = SENTINEL,
+        agents: Union[List[str], None] = SENTINEL,
+        agent_version: Union[str, None] = SENTINEL,
+        providers: Union[List[str], None] = SENTINEL,
+        models: Union[List[str], None] = SENTINEL,
+        tasks: Union[List[str], None] = SENTINEL,
+        exceptions: Union[List[str], None] = SENTINEL,
+        failed_only: Union[bool, None] = SENTINEL,
+        config_filters: Union[dict, None] = SENTINEL,
+        all_: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[RetryTrialsResponse]:
         data = await AsyncTrialsClient.retry(
-            self._client, request=request, request_options=request_options
+            self._client,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "job_id": job_id,
+                        "trial_ids": trial_ids,
+                        "search": search,
+                        "agents": agents,
+                        "agent_version": agent_version,
+                        "providers": providers,
+                        "models": models,
+                        "tasks": tasks,
+                        "exceptions": exceptions,
+                        "failed_only": failed_only,
+                        "config_filters": config_filters,
+                        "all_": all_,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
