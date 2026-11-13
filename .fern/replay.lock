@@ -16904,11 +16904,11 @@ patches:
       -        generate_export_stubs(Path(self.build_lib) / "harbor_client")
     user_owned: true
   - id: patch-54e30fcc
-    content_hash: sha256:0aecaf61803de2acecbb14bef66c1ac9353d8643d1fad454deeb56d73881ecb2
+    content_hash: sha256:fbc06a249f400352f09cdfae6864bcae10f98f32748c7fd8a930e1f34a1eea11
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
+    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
     files:
       - examples/sample.py
       - src/harbor_client/rollouts/client.py
@@ -16984,7 +16984,7 @@ patches:
        
        RolloutsListBadRequestResponse_adapter = TypeAdapter(RolloutsListBadRequestResponse)
       diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
-      index cd3822c..856689d 100644
+      index d52cd18..f1e1462 100644
       --- a/src/harbor_client/types/trial_detail.py
       +++ b/src/harbor_client/types/trial_detail.py
       @@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
@@ -17005,18 +17005,6 @@ patches:
            usage: Usage
            error_type: Optional[str]
            lock: Optional[Dict[str, Any]] = Field(
-      @@ -95,9 +95,9 @@ class TrialDetail(BaseModel):
-           artifacts: Dict[str, str] = Field(
-               description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
-           )
-      -    storage_error: Optional[Any] = Field(
-      +    storage_error: None = Field(
-               description="Storage failures are not persisted in the trial resource."
-           )
-      -    result: Optional[Any] = Field(
-      +    result: None = Field(
-               description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
-           )
     theirs_snapshot:
       examples/sample.py: |
         from harbor_client import HarborAPIClient
@@ -18246,165 +18234,6 @@ patches:
                     request_options=request_options,
                 )
                 return HttpResponse(data=data, response_source=lambda: data.last_response)
-      src/harbor_client/types/job_detail.py: |
-        from __future__ import annotations
-        from typing import List
-        from pydantic import Field
-        from typing import Optional
-        from typing import Any
-        from typing import Union
-        from typing import Dict
-        from .utils.base_model import BaseModel
-        from .run_state import RunState
-        from .trial_counts import TrialCounts
-        from .mean_aggregate import MeanAggregate
-        from .usage_aggregates import UsageAggregates
-
-
-        class JobDetail(BaseModel):
-            """JobDetail
-
-            :param created_at: created_at
-            :type created_at: str
-            :param updated_at: updated_at
-            :type updated_at: str
-            :param started_at: started_at
-            :type started_at: str
-            :param finished_at: finished_at
-            :type finished_at: str
-            :param id: id
-            :type id: str
-            :param name: name
-            :type name: str
-            :param state: state
-            :type state: RunState
-            :param rollouts: rollouts
-            :type rollouts: TrialCounts
-            :param trials: trials, defaults to None
-            :type trials: TrialCounts, optional
-            :param n_retries: n_retries
-            :type n_retries: int
-            :param n_errors: n_errors
-            :type n_errors: int
-            :param agent_names: agent_names
-            :type agent_names: List[str]
-            :param model_names: model_names
-            :type model_names: List[str]
-            :param model_providers: model_providers
-            :type model_providers: List[str]
-            :param reasoning_efforts: reasoning_efforts
-            :type reasoning_efforts: List[str]
-            :param sources: sources
-            :type sources: List[str]
-            :param rewards: rewards
-            :type rewards: Dict[str, MeanAggregate]
-            :param usage: usage
-            :type usage: UsageAggregates
-            :param lock_uri: Null when no standalone job lock was stored. Artifact downloads use the storage API.
-            :type lock_uri: str
-            :param config: config
-            :type config: Dict[str, Any]
-            :param session_id: session_id
-            :type session_id: str
-            """
-
-            created_at: str
-            updated_at: str
-            started_at: Optional[str]
-            finished_at: Optional[str]
-            id: str
-            name: str
-            state: RunState
-            rollouts: TrialCounts
-            trials: Optional[TrialCounts] = Field(default=None)
-            n_retries: int
-            n_errors: int
-            agent_names: List[str]
-            model_names: List[str]
-            model_providers: List[str]
-            reasoning_efforts: List[str]
-            sources: List[str]
-            rewards: Dict[str, MeanAggregate]
-            usage: UsageAggregates
-            lock_uri: Optional[str] = Field(
-                description="Null when no standalone job lock was stored. Artifact downloads use the storage API."
-            )
-            config: Dict[str, Any]
-            session_id: Optional[str]
-      src/harbor_client/types/job_summary.py: |
-        from __future__ import annotations
-        from typing import List
-        from pydantic import Field
-        from typing import Optional
-        from typing import Any
-        from typing import Union
-        from typing import Dict
-        from .utils.base_model import BaseModel
-        from .run_state import RunState
-        from .trial_counts import TrialCounts
-        from .mean_aggregate import MeanAggregate
-        from .usage_aggregates import UsageAggregates
-
-
-        class JobSummary(BaseModel):
-            """JobSummary
-
-            :param created_at: created_at
-            :type created_at: str
-            :param updated_at: updated_at
-            :type updated_at: str
-            :param started_at: started_at
-            :type started_at: str
-            :param finished_at: finished_at
-            :type finished_at: str
-            :param id: id
-            :type id: str
-            :param name: name
-            :type name: str
-            :param state: state
-            :type state: RunState
-            :param rollouts: rollouts
-            :type rollouts: TrialCounts
-            :param trials: trials, defaults to None
-            :type trials: TrialCounts, optional
-            :param n_retries: n_retries
-            :type n_retries: int
-            :param n_errors: n_errors
-            :type n_errors: int
-            :param agent_names: agent_names
-            :type agent_names: List[str]
-            :param model_names: model_names
-            :type model_names: List[str]
-            :param model_providers: model_providers
-            :type model_providers: List[str]
-            :param reasoning_efforts: reasoning_efforts
-            :type reasoning_efforts: List[str]
-            :param sources: sources
-            :type sources: List[str]
-            :param rewards: rewards
-            :type rewards: Dict[str, MeanAggregate]
-            :param usage: usage
-            :type usage: UsageAggregates
-            """
-
-            created_at: str
-            updated_at: str
-            started_at: Optional[str]
-            finished_at: Optional[str]
-            id: str
-            name: str
-            state: RunState
-            rollouts: TrialCounts
-            trials: Optional[TrialCounts] = Field(default=None)
-            n_retries: int
-            n_errors: int
-            agent_names: List[str]
-            model_names: List[str]
-            model_providers: List[str]
-            reasoning_efforts: List[str]
-            sources: List[str]
-            rewards: Dict[str, MeanAggregate]
-            usage: UsageAggregates
       src/harbor_client/types/jobs_submit_response.py: |
         from __future__ import annotations
         from typing import Union
@@ -18524,10 +18353,10 @@ patches:
             :type lock: Dict[str, Any]
             :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
             :type artifacts: Dict[str, str]
-            :param storage_error: Storage failures are not persisted in the trial resource.
-            :type storage_error: Any
-            :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
-            :type result: Any
+            :param storage_error: Structured storage failure when available; otherwise null.
+            :type storage_error: Dict[str, Any]
+            :param result: Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers.
+            :type result: Dict[str, Any]
             """
 
             created_at: str
@@ -18554,57 +18383,22 @@ patches:
             artifacts: Dict[str, str] = Field(
                 description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
             )
-            storage_error: None = Field(
-                description="Storage failures are not persisted in the trial resource."
+            storage_error: Optional[Dict[str, Any]] = Field(
+                description="Structured storage failure when available; otherwise null."
             )
-            result: None = Field(
-                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+            result: Optional[Dict[str, Any]] = Field(
+                description="Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
             )
-    status: unresolved
   - id: patch-7c950c27
-    content_hash: sha256:ed546c9a6047cd81b922d80f5b2332001da81878afd51bbf7113c0660ff108ef
+    content_hash: sha256:ae6678991ecc9d67d79dff42897c7afce1eac47ec0efa83c76ad5872656b8a30
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
+    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
     patch_content: |
-      diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
-      index cd3822c..856689d 100644
-      --- a/src/harbor_client/types/trial_detail.py
-      +++ b/src/harbor_client/types/trial_detail.py
-      @@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
-           :param model: model
-           :type model: ModelIdentity
-           :param rewards: rewards
-      -    :type rewards: Dict[str, float]
-      +    :type rewards: Dict[str, Optional[float]]
-           :param usage: usage
-           :type usage: Usage
-           :param error_type: error_type
-      @@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
-           task: TaskIdentity
-           agent: AgentIdentity
-           model: ModelIdentity
-      -    rewards: Optional[Dict[str, float]]
-      +    rewards: Optional[Dict[str, Optional[float]]]
-           usage: Usage
-           error_type: Optional[str]
-           lock: Optional[Dict[str, Any]] = Field(
-      @@ -95,9 +95,9 @@ class TrialDetail(BaseModel):
-           artifacts: Dict[str, str] = Field(
-               description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
-           )
-      -    storage_error: Optional[Any] = Field(
-      +    storage_error: None = Field(
-               description="Storage failures are not persisted in the trial resource."
-           )
-      -    result: Optional[Any] = Field(
-      +    result: None = Field(
-               description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
-           )
       diff --git a/src/harbor_client/types/trial_summary.py b/src/harbor_client/types/trial_summary.py
       index e55e2d5..0004203 100644
       --- a/src/harbor_client/types/trial_summary.py
@@ -18626,6 +18420,28 @@ patches:
       +    rewards: Optional[Dict[str, Optional[float]]]
            usage: Usage
            error_type: Optional[str]
+      diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
+      index d52cd18..f1e1462 100644
+      --- a/src/harbor_client/types/trial_detail.py
+      +++ b/src/harbor_client/types/trial_detail.py
+      @@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
+           :param model: model
+           :type model: ModelIdentity
+           :param rewards: rewards
+      -    :type rewards: Dict[str, float]
+      +    :type rewards: Dict[str, Optional[float]]
+           :param usage: usage
+           :type usage: Usage
+           :param error_type: error_type
+      @@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
+           task: TaskIdentity
+           agent: AgentIdentity
+           model: ModelIdentity
+      -    rewards: Optional[Dict[str, float]]
+      +    rewards: Optional[Dict[str, Optional[float]]]
+           usage: Usage
+           error_type: Optional[str]
+           lock: Optional[Dict[str, Any]] = Field(
     theirs_snapshot:
       src/harbor_client/types/trial_detail.py: |
         from __future__ import annotations
@@ -18695,10 +18511,10 @@ patches:
             :type lock: Dict[str, Any]
             :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
             :type artifacts: Dict[str, str]
-            :param storage_error: Storage failures are not persisted in the trial resource.
-            :type storage_error: Any
-            :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
-            :type result: Any
+            :param storage_error: Structured storage failure when available; otherwise null.
+            :type storage_error: Dict[str, Any]
+            :param result: Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers.
+            :type result: Dict[str, Any]
             """
 
             created_at: str
@@ -18725,11 +18541,11 @@ patches:
             artifacts: Dict[str, str] = Field(
                 description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
             )
-            storage_error: None = Field(
-                description="Storage failures are not persisted in the trial resource."
+            storage_error: Optional[Dict[str, Any]] = Field(
+                description="Structured storage failure when available; otherwise null."
             )
-            result: None = Field(
-                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+            result: Optional[Dict[str, Any]] = Field(
+                description="Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
             )
       src/harbor_client/types/trial_summary.py: |
         from __future__ import annotations
@@ -18815,7 +18631,6 @@ patches:
             rewards: Optional[Dict[str, Optional[float]]]
             usage: Usage
             error_type: Optional[str]
-    status: unresolved
   - id: patch-081259ba
     content_hash: sha256:b90a665b4916b159c296d8179d93a7dcdb6ff275561e8c8361f6b65e6284b551
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
