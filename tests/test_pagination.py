@@ -123,6 +123,7 @@ def test_every_cursor_endpoint_has_exact_native_metadata_and_a_pager_method():
         "jobs.list",
         "jobs.listTasks",
         "trials.list",
+        "rollouts.list",
         "packages.listVersionFiles",
         "packages.listVersionCatalog",
         "packages.listVersions",
@@ -197,14 +198,14 @@ async def test_every_native_pager_exposes_one_page_with_original_metadata(
     assert body == payload
 
 
+@pytest.mark.parametrize("path", ["/v1/api-keys", "/v1/trials", "/v1/rollouts"])
 @pytest.mark.parametrize(
     "empty_position", [0, 1, 2], ids=["first", "middle", "terminal"]
 )
 @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
 async def test_native_cursor_iteration_preserves_opaque_tokens_through_empty_batches(
-    empty_position, asynchronous
+    empty_position, asynchronous, path
 ):
-    path = "/v1/api-keys"
     item = item_for(path)
     tokens = [None, "opaque+/cursor==", "next?&=cursor"]
     calls = []
@@ -213,27 +214,27 @@ async def test_native_cursor_iteration_preserves_opaque_tokens_through_empty_bat
         position = len(calls)
         calls.append(request.url.params.get("page_token"))
         assert position < 3, "Fetched beyond the terminal empty cursor"
-        return httpx.Response(
-            200,
-            json={
-                "api_keys": [] if position == empty_position else [item],
-                "total_size": 2,
-                "next_page_token": tokens[position + 1] if position < 2 else "",
-            },
-        )
+        payload = response_fixture(path)
+        info = CURSORS[path]["x-fern-pagination"]
+        put(payload, info["results"], [] if position == empty_position else [item])
+        put(payload, info["next_cursor"], tokens[position + 1] if position < 2 else "")
+        return httpx.Response(200, json=payload)
 
     transport = httpx.MockTransport(handler)
     if asynchronous:
         async with async_client(token="test", transport=transport) as client:
-            values = [item async for item in client.api_keys.list()]
+            values = [item async for item in getattr(client, METHODS[path][0]).list()]
     else:
         with sync_client(token="test", transport=transport) as client:
-            values = list(client.api_keys.list())
+            values = list(getattr(client, METHODS[path][0]).list())
     assert len(values) == 2
     assert calls == tokens
 
 
-async def test_native_async_pages_use_workers_and_propagate_context_and_rotating_auth():
+@pytest.mark.parametrize("path", ["/v1/api-keys", "/v1/trials", "/v1/rollouts"])
+async def test_native_async_pages_use_workers_and_propagate_context_and_rotating_auth(
+    path,
+):
     tag = ContextVar("pager_test_scope", default="missing")
     tag.set("active")
     caller = get_ident()
@@ -245,19 +246,16 @@ async def test_native_async_pages_use_workers_and_propagate_context_and_rotating
         assert tag.get() == "active"
         threads.append(get_ident())
         headers.append(request.headers["authorization"])
-        return httpx.Response(
-            200,
-            json={
-                "api_keys": [],
-                "next_page_token": "opaque" if len(headers) == 1 else "",
-                "total_size": 0,
-            },
-        )
+        payload = response_fixture(path)
+        info = CURSORS[path]["x-fern-pagination"]
+        put(payload, info["results"], [])
+        put(payload, info["next_cursor"], "opaque" if len(headers) == 1 else "")
+        return httpx.Response(200, json=payload)
 
     async with async_client(
         token=lambda: token[0], transport=httpx.MockTransport(handler)
     ) as client:
-        batches = client.api_keys.list().iter_pages()
+        batches = getattr(client, METHODS[path][0]).list().iter_pages()
         assert await anext(batches) == []
         token[0] = "second"
         assert await anext(batches) == []
@@ -338,3 +336,58 @@ async def test_concurrent_native_pagers_keep_their_own_response_metadata(monkeyp
         assert first.last_response.body["total_size"] == 11
         assert second.last_response.body["total_size"] == 22
     assert len(requests) == 2 and pool.closes == 1
+
+
+@pytest.mark.parametrize(
+    "resource,page_model", [("trials", "TrialPage"), ("rollouts", "TrialPage1")]
+)
+async def test_execution_pagers_keep_concurrent_response_metadata(
+    monkeypatch, resource, page_model
+):
+    from harbor_client import types
+
+    first_id, second_id = UUID, "22222222-2222-4222-8222-222222222222"
+    started, release = Event(), Event()
+    model = getattr(types, page_model)
+    original = model.model_validate
+
+    def validate(cls, value, *args, **kwargs):
+        if value["items"][0]["id"] == first_id:
+            started.set()
+            if not release.wait(5):
+                raise RuntimeError("First execution page decode was not released")
+        return original(value, *args, **kwargs)
+
+    monkeypatch.setattr(model, "model_validate", classmethod(validate))
+    path = f"/v1/{resource}"
+
+    def handler(request):
+        first = request.url.params["q"] == "first"
+        payload = response_fixture(path)
+        item = item_for(path)
+        item["id"] = first_id if first else second_id
+        payload.update(items=[item], total=11 if first else 22, next_page_token="")
+        return httpx.Response(200, json=payload)
+
+    async with async_client(transport=httpx.MockTransport(handler)) as client:
+        service = getattr(client, resource)
+        first, second = service.list(q="first"), service.list(q="second")
+        async with asyncio.TaskGroup() as group:
+            task = group.create_task(anext(first.iter_pages()))
+            try:
+                assert await asyncio.to_thread(started.wait, 5)
+                second_batch = await anext(second.iter_pages())
+            finally:
+                release.set()
+        assert (
+            task.result()[0].id
+            == first.last_response.body["items"][0]["id"]
+            == first_id
+        )
+        assert (
+            second_batch[0].id
+            == second.last_response.body["items"][0]["id"]
+            == second_id
+        )
+        assert first.last_response.body["total"] == 11
+        assert second.last_response.body["total"] == 22

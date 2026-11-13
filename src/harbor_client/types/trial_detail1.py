@@ -95,9 +95,9 @@ class TrialDetail1(BaseModel):
     artifacts: Dict[str, str] = Field(
         description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
     )
-    storage_error: Optional[Any] = Field(
+    storage_error: None = Field(
         description="Storage failures are not persisted in the trial resource."
     )
-    result: Optional[Any] = Field(
+    result: None = Field(
         description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
     )

@@ -128,7 +128,7 @@ def test_open_agent_config_stays_open_and_valid_submission_works():
 @pytest.mark.parametrize("value", [0, "invalid", [], {}])
 def test_null_only_response_is_rejected_before_generated_decoder(value):
     payload = response_fixture("/v1/trials/{trial_id}")
-    payload["step_results"] = value
+    payload["trial"]["result"] = value
     with sync_client(
         token="key",
         transport=httpx.MockTransport(
@@ -141,7 +141,7 @@ def test_null_only_response_is_rejected_before_generated_decoder(value):
 
 def test_required_nullable_response_accepts_null_and_a_real_detail():
     payload = response_fixture("/v1/trials/{trial_id}")
-    assert payload["step_results"] is None
+    assert payload["trial"]["result"] is None
     with sync_client(
         token="key",
         transport=httpx.MockTransport(
@@ -149,7 +149,7 @@ def test_required_nullable_response_accepts_null_and_a_real_detail():
         ),
     ) as client:
         detail = client.trials.get(trial_id=UUID)
-    assert detail.step_results is None
+    assert detail.trial.result is None
 
 
 def test_checked_reads_send_auth_and_preserve_empty_strings_and_opaque_cursors():
@@ -162,11 +162,11 @@ def test_checked_reads_send_auth_and_preserve_empty_strings_and_opaque_cursors()
         )
 
     with sync_client(token="key", transport=httpx.MockTransport(handler)) as client:
-        pager = client.jobs.list(scope="my", search="", page_token="opaque/+=token")
+        pager = client.jobs.list(q="", page_token="opaque/+=token")
         assert next(pager.iter_pages()) == []
         assert pager.last_response.body["total"] == 0
     assert requests[0].headers["authorization"] == "Bearer key"
-    assert requests[0].url.params["search"] == ""
+    assert requests[0].url.params["q"] == ""
     assert requests[0].url.params["page_token"] == "opaque/+=token"
 
 
@@ -188,9 +188,8 @@ def test_known_response_types_are_strict_without_rejecting_future_fields(total):
 @pytest.mark.parametrize(
     "options",
     [
-        {"scope": "invalid"},
+        {"state": "invalid"},
         {
-            "scope": "my",
             "request_options": {"additional_headers": {"Harbor-API-Version": "wrong"}},
         },
     ],
@@ -255,7 +254,7 @@ async def test_async_checked_client_reuses_the_same_contract_transport():
     async with async_client(
         token="key", transport=httpx.MockTransport(handler)
     ) as client:
-        pager = client.jobs.list(scope="my")
+        pager = client.jobs.list()
         assert await anext(pager.iter_pages()) == []
         assert pager.last_response.body["total"] == 0
     assert with_requests[0].headers["authorization"] == "Bearer key"

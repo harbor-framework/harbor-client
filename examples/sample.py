@@ -1,5 +1,4 @@
 from harbor_client import HarborAPIClient
-from harbor_client.types import RunState, JobsListRequestSort
 
 client = HarborAPIClient(
     harbor_api_version="YOUR_HARBOR_API_VERSION",

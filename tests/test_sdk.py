@@ -100,7 +100,6 @@ def test_sync_read_preserves_cursor_and_reuses_caller_session():
         client = HarborAPIClient(harbor_api_version=VERSION, httpx_client=http)
         for cursor in ["opaque/+=token", "next/+=token"]:
             pager = client.jobs.list(
-                scope="my",
                 page_token=cursor,
                 request_options={
                     "additional_headers": {"Authorization": "Bearer active"}
@@ -262,7 +261,7 @@ def test_forbidden_properties_should_be_rejected(config, field, value):
 
 
 def test_null_only_should_reject_non_null():
-    field = TrialDetail.model_fields["step_results"]
+    field = TrialDetail.model_fields["result"]
     with pytest.raises(ValidationError):
         TypeAdapter(field.annotation).validate_python({"unexpected": True})
 
@@ -280,5 +279,5 @@ def test_token_should_reach_identity_dependent_public_reads():
         client = HarborAPIClient(
             harbor_api_version=VERSION, token="test", httpx_client=http
         )
-        list(client.jobs.list(scope="my"))
+        list(client.jobs.list())
     assert requests[0].headers.get("authorization") == "Bearer test"
