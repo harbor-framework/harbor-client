@@ -72,14 +72,20 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-python-sdk: 6.17.0
-current_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
+  - commit_sha: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+    tree_hash: 3c8a2405e766367335cb928813cbd301f4fb84fc
+    timestamp: 2026-11-13T21:00:24.339Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:d277ceba2d282138bc32aa63fac585e8c7346c4983857e6cb0f710243d884031
+    content_hash: sha256:2211ed92a2dfea85feb54277b3e6d4b36b33413161d12f34f5557d5380bd69de
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
+    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -578,10 +584,10 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index 41039a0..071e664 100644
+      index d14ec44..8a80d14 100644
       --- a/src/harbor_client/trials/client.py
       +++ b/src/harbor_client/trials/client.py
-      @@ -289,6 +289,7 @@ class TrialsClient(BaseService):
+      @@ -310,6 +310,7 @@ class TrialsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[TrialSummary]
                """
@@ -589,7 +595,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -357,9 +358,6 @@ class TrialsClient(BaseService):
+      @@ -394,9 +395,6 @@ class TrialsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -599,7 +605,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1326,7 +1324,11 @@ class AsyncTrialsClient(TrialsClient):
+      @@ -1424,7 +1422,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
                async def _paginate():
@@ -10687,7 +10693,6 @@ patches:
             CancelTrialRequest,
             ConflictEncoded,
             CreatedResultTrial,
-            FilterValuesResponse,
             ForbiddenEncoded,
             InternalServerErrorEncoded,
             NotFoundEncoded,
@@ -10700,12 +10705,19 @@ patches:
             StorageDownload,
             TooManyRequestsEncoded,
             TrialArtifactType,
+            TrialFilterValuesResponse,
             TrialPage,
             TrialResponse,
             TrialsCopyRequest,
+            TrialsGetFiltersRequestAttempts,
+            TrialsGetFiltersRequestFailedOnly,
             TrialsGetFiltersRequestField,
+            TrialsGetFiltersRequestTerminal,
             TrialsListBadRequestResponse,
+            TrialsListRequestAttempts,
+            TrialsListRequestFailedOnly,
             TrialsListRequestSort,
+            TrialsListRequestTerminal,
             TrialSummary,
             UnauthorizedEncoded,
         )
@@ -10908,6 +10920,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsListRequestFailedOnly = SENTINEL,
+                terminal: TrialsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -10919,6 +10935,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
@@ -10930,6 +10947,14 @@ patches:
                 :type task: List[str], optional
                 :param state: state, defaults to None
                 :type state: RunState, optional
+                :param attempts: attempts, defaults to None
+                :type attempts: TrialsListRequestAttempts, optional
+                :param error_type: error_type, defaults to None
+                :type error_type: List[str], optional
+                :param failed_only: failed_only, defaults to None
+                :type failed_only: TrialsListRequestFailedOnly, optional
+                :param terminal: terminal, defaults to None
+                :type terminal: TrialsListRequestTerminal, optional
                 :param name: name, defaults to None
                 :type name: str, optional
                 :param q: q, defaults to None
@@ -10952,6 +10977,8 @@ patches:
                 :type created_before: str, optional
                 :param job_id: job_id, defaults to None
                 :type job_id: str, optional
+                :param job_ids: job_ids, defaults to None
+                :type job_ids: List[str], optional
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
@@ -10968,6 +10995,16 @@ patches:
 
                 Validator(str).is_array().is_optional().validate(task, "task")
                 Validator(RunState).is_optional().validate(state, "state")
+                Validator(TrialsListRequestAttempts).is_optional().validate(
+                    attempts, "attempts"
+                )
+                Validator(str).is_array().is_optional().validate(error_type, "error_type")
+                Validator(TrialsListRequestFailedOnly).is_optional().validate(
+                    failed_only, "failed_only"
+                )
+                Validator(TrialsListRequestTerminal).is_optional().validate(
+                    terminal, "terminal"
+                )
                 Validator(str).is_optional().validate(name, "name")
                 Validator(str).is_optional().validate(q, "q")
                 Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -10983,6 +11020,7 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
                 Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
@@ -11004,6 +11042,10 @@ patches:
                             )
                             .add_query("task", task)
                             .add_query("state", state)
+                            .add_query("attempts", attempts)
+                            .add_query("error_type", error_type)
+                            .add_query("failed_only", failed_only)
+                            .add_query("terminal", terminal)
                             .add_query("name", name)
                             .add_query("q", q)
                             .add_query("agent_name", agent_name)
@@ -11015,6 +11057,7 @@ patches:
                             .add_query("created_after", created_after)
                             .add_query("created_before", created_before)
                             .add_query("job_id", job_id)
+                            .add_query("job_ids", job_ids)
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
                             .add_query("sort", sort)
@@ -11153,6 +11196,10 @@ patches:
                 field: TrialsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -11164,9 +11211,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> FilterValuesResponse:
+            ) -> TrialFilterValuesResponse:
                 """get_filters
 
                 :param field: field
@@ -11175,6 +11223,14 @@ patches:
                 :type task: List[str], optional
                 :param state: state, defaults to None
                 :type state: RunState, optional
+                :param attempts: attempts, defaults to None
+                :type attempts: TrialsGetFiltersRequestAttempts, optional
+                :param error_type: error_type, defaults to None
+                :type error_type: List[str], optional
+                :param failed_only: failed_only, defaults to None
+                :type failed_only: TrialsGetFiltersRequestFailedOnly, optional
+                :param terminal: terminal, defaults to None
+                :type terminal: TrialsGetFiltersRequestTerminal, optional
                 :param name: name, defaults to None
                 :type name: str, optional
                 :param q: q, defaults to None
@@ -11197,18 +11253,30 @@ patches:
                 :type created_before: str, optional
                 :param job_id: job_id, defaults to None
                 :type job_id: str, optional
+                :param job_ids: job_ids, defaults to None
+                :type job_ids: List[str], optional
                 :param limit: limit, defaults to None
                 :type limit: str, optional
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: FilterValuesResponse
+                :rtype: TrialFilterValuesResponse
                 """
 
                 Validator(TrialsGetFiltersRequestField).validate(field, "field")
                 Validator(str).is_array().is_optional().validate(task, "task")
                 Validator(RunState).is_optional().validate(state, "state")
+                Validator(TrialsGetFiltersRequestAttempts).is_optional().validate(
+                    attempts, "attempts"
+                )
+                Validator(str).is_array().is_optional().validate(error_type, "error_type")
+                Validator(TrialsGetFiltersRequestFailedOnly).is_optional().validate(
+                    failed_only, "failed_only"
+                )
+                Validator(TrialsGetFiltersRequestTerminal).is_optional().validate(
+                    terminal, "terminal"
+                )
                 Validator(str).is_optional().validate(name, "name")
                 Validator(str).is_optional().validate(q, "q")
                 Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -11224,6 +11292,7 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(limit, "limit")
 
                 resolved_config = self._get_resolved_config(
@@ -11241,6 +11310,10 @@ patches:
                     )
                     .add_query("task", task)
                     .add_query("state", state)
+                    .add_query("attempts", attempts)
+                    .add_query("error_type", error_type)
+                    .add_query("failed_only", failed_only)
+                    .add_query("terminal", terminal)
                     .add_query("name", name)
                     .add_query("q", q)
                     .add_query("agent_name", agent_name)
@@ -11252,6 +11325,7 @@ patches:
                     .add_query("created_after", created_after)
                     .add_query("created_before", created_before)
                     .add_query("job_id", job_id)
+                    .add_query("job_ids", job_ids)
                     .add_query("field", field)
                     .add_query("limit", limit)
                     .add_error(401, UnauthorizedEncoded)
@@ -11267,9 +11341,9 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        FilterValuesResponse.model_validate(response)
+                        TrialFilterValuesResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(FilterValuesResponse, response)
+                        else construct_lenient(TrialFilterValuesResponse, response)
                     )
                 )
 
@@ -11667,6 +11741,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsListRequestFailedOnly = SENTINEL,
+                terminal: TrialsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -11678,6 +11756,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
@@ -11691,6 +11770,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -11702,6 +11785,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -11780,6 +11864,10 @@ patches:
                 field: TrialsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -11791,9 +11879,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[FilterValuesResponse]:
+            ) -> HttpResponse[TrialFilterValuesResponse]:
                 data = TrialsClient.get_filters(
                     self._client,
                     field=field,
@@ -11803,6 +11892,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -11814,6 +11907,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -11954,6 +12048,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsListRequestFailedOnly = SENTINEL,
+                terminal: TrialsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -11965,6 +12063,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
@@ -11977,6 +12076,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -11988,6 +12091,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -12073,6 +12177,10 @@ patches:
                 field: TrialsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -12084,9 +12192,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+            ) -> Awaitable[TrialFilterValuesResponse]:  # type: ignore[override]
                 return to_async(super().get_filters)(
                     field=field,
                     **dict[str, Any](
@@ -12095,6 +12204,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -12106,6 +12219,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -12223,6 +12337,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsListRequestFailedOnly = SENTINEL,
+                terminal: TrialsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -12234,6 +12352,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
@@ -12247,6 +12366,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -12258,6 +12381,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -12336,6 +12460,10 @@ patches:
                 field: TrialsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -12347,9 +12475,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[FilterValuesResponse]:
+            ) -> HttpResponse[TrialFilterValuesResponse]:
                 data = await AsyncTrialsClient.get_filters(
                     self._client,
                     field=field,
@@ -12359,6 +12488,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -12370,6 +12503,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -13827,12 +13961,13 @@ patches:
                 return hasattr(cls_type, "__origin__") and cls_type.__origin__ is Union
 
             return cast(F, wrapper)
+    user_owned: true
   - id: patch-54e30fcc
-    content_hash: sha256:05a8ec264f8433398495b28716d36c8566752b4bb72dc8ce7eac6fa0754e27da
+    content_hash: sha256:8c4e08ac0b179a1c8b5cdfe261bcdce3f71420b8c012f248498a022e3a10a191
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
+    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -13840,10 +13975,10 @@ patches:
       - src/harbor_client/types/trial_detail.py
     patch_content: |
       diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
-      index 0049ec5..c413f51 100644
+      index feb8c5b..58c1666 100644
       --- a/src/harbor_client/rollouts/client.py
       +++ b/src/harbor_client/rollouts/client.py
-      @@ -247,6 +247,7 @@ class RolloutsClient(BaseService):
+      @@ -268,6 +268,7 @@ class RolloutsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[TrialSummary]
                """
@@ -13851,7 +13986,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -315,9 +316,6 @@ class RolloutsClient(BaseService):
+      @@ -352,9 +353,6 @@ class RolloutsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -13861,7 +13996,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -949,7 +947,11 @@ class AsyncRolloutsClient(RolloutsClient):
+      @@ -1047,7 +1045,11 @@ class AsyncRolloutsClient(RolloutsClient):
                )
        
                async def _paginate():
@@ -13933,16 +14068,22 @@ patches:
             BadRequestEncoded,
             CancelTrialRequest,
             ConflictEncoded,
-            FilterValuesResponse,
             ForbiddenEncoded,
             InternalServerErrorEncoded,
             NotFoundEncoded,
             RetryRolloutResponse,
             RolloutResponse,
+            RolloutsGetFiltersRequestAttempts,
+            RolloutsGetFiltersRequestFailedOnly,
             RolloutsGetFiltersRequestField,
+            RolloutsGetFiltersRequestTerminal,
             RolloutsListBadRequestResponse,
+            RolloutsListRequestAttempts,
+            RolloutsListRequestFailedOnly,
             RolloutsListRequestSort,
+            RolloutsListRequestTerminal,
             RunState,
+            TrialFilterValuesResponse,
             TrialPage,
             TrialSummary,
             UnauthorizedEncoded,
@@ -14113,6 +14254,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+                terminal: RolloutsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -14124,6 +14269,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
@@ -14135,6 +14281,14 @@ patches:
                 :type task: List[str], optional
                 :param state: state, defaults to None
                 :type state: RunState, optional
+                :param attempts: attempts, defaults to None
+                :type attempts: RolloutsListRequestAttempts, optional
+                :param error_type: error_type, defaults to None
+                :type error_type: List[str], optional
+                :param failed_only: failed_only, defaults to None
+                :type failed_only: RolloutsListRequestFailedOnly, optional
+                :param terminal: terminal, defaults to None
+                :type terminal: RolloutsListRequestTerminal, optional
                 :param name: name, defaults to None
                 :type name: str, optional
                 :param q: q, defaults to None
@@ -14157,6 +14311,8 @@ patches:
                 :type created_before: str, optional
                 :param job_id: job_id, defaults to None
                 :type job_id: str, optional
+                :param job_ids: job_ids, defaults to None
+                :type job_ids: List[str], optional
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
@@ -14173,6 +14329,16 @@ patches:
 
                 Validator(str).is_array().is_optional().validate(task, "task")
                 Validator(RunState).is_optional().validate(state, "state")
+                Validator(RolloutsListRequestAttempts).is_optional().validate(
+                    attempts, "attempts"
+                )
+                Validator(str).is_array().is_optional().validate(error_type, "error_type")
+                Validator(RolloutsListRequestFailedOnly).is_optional().validate(
+                    failed_only, "failed_only"
+                )
+                Validator(RolloutsListRequestTerminal).is_optional().validate(
+                    terminal, "terminal"
+                )
                 Validator(str).is_optional().validate(name, "name")
                 Validator(str).is_optional().validate(q, "q")
                 Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -14188,6 +14354,7 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
                 Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
@@ -14209,6 +14376,10 @@ patches:
                             )
                             .add_query("task", task)
                             .add_query("state", state)
+                            .add_query("attempts", attempts)
+                            .add_query("error_type", error_type)
+                            .add_query("failed_only", failed_only)
+                            .add_query("terminal", terminal)
                             .add_query("name", name)
                             .add_query("q", q)
                             .add_query("agent_name", agent_name)
@@ -14220,6 +14391,7 @@ patches:
                             .add_query("created_after", created_after)
                             .add_query("created_before", created_before)
                             .add_query("job_id", job_id)
+                            .add_query("job_ids", job_ids)
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
                             .add_query("sort", sort)
@@ -14255,6 +14427,10 @@ patches:
                 field: RolloutsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -14266,9 +14442,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> FilterValuesResponse:
+            ) -> TrialFilterValuesResponse:
                 """get_filters
 
                 :param field: field
@@ -14277,6 +14454,14 @@ patches:
                 :type task: List[str], optional
                 :param state: state, defaults to None
                 :type state: RunState, optional
+                :param attempts: attempts, defaults to None
+                :type attempts: RolloutsGetFiltersRequestAttempts, optional
+                :param error_type: error_type, defaults to None
+                :type error_type: List[str], optional
+                :param failed_only: failed_only, defaults to None
+                :type failed_only: RolloutsGetFiltersRequestFailedOnly, optional
+                :param terminal: terminal, defaults to None
+                :type terminal: RolloutsGetFiltersRequestTerminal, optional
                 :param name: name, defaults to None
                 :type name: str, optional
                 :param q: q, defaults to None
@@ -14299,18 +14484,30 @@ patches:
                 :type created_before: str, optional
                 :param job_id: job_id, defaults to None
                 :type job_id: str, optional
+                :param job_ids: job_ids, defaults to None
+                :type job_ids: List[str], optional
                 :param limit: limit, defaults to None
                 :type limit: str, optional
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: FilterValuesResponse
+                :rtype: TrialFilterValuesResponse
                 """
 
                 Validator(RolloutsGetFiltersRequestField).validate(field, "field")
                 Validator(str).is_array().is_optional().validate(task, "task")
                 Validator(RunState).is_optional().validate(state, "state")
+                Validator(RolloutsGetFiltersRequestAttempts).is_optional().validate(
+                    attempts, "attempts"
+                )
+                Validator(str).is_array().is_optional().validate(error_type, "error_type")
+                Validator(RolloutsGetFiltersRequestFailedOnly).is_optional().validate(
+                    failed_only, "failed_only"
+                )
+                Validator(RolloutsGetFiltersRequestTerminal).is_optional().validate(
+                    terminal, "terminal"
+                )
                 Validator(str).is_optional().validate(name, "name")
                 Validator(str).is_optional().validate(q, "q")
                 Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -14326,6 +14523,7 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(limit, "limit")
 
                 resolved_config = self._get_resolved_config(
@@ -14343,6 +14541,10 @@ patches:
                     )
                     .add_query("task", task)
                     .add_query("state", state)
+                    .add_query("attempts", attempts)
+                    .add_query("error_type", error_type)
+                    .add_query("failed_only", failed_only)
+                    .add_query("terminal", terminal)
                     .add_query("name", name)
                     .add_query("q", q)
                     .add_query("agent_name", agent_name)
@@ -14354,6 +14556,7 @@ patches:
                     .add_query("created_after", created_after)
                     .add_query("created_before", created_before)
                     .add_query("job_id", job_id)
+                    .add_query("job_ids", job_ids)
                     .add_query("field", field)
                     .add_query("limit", limit)
                     .add_error(401, UnauthorizedEncoded)
@@ -14369,9 +14572,9 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        FilterValuesResponse.model_validate(response)
+                        TrialFilterValuesResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(FilterValuesResponse, response)
+                        else construct_lenient(TrialFilterValuesResponse, response)
                     )
                 )
 
@@ -14640,6 +14843,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+                terminal: RolloutsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -14651,6 +14858,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
@@ -14664,6 +14872,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -14675,6 +14887,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -14692,6 +14905,10 @@ patches:
                 field: RolloutsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -14703,9 +14920,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[FilterValuesResponse]:
+            ) -> HttpResponse[TrialFilterValuesResponse]:
                 data = RolloutsClient.get_filters(
                     self._client,
                     field=field,
@@ -14715,6 +14933,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -14726,6 +14948,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -14824,6 +15047,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+                terminal: RolloutsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -14835,6 +15062,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
@@ -14847,6 +15075,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -14858,6 +15090,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -14884,6 +15117,10 @@ patches:
                 field: RolloutsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -14895,9 +15132,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+            ) -> Awaitable[TrialFilterValuesResponse]:  # type: ignore[override]
                 return to_async(super().get_filters)(
                     field=field,
                     **dict[str, Any](
@@ -14906,6 +15144,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -14917,6 +15159,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -14998,6 +15241,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+                terminal: RolloutsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -15009,6 +15256,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
@@ -15022,6 +15270,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -15033,6 +15285,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -15050,6 +15303,10 @@ patches:
                 field: RolloutsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -15061,9 +15318,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[FilterValuesResponse]:
+            ) -> HttpResponse[TrialFilterValuesResponse]:
                 data = await AsyncRolloutsClient.get_filters(
                     self._client,
                     field=field,
@@ -15073,6 +15331,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -15084,6 +15346,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -15311,12 +15574,13 @@ patches:
             result: Optional[Dict[str, Any]] = Field(
                 description="Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
             )
+    user_owned: true
   - id: patch-7c950c27
     content_hash: sha256:cfb3ead6aff7c3d31a7afef551e1c2c6afde34006f200dd416b91bdcb81fb180
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
+    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -15553,12 +15817,13 @@ patches:
             rewards: Optional[Dict[str, Optional[float]]]
             usage: Usage
             error_type: Optional[str]
+    user_owned: true
   - id: patch-081259ba
     content_hash: sha256:b90a665b4916b159c296d8179d93a7dcdb6ff275561e8c8361f6b65e6284b551
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
+    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -15576,12 +15841,13 @@ patches:
         from typing import Optional
 
         RewardValue = Optional[float]
+    user_owned: true
   - id: patch-bcfdf292
-    content_hash: sha256:0ad63d4ea45d4391a31635e0308f85eafe9aadd455fe628736c2ac234f7de4a2
+    content_hash: sha256:777d276459c1772d347887a72a3dab37d5bdf597bffc9622135e1e1859dcc3ba
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
+    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
@@ -15654,10 +15920,10 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
-      index 0049ec5..c413f51 100644
+      index feb8c5b..58c1666 100644
       --- a/src/harbor_client/rollouts/client.py
       +++ b/src/harbor_client/rollouts/client.py
-      @@ -247,6 +247,7 @@ class RolloutsClient(BaseService):
+      @@ -268,6 +268,7 @@ class RolloutsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[TrialSummary]
                """
@@ -15665,7 +15931,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -315,9 +316,6 @@ class RolloutsClient(BaseService):
+      @@ -352,9 +353,6 @@ class RolloutsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -15675,7 +15941,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -949,7 +947,11 @@ class AsyncRolloutsClient(RolloutsClient):
+      @@ -1047,7 +1045,11 @@ class AsyncRolloutsClient(RolloutsClient):
                )
        
                async def _paginate():
@@ -15689,10 +15955,10 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index 41039a0..071e664 100644
+      index d14ec44..8a80d14 100644
       --- a/src/harbor_client/trials/client.py
       +++ b/src/harbor_client/trials/client.py
-      @@ -289,6 +289,7 @@ class TrialsClient(BaseService):
+      @@ -310,6 +310,7 @@ class TrialsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[TrialSummary]
                """
@@ -15700,7 +15966,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -357,9 +358,6 @@ class TrialsClient(BaseService):
+      @@ -394,9 +395,6 @@ class TrialsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -15710,7 +15976,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1326,7 +1324,11 @@ class AsyncTrialsClient(TrialsClient):
+      @@ -1424,7 +1422,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
                async def _paginate():
@@ -18744,16 +19010,22 @@ patches:
             BadRequestEncoded,
             CancelTrialRequest,
             ConflictEncoded,
-            FilterValuesResponse,
             ForbiddenEncoded,
             InternalServerErrorEncoded,
             NotFoundEncoded,
             RetryRolloutResponse,
             RolloutResponse,
+            RolloutsGetFiltersRequestAttempts,
+            RolloutsGetFiltersRequestFailedOnly,
             RolloutsGetFiltersRequestField,
+            RolloutsGetFiltersRequestTerminal,
             RolloutsListBadRequestResponse,
+            RolloutsListRequestAttempts,
+            RolloutsListRequestFailedOnly,
             RolloutsListRequestSort,
+            RolloutsListRequestTerminal,
             RunState,
+            TrialFilterValuesResponse,
             TrialPage,
             TrialSummary,
             UnauthorizedEncoded,
@@ -18924,6 +19196,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+                terminal: RolloutsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -18935,6 +19211,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
@@ -18946,6 +19223,14 @@ patches:
                 :type task: List[str], optional
                 :param state: state, defaults to None
                 :type state: RunState, optional
+                :param attempts: attempts, defaults to None
+                :type attempts: RolloutsListRequestAttempts, optional
+                :param error_type: error_type, defaults to None
+                :type error_type: List[str], optional
+                :param failed_only: failed_only, defaults to None
+                :type failed_only: RolloutsListRequestFailedOnly, optional
+                :param terminal: terminal, defaults to None
+                :type terminal: RolloutsListRequestTerminal, optional
                 :param name: name, defaults to None
                 :type name: str, optional
                 :param q: q, defaults to None
@@ -18968,6 +19253,8 @@ patches:
                 :type created_before: str, optional
                 :param job_id: job_id, defaults to None
                 :type job_id: str, optional
+                :param job_ids: job_ids, defaults to None
+                :type job_ids: List[str], optional
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
@@ -18984,6 +19271,16 @@ patches:
 
                 Validator(str).is_array().is_optional().validate(task, "task")
                 Validator(RunState).is_optional().validate(state, "state")
+                Validator(RolloutsListRequestAttempts).is_optional().validate(
+                    attempts, "attempts"
+                )
+                Validator(str).is_array().is_optional().validate(error_type, "error_type")
+                Validator(RolloutsListRequestFailedOnly).is_optional().validate(
+                    failed_only, "failed_only"
+                )
+                Validator(RolloutsListRequestTerminal).is_optional().validate(
+                    terminal, "terminal"
+                )
                 Validator(str).is_optional().validate(name, "name")
                 Validator(str).is_optional().validate(q, "q")
                 Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -18999,6 +19296,7 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
                 Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
@@ -19020,6 +19318,10 @@ patches:
                             )
                             .add_query("task", task)
                             .add_query("state", state)
+                            .add_query("attempts", attempts)
+                            .add_query("error_type", error_type)
+                            .add_query("failed_only", failed_only)
+                            .add_query("terminal", terminal)
                             .add_query("name", name)
                             .add_query("q", q)
                             .add_query("agent_name", agent_name)
@@ -19031,6 +19333,7 @@ patches:
                             .add_query("created_after", created_after)
                             .add_query("created_before", created_before)
                             .add_query("job_id", job_id)
+                            .add_query("job_ids", job_ids)
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
                             .add_query("sort", sort)
@@ -19066,6 +19369,10 @@ patches:
                 field: RolloutsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -19077,9 +19384,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> FilterValuesResponse:
+            ) -> TrialFilterValuesResponse:
                 """get_filters
 
                 :param field: field
@@ -19088,6 +19396,14 @@ patches:
                 :type task: List[str], optional
                 :param state: state, defaults to None
                 :type state: RunState, optional
+                :param attempts: attempts, defaults to None
+                :type attempts: RolloutsGetFiltersRequestAttempts, optional
+                :param error_type: error_type, defaults to None
+                :type error_type: List[str], optional
+                :param failed_only: failed_only, defaults to None
+                :type failed_only: RolloutsGetFiltersRequestFailedOnly, optional
+                :param terminal: terminal, defaults to None
+                :type terminal: RolloutsGetFiltersRequestTerminal, optional
                 :param name: name, defaults to None
                 :type name: str, optional
                 :param q: q, defaults to None
@@ -19110,18 +19426,30 @@ patches:
                 :type created_before: str, optional
                 :param job_id: job_id, defaults to None
                 :type job_id: str, optional
+                :param job_ids: job_ids, defaults to None
+                :type job_ids: List[str], optional
                 :param limit: limit, defaults to None
                 :type limit: str, optional
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: FilterValuesResponse
+                :rtype: TrialFilterValuesResponse
                 """
 
                 Validator(RolloutsGetFiltersRequestField).validate(field, "field")
                 Validator(str).is_array().is_optional().validate(task, "task")
                 Validator(RunState).is_optional().validate(state, "state")
+                Validator(RolloutsGetFiltersRequestAttempts).is_optional().validate(
+                    attempts, "attempts"
+                )
+                Validator(str).is_array().is_optional().validate(error_type, "error_type")
+                Validator(RolloutsGetFiltersRequestFailedOnly).is_optional().validate(
+                    failed_only, "failed_only"
+                )
+                Validator(RolloutsGetFiltersRequestTerminal).is_optional().validate(
+                    terminal, "terminal"
+                )
                 Validator(str).is_optional().validate(name, "name")
                 Validator(str).is_optional().validate(q, "q")
                 Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -19137,6 +19465,7 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(limit, "limit")
 
                 resolved_config = self._get_resolved_config(
@@ -19154,6 +19483,10 @@ patches:
                     )
                     .add_query("task", task)
                     .add_query("state", state)
+                    .add_query("attempts", attempts)
+                    .add_query("error_type", error_type)
+                    .add_query("failed_only", failed_only)
+                    .add_query("terminal", terminal)
                     .add_query("name", name)
                     .add_query("q", q)
                     .add_query("agent_name", agent_name)
@@ -19165,6 +19498,7 @@ patches:
                     .add_query("created_after", created_after)
                     .add_query("created_before", created_before)
                     .add_query("job_id", job_id)
+                    .add_query("job_ids", job_ids)
                     .add_query("field", field)
                     .add_query("limit", limit)
                     .add_error(401, UnauthorizedEncoded)
@@ -19180,9 +19514,9 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        FilterValuesResponse.model_validate(response)
+                        TrialFilterValuesResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(FilterValuesResponse, response)
+                        else construct_lenient(TrialFilterValuesResponse, response)
                     )
                 )
 
@@ -19451,6 +19785,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+                terminal: RolloutsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -19462,6 +19800,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
@@ -19475,6 +19814,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -19486,6 +19829,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -19503,6 +19847,10 @@ patches:
                 field: RolloutsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -19514,9 +19862,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[FilterValuesResponse]:
+            ) -> HttpResponse[TrialFilterValuesResponse]:
                 data = RolloutsClient.get_filters(
                     self._client,
                     field=field,
@@ -19526,6 +19875,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -19537,6 +19890,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -19635,6 +19989,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+                terminal: RolloutsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -19646,6 +20004,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
@@ -19658,6 +20017,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -19669,6 +20032,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -19695,6 +20059,10 @@ patches:
                 field: RolloutsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -19706,9 +20074,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+            ) -> Awaitable[TrialFilterValuesResponse]:  # type: ignore[override]
                 return to_async(super().get_filters)(
                     field=field,
                     **dict[str, Any](
@@ -19717,6 +20086,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -19728,6 +20101,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -19809,6 +20183,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsListRequestFailedOnly = SENTINEL,
+                terminal: RolloutsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -19820,6 +20198,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
@@ -19833,6 +20212,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -19844,6 +20227,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -19861,6 +20245,10 @@ patches:
                 field: RolloutsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: RolloutsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: RolloutsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: RolloutsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -19872,9 +20260,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[FilterValuesResponse]:
+            ) -> HttpResponse[TrialFilterValuesResponse]:
                 data = await AsyncRolloutsClient.get_filters(
                     self._client,
                     field=field,
@@ -19884,6 +20273,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -19895,6 +20288,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -19982,7 +20376,6 @@ patches:
             CancelTrialRequest,
             ConflictEncoded,
             CreatedResultTrial,
-            FilterValuesResponse,
             ForbiddenEncoded,
             InternalServerErrorEncoded,
             NotFoundEncoded,
@@ -19995,12 +20388,19 @@ patches:
             StorageDownload,
             TooManyRequestsEncoded,
             TrialArtifactType,
+            TrialFilterValuesResponse,
             TrialPage,
             TrialResponse,
             TrialsCopyRequest,
+            TrialsGetFiltersRequestAttempts,
+            TrialsGetFiltersRequestFailedOnly,
             TrialsGetFiltersRequestField,
+            TrialsGetFiltersRequestTerminal,
             TrialsListBadRequestResponse,
+            TrialsListRequestAttempts,
+            TrialsListRequestFailedOnly,
             TrialsListRequestSort,
+            TrialsListRequestTerminal,
             TrialSummary,
             UnauthorizedEncoded,
         )
@@ -20203,6 +20603,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsListRequestFailedOnly = SENTINEL,
+                terminal: TrialsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -20214,6 +20618,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
@@ -20225,6 +20630,14 @@ patches:
                 :type task: List[str], optional
                 :param state: state, defaults to None
                 :type state: RunState, optional
+                :param attempts: attempts, defaults to None
+                :type attempts: TrialsListRequestAttempts, optional
+                :param error_type: error_type, defaults to None
+                :type error_type: List[str], optional
+                :param failed_only: failed_only, defaults to None
+                :type failed_only: TrialsListRequestFailedOnly, optional
+                :param terminal: terminal, defaults to None
+                :type terminal: TrialsListRequestTerminal, optional
                 :param name: name, defaults to None
                 :type name: str, optional
                 :param q: q, defaults to None
@@ -20247,6 +20660,8 @@ patches:
                 :type created_before: str, optional
                 :param job_id: job_id, defaults to None
                 :type job_id: str, optional
+                :param job_ids: job_ids, defaults to None
+                :type job_ids: List[str], optional
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
@@ -20263,6 +20678,16 @@ patches:
 
                 Validator(str).is_array().is_optional().validate(task, "task")
                 Validator(RunState).is_optional().validate(state, "state")
+                Validator(TrialsListRequestAttempts).is_optional().validate(
+                    attempts, "attempts"
+                )
+                Validator(str).is_array().is_optional().validate(error_type, "error_type")
+                Validator(TrialsListRequestFailedOnly).is_optional().validate(
+                    failed_only, "failed_only"
+                )
+                Validator(TrialsListRequestTerminal).is_optional().validate(
+                    terminal, "terminal"
+                )
                 Validator(str).is_optional().validate(name, "name")
                 Validator(str).is_optional().validate(q, "q")
                 Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -20278,6 +20703,7 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
                 Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
@@ -20299,6 +20725,10 @@ patches:
                             )
                             .add_query("task", task)
                             .add_query("state", state)
+                            .add_query("attempts", attempts)
+                            .add_query("error_type", error_type)
+                            .add_query("failed_only", failed_only)
+                            .add_query("terminal", terminal)
                             .add_query("name", name)
                             .add_query("q", q)
                             .add_query("agent_name", agent_name)
@@ -20310,6 +20740,7 @@ patches:
                             .add_query("created_after", created_after)
                             .add_query("created_before", created_before)
                             .add_query("job_id", job_id)
+                            .add_query("job_ids", job_ids)
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
                             .add_query("sort", sort)
@@ -20448,6 +20879,10 @@ patches:
                 field: TrialsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -20459,9 +20894,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> FilterValuesResponse:
+            ) -> TrialFilterValuesResponse:
                 """get_filters
 
                 :param field: field
@@ -20470,6 +20906,14 @@ patches:
                 :type task: List[str], optional
                 :param state: state, defaults to None
                 :type state: RunState, optional
+                :param attempts: attempts, defaults to None
+                :type attempts: TrialsGetFiltersRequestAttempts, optional
+                :param error_type: error_type, defaults to None
+                :type error_type: List[str], optional
+                :param failed_only: failed_only, defaults to None
+                :type failed_only: TrialsGetFiltersRequestFailedOnly, optional
+                :param terminal: terminal, defaults to None
+                :type terminal: TrialsGetFiltersRequestTerminal, optional
                 :param name: name, defaults to None
                 :type name: str, optional
                 :param q: q, defaults to None
@@ -20492,18 +20936,30 @@ patches:
                 :type created_before: str, optional
                 :param job_id: job_id, defaults to None
                 :type job_id: str, optional
+                :param job_ids: job_ids, defaults to None
+                :type job_ids: List[str], optional
                 :param limit: limit, defaults to None
                 :type limit: str, optional
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: FilterValuesResponse
+                :rtype: TrialFilterValuesResponse
                 """
 
                 Validator(TrialsGetFiltersRequestField).validate(field, "field")
                 Validator(str).is_array().is_optional().validate(task, "task")
                 Validator(RunState).is_optional().validate(state, "state")
+                Validator(TrialsGetFiltersRequestAttempts).is_optional().validate(
+                    attempts, "attempts"
+                )
+                Validator(str).is_array().is_optional().validate(error_type, "error_type")
+                Validator(TrialsGetFiltersRequestFailedOnly).is_optional().validate(
+                    failed_only, "failed_only"
+                )
+                Validator(TrialsGetFiltersRequestTerminal).is_optional().validate(
+                    terminal, "terminal"
+                )
                 Validator(str).is_optional().validate(name, "name")
                 Validator(str).is_optional().validate(q, "q")
                 Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -20519,6 +20975,7 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(limit, "limit")
 
                 resolved_config = self._get_resolved_config(
@@ -20536,6 +20993,10 @@ patches:
                     )
                     .add_query("task", task)
                     .add_query("state", state)
+                    .add_query("attempts", attempts)
+                    .add_query("error_type", error_type)
+                    .add_query("failed_only", failed_only)
+                    .add_query("terminal", terminal)
                     .add_query("name", name)
                     .add_query("q", q)
                     .add_query("agent_name", agent_name)
@@ -20547,6 +21008,7 @@ patches:
                     .add_query("created_after", created_after)
                     .add_query("created_before", created_before)
                     .add_query("job_id", job_id)
+                    .add_query("job_ids", job_ids)
                     .add_query("field", field)
                     .add_query("limit", limit)
                     .add_error(401, UnauthorizedEncoded)
@@ -20562,9 +21024,9 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        FilterValuesResponse.model_validate(response)
+                        TrialFilterValuesResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(FilterValuesResponse, response)
+                        else construct_lenient(TrialFilterValuesResponse, response)
                     )
                 )
 
@@ -20962,6 +21424,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsListRequestFailedOnly = SENTINEL,
+                terminal: TrialsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -20973,6 +21439,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
@@ -20986,6 +21453,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -20997,6 +21468,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -21075,6 +21547,10 @@ patches:
                 field: TrialsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -21086,9 +21562,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[FilterValuesResponse]:
+            ) -> HttpResponse[TrialFilterValuesResponse]:
                 data = TrialsClient.get_filters(
                     self._client,
                     field=field,
@@ -21098,6 +21575,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -21109,6 +21590,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -21249,6 +21731,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsListRequestFailedOnly = SENTINEL,
+                terminal: TrialsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -21260,6 +21746,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
@@ -21272,6 +21759,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -21283,6 +21774,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -21368,6 +21860,10 @@ patches:
                 field: TrialsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -21379,9 +21875,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+            ) -> Awaitable[TrialFilterValuesResponse]:  # type: ignore[override]
                 return to_async(super().get_filters)(
                     field=field,
                     **dict[str, Any](
@@ -21390,6 +21887,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -21401,6 +21902,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -21518,6 +22020,10 @@ patches:
                 *,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsListRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsListRequestFailedOnly = SENTINEL,
+                terminal: TrialsListRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -21529,6 +22035,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
@@ -21542,6 +22049,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -21553,6 +22064,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "sort": sort,
@@ -21631,6 +22143,10 @@ patches:
                 field: TrialsGetFiltersRequestField,
                 task: List[str] = SENTINEL,
                 state: RunState = SENTINEL,
+                attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+                error_type: List[str] = SENTINEL,
+                failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+                terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
                 name: str = SENTINEL,
                 q: str = SENTINEL,
                 agent_name: List[str] = SENTINEL,
@@ -21642,9 +22158,10 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 job_id: str = SENTINEL,
+                job_ids: List[str] = SENTINEL,
                 limit: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[FilterValuesResponse]:
+            ) -> HttpResponse[TrialFilterValuesResponse]:
                 data = await AsyncTrialsClient.get_filters(
                     self._client,
                     field=field,
@@ -21654,6 +22171,10 @@ patches:
                             for k, v in {
                                 "task": task,
                                 "state": state,
+                                "attempts": attempts,
+                                "error_type": error_type,
+                                "failed_only": failed_only,
+                                "terminal": terminal,
                                 "name": name,
                                 "q": q,
                                 "agent_name": agent_name,
@@ -21665,6 +22186,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "job_id": job_id,
+                                "job_ids": job_ids,
                                 "limit": limit,
                             }.items()
                             if v is not SENTINEL
@@ -21779,6 +22301,112 @@ patches:
                     request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
+    user_owned: true
+  - id: patch-ef6bc19e
+    content_hash: sha256:93f676d1bdbb2fed018c64c17e4983a771ee9b84fb5ea5c85798a8be6b5e159d
+    original_commit: ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e
+    original_message: Keep the native generated example aligned with execution filters
+    original_author: Sam Vance <samvance243@gmail.com>
+    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+    files:
+      - examples/sample.py
+    patch_content: |+
+      From ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e Mon Sep 17 00:00:00 2001
+      From: Sam Vance <samvance243@gmail.com>
+      Date: Fri, 13 Nov 2026 10:15:09 -0800
+      Subject: [PATCH] Keep the native generated example aligned with execution
+       filters
+
+      ---
+       examples/sample.py | 36 ++++++++++++++----------------------
+       1 file changed, 14 insertions(+), 22 deletions(-)
+
+      diff --git a/examples/sample.py b/examples/sample.py
+      index ba38203..08ce74b 100644
+      --- a/examples/sample.py
+      +++ b/examples/sample.py
+      @@ -1,33 +1,25 @@
+       from harbor_client import HarborAPIClient
+      -from harbor_client.types import (
+      -    JobsListRequestScope,
+      -    JobsListRequestAccess,
+      -    JobsListRequestArchive,
+      -    JobsListRequestSort,
+      -)
+      +from harbor_client.types import RunState, JobsListRequestSort
+       
+       client = HarborAPIClient(
+           harbor_api_version="YOUR_HARBOR_API_VERSION",
+       )
+       response = client.jobs.list(
+      +    task=["task"],
+      +    state="queued",
+      +    name="name",
+      +    q="q",
+      +    agent_name=["agent_name"],
+      +    agent_version=["agent_version"],
+      +    model_name=["model_name"],
+      +    model_provider=["model_provider"],
+      +    reasoning_effort=["reasoning_effort"],
+      +    source=["source"],
+      +    created_after="created_after",
+      +    created_before="created_before",
+           page_size="page_size",
+           page_token="page_token",
+      -    offset="offset",
+      -    search="search",
+      -    agents="agents",
+      -    providers="providers",
+      -    models="models",
+      -    date_="date",
+      -    scope="my",
+      -    shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
+      -    datasets="datasets",
+      -    access="owned",
+      -    owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
+      -    date_from="date_from",
+      -    date_to="date_to",
+      -    created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
+      -    archive="current",
+      -    sort="importance",
+      +    sort="id",
+       )
+       for item in response:
+           print(item)
+      -- 
+      2.52.1
+
+    theirs_snapshot:
+      examples/sample.py: |
+        from harbor_client import HarborAPIClient
+        from harbor_client.types import RunState, JobsListRequestSort
+
+        client = HarborAPIClient(
+            harbor_api_version="YOUR_HARBOR_API_VERSION",
+        )
+        response = client.jobs.list(
+            task=["task"],
+            state="queued",
+            name="name",
+            q="q",
+            agent_name=["agent_name"],
+            agent_version=["agent_version"],
+            model_name=["model_name"],
+            model_provider=["model_provider"],
+            reasoning_effort=["reasoning_effort"],
+            source=["source"],
+            created_after="created_after",
+            created_before="created_before",
+            page_size="page_size",
+            page_token="page_token",
+            sort="id",
+        )
+        for item in response:
+            print(item)
+        # alternatively, you can paginate page-by-page
+        for page in response.iter_pages():
+            print(page)
+    user_owned: true
 dismissals:
   - patch_id: patch-1ca0ca5e
     original_commit: 1ca0ca5efc2d21a821fc189acd0fad4c40c5d374
