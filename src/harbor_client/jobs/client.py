@@ -87,10 +87,10 @@ class JobsClient(BaseService):
         self._get_sharing_config: SdkConfig = {}
         self._update_sharing_config: SdkConfig = {}
         self._get_trial_status_config: SdkConfig = {}
-        self._get_artifact_download_config: SdkConfig = {}
-        self._submit_config: SdkConfig = {}
         self._get_config: SdkConfig = {}
         self._rename_config: SdkConfig = {}
+        self._get_artifact_download_config: SdkConfig = {}
+        self._submit_config: SdkConfig = {}
         self._delete_config: SdkConfig = {}
         self._transfer_config: SdkConfig = {}
         self._copy_config: SdkConfig = {}
@@ -134,26 +134,6 @@ class JobsClient(BaseService):
         self._get_trial_status_config = config
         return self
 
-    def set_get_artifact_download_config(self, config: SdkConfig):
-        """
-        Sets method-level configuration for get_artifact_download.
-
-        :param SdkConfig config: Configuration dictionary to override service-level defaults.
-        :return: The service instance for method chaining.
-        """
-        self._get_artifact_download_config = config
-        return self
-
-    def set_submit_config(self, config: SdkConfig):
-        """
-        Sets method-level configuration for submit.
-
-        :param SdkConfig config: Configuration dictionary to override service-level defaults.
-        :return: The service instance for method chaining.
-        """
-        self._submit_config = config
-        return self
-
     def set_get_config(self, config: SdkConfig):
         """
         Sets method-level configuration for get.
@@ -172,6 +152,26 @@ class JobsClient(BaseService):
         :return: The service instance for method chaining.
         """
         self._rename_config = config
+        return self
+
+    def set_get_artifact_download_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for get_artifact_download.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._get_artifact_download_config = config
+        return self
+
+    def set_submit_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for submit.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._submit_config = config
         return self
 
     def set_delete_config(self, config: SdkConfig):
@@ -485,6 +485,113 @@ class JobsClient(BaseService):
         )
 
     @cast_models
+    def get(
+        self, job_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> JobResponse:
+        """get
+
+        :param job_id: job_id
+        :type job_id: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: JobResponse
+        """
+
+        Validator(str).validate(job_id, "job_id")
+
+        resolved_config = self._get_resolved_config(self._get_config, request_options)
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_path("job_id", job_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("GET")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                JobResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(JobResponse, response)
+            )
+        )
+
+    @cast_models
+    def rename(
+        self,
+        job_id: str,
+        *,
+        job_name: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> RenameJobResponse:
+        """rename
+
+        :param request_body: The request body.
+        :type request_body: JobsRenameRequest
+        :param job_id: job_id
+        :type job_id: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: RenameJobResponse
+        """
+
+        Validator(str).validate(job_id, "job_id")
+
+        resolved_config = self._get_resolved_config(
+            self._rename_config, request_options
+        )
+
+        request_body = JobsRenameRequest(job_name=job_name)
+        Validator(JobsRenameRequest).validate(request_body, "request_body")
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_path("job_id", job_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("PATCH")
+            .set_body(request_body)
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                RenameJobResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(RenameJobResponse, response)
+            )
+        )
+
+    @cast_models
     def get_artifact_download(
         self,
         job_id: str,
@@ -625,113 +732,6 @@ class JobsClient(BaseService):
                 JobsSubmitResponse_adapter.validate_python(response)
                 if should_validate_response(resolved_config)
                 else construct_lenient(JobsSubmitResponse, response)
-            )
-        )
-
-    @cast_models
-    def get(
-        self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> JobResponse:
-        """get
-
-        :param job_id: job_id
-        :type job_id: str
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: JobResponse
-        """
-
-        Validator(str).validate(job_id, "job_id")
-
-        resolved_config = self._get_resolved_config(self._get_config, request_options)
-
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_path("job_id", job_id)
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("GET")
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                JobResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(JobResponse, response)
-            )
-        )
-
-    @cast_models
-    def rename(
-        self,
-        job_id: str,
-        *,
-        job_name: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> RenameJobResponse:
-        """rename
-
-        :param request_body: The request body.
-        :type request_body: JobsRenameRequest
-        :param job_id: job_id
-        :type job_id: str
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: RenameJobResponse
-        """
-
-        Validator(str).validate(job_id, "job_id")
-
-        resolved_config = self._get_resolved_config(
-            self._rename_config, request_options
-        )
-
-        request_body = JobsRenameRequest(job_name=job_name)
-        Validator(JobsRenameRequest).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_path("job_id", job_id)
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("PATCH")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                RenameJobResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(RenameJobResponse, response)
             )
         )
 
@@ -1720,6 +1720,24 @@ class RawJobsClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
+    def get(
+        self, job_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[JobResponse]:
+        data = JobsClient.get(self._client, job_id, request_options=request_options)
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def rename(
+        self,
+        job_id: str,
+        *,
+        job_name: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[RenameJobResponse]:
+        data = JobsClient.rename(
+            self._client, job_id, job_name=job_name, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
     def get_artifact_download(
         self,
         job_id: str,
@@ -1769,24 +1787,6 @@ class RawJobsClient:
                 }
             ),
             request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def get(
-        self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobResponse]:
-        data = JobsClient.get(self._client, job_id, request_options=request_options)
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def rename(
-        self,
-        job_id: str,
-        *,
-        job_name: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RenameJobResponse]:
-        data = JobsClient.rename(
-            self._client, job_id, job_name=job_name, request_options=request_options
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
@@ -2149,6 +2149,22 @@ class AsyncJobsClient(JobsClient):
             job_id, request_options=request_options
         )
 
+    def get(
+        self, job_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> Awaitable[JobResponse]:  # type: ignore[override]
+        return to_async(super().get)(job_id, request_options=request_options)
+
+    def rename(
+        self,
+        job_id: str,
+        *,
+        job_name: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[RenameJobResponse]:  # type: ignore[override]
+        return to_async(super().rename)(
+            job_id, job_name=job_name, request_options=request_options
+        )
+
     def get_artifact_download(
         self,
         job_id: str,
@@ -2193,22 +2209,6 @@ class AsyncJobsClient(JobsClient):
                 }
             ),
             request_options=request_options,
-        )
-
-    def get(
-        self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[JobResponse]:  # type: ignore[override]
-        return to_async(super().get)(job_id, request_options=request_options)
-
-    def rename(
-        self,
-        job_id: str,
-        *,
-        job_name: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[RenameJobResponse]:  # type: ignore[override]
-        return to_async(super().rename)(
-            job_id, job_name=job_name, request_options=request_options
         )
 
     def delete(
@@ -2560,6 +2560,26 @@ class AsyncRawJobsClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
+    async def get(
+        self, job_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[JobResponse]:
+        data = await AsyncJobsClient.get(
+            self._client, job_id, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def rename(
+        self,
+        job_id: str,
+        *,
+        job_name: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[RenameJobResponse]:
+        data = await AsyncJobsClient.rename(
+            self._client, job_id, job_name=job_name, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
     async def get_artifact_download(
         self,
         job_id: str,
@@ -2609,26 +2629,6 @@ class AsyncRawJobsClient:
                 }
             ),
             request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def get(
-        self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobResponse]:
-        data = await AsyncJobsClient.get(
-            self._client, job_id, request_options=request_options
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def rename(
-        self,
-        job_id: str,
-        *,
-        job_name: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RenameJobResponse]:
-        data = await AsyncJobsClient.rename(
-            self._client, job_id, job_name=job_name, request_options=request_options
         )
         return HttpResponse(data=data, response=self._client._last_response)
 

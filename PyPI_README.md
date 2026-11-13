@@ -34,13 +34,13 @@ This SDK is compatible with the following versions: `Python >= 3.9`
 To get started with the SDK, we recommend installing using `pip`:
 
 ```bash
-pip install harbor-client
+pip install harbor-framework-client
 ```
 
 If you are using Python 3, you can use `pip3` instead:
 
 ```bash
-pip3 install harbor-client
+pip3 install harbor-framework-client
 ```
 
 ## Disabling Redirects<a id="disabling-redirects"></a>
@@ -275,11 +275,11 @@ The SDK includes several models that represent the data structures used in API r
 | JobSharing                                     |             |
 | UpdateJobSharingRequest                        |             |
 | JobTrialStatusItem                             |             |
-| JobArtifactType                                |             |
-| SubmitJobRequest                               |             |
 | JobResponse                                    |             |
 | JobsRenameRequest                              |             |
 | RenameJobResponse                              |             |
+| JobArtifactType                                |             |
+| SubmitJobRequest                               |             |
 | DeleteJobsRequest                              |             |
 | DeleteJobsResponse                             |             |
 | JobsTransferRequest                            |             |
@@ -303,25 +303,25 @@ The SDK includes several models that represent the data structures used in API r
 | JobsGetOverviewRequestForceCombined            |             |
 | EvaluationComparison                           |             |
 | TrialResponse                                  |             |
-| TrialArtifactType                              |             |
+| TrialPage                                      |             |
+| TrialsListRequestSort                          |             |
+| ResultTrialCreate                              |             |
+| CreatedResultTrial                             |             |
+| TrialsGetFiltersRequestField                   |             |
 | TrialActionRequest                             |             |
 | TrialActionResponse                            |             |
 | CancelTrialsRequest                            |             |
 | RetryTrialsRequest                             |             |
 | RetryTrialsResponse                            |             |
+| TrialArtifactType                              |             |
 | TrialsCopyRequest                              |             |
-| TrialsGetFiltersRequestField                   |             |
-| TrialPage                                      |             |
-| TrialsListRequestSort                          |             |
-| ResultTrialCreate                              |             |
-| CreatedResultTrial                             |             |
 | RolloutResponse                                |             |
+| RolloutsListRequestSort                        |             |
+| RolloutsGetFiltersRequestField                 |             |
 | RolloutActionRequest                           |             |
 | CancelRolloutsRequest                          |             |
 | RetryRolloutsRequest                           |             |
 | RetryRolloutsResponse                          |             |
-| RolloutsGetFiltersRequestField                 |             |
-| RolloutsListRequestSort                        |             |
 | AccountIdentity                                |             |
 | MyOrganizationsItem                            |             |
 | ApiKeyMetadataPage                             |             |
@@ -374,6 +374,11 @@ The SDK includes several models that represent the data structures used in API r
 | JobOwnerOrganization                           |             |
 | JobShareOrganizationSummary                    |             |
 | JobCreator                                     |             |
+| JobDetail                                      |             |
+| TrialCounts                                    |             |
+| MeanAggregate                                  |             |
+| UsageAggregates                                |             |
+| SumAggregate                                   |             |
 | HostedDiffSelectors                            |             |
 | HostedAgentConfig                              |             |
 | HostedSubmissionEnvironmentConfig              |             |
@@ -397,11 +402,6 @@ The SDK includes several models that represent the data structures used in API r
 | AgentSource                                    |             |
 | AgentSourceManifest                            |             |
 | AgentSourceRuntime                             |             |
-| JobDetail                                      |             |
-| TrialCounts                                    |             |
-| MeanAggregate                                  |             |
-| UsageAggregates                                |             |
-| SumAggregate                                   |             |
 | JobSummary                                     |             |
 | JobTaskSummary                                 |             |
 | JobRewardMetricSet                             |             |

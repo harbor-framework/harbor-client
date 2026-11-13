@@ -197,6 +197,22 @@
 
 - `job_id` (required)
 
+### `client.jobs.get`
+
+`GET /v1/jobs/{job_id}`
+
+**Parameters:**
+
+- `job_id` (required)
+
+### `client.jobs.rename`
+
+`PATCH /v1/jobs/{job_id}`
+
+**Parameters:**
+
+- `job_id` (required)
+
 ### `client.jobs.get_artifact_download`
 
 `GET /v1/jobs/{job_id}/artifacts`
@@ -213,22 +229,6 @@
 **Parameters:**
 
 - `idempotency_key` (required)
-
-### `client.jobs.get`
-
-`GET /v1/jobs/{job_id}`
-
-**Parameters:**
-
-- `job_id` (required)
-
-### `client.jobs.rename`
-
-`PATCH /v1/jobs/{job_id}`
-
-**Parameters:**
-
-- `job_id` (required)
 
 ### `client.jobs.delete`
 
@@ -354,69 +354,6 @@
 
 - `trial_id` (required)
 
-### `client.trials.get_artifact_download`
-
-`GET /v1/trials/{trial_id}/artifacts`
-
-**Parameters:**
-
-- `trial_id` (required)
-- `artifact_type` (required)
-
-### `client.trials.pause`
-
-`POST /v1/trials/pause`
-
-### `client.trials.resume`
-
-`POST /v1/trials/resume`
-
-### `client.trials.cancel`
-
-`POST /v1/trials/cancel`
-
-Cancel the specified physical trial attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-### `client.trials.retry`
-
-`POST /v1/trials/retry`
-
-Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new trial IDs. Stale or active attempts return 409.
-
-**Parameters:**
-
-- `idempotency_key` (required)
-
-### `client.trials.copy`
-
-`POST /v1/trials/{source_trial_id}/copy`
-
-**Parameters:**
-
-- `source_trial_id` (required)
-
-### `client.trials.get_filters`
-
-`GET /v1/trials/filters`
-
-**Parameters:**
-
-- `field` (required)
-- `task`
-- `state`
-- `name`
-- `q`
-- `agent_name`
-- `agent_version`
-- `model_name`
-- `model_provider`
-- `reasoning_effort`
-- `source`
-- `created_after`
-- `created_before`
-- `job_id`
-- `limit`
-
 ### `client.trials.list`
 
 `GET /v1/trials`
@@ -444,6 +381,69 @@ Retry the specified latest terminal attempts. Idempotency-Key is required; repla
 
 `POST /v1/trials`
 
+### `client.trials.get_filters`
+
+`GET /v1/trials/filters`
+
+**Parameters:**
+
+- `field` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `limit`
+
+### `client.trials.pause`
+
+`POST /v1/trials/pause`
+
+### `client.trials.resume`
+
+`POST /v1/trials/resume`
+
+### `client.trials.cancel`
+
+`POST /v1/trials/cancel`
+
+Cancel the specified physical trial attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
+
+### `client.trials.retry`
+
+`POST /v1/trials/retry`
+
+Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new trial IDs. Stale or active attempts return 409.
+
+**Parameters:**
+
+- `idempotency_key` (required)
+
+### `client.trials.get_artifact_download`
+
+`GET /v1/trials/{trial_id}/artifacts`
+
+**Parameters:**
+
+- `trial_id` (required)
+- `artifact_type` (required)
+
+### `client.trials.copy`
+
+`POST /v1/trials/{source_trial_id}/copy`
+
+**Parameters:**
+
+- `source_trial_id` (required)
+
 ## RolloutsClient
 
 ### `client.rollouts.get`
@@ -453,6 +453,51 @@ Retry the specified latest terminal attempts. Idempotency-Key is required; repla
 **Parameters:**
 
 - `rollout_id` (required)
+
+### `client.rollouts.list`
+
+`GET /v1/rollouts`
+
+**Parameters:**
+
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `page_size`
+- `page_token`
+- `sort`
+
+### `client.rollouts.get_filters`
+
+`GET /v1/rollouts/filters`
+
+**Parameters:**
+
+- `field` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `limit`
 
 ### `client.rollouts.pause`
 
@@ -477,51 +522,6 @@ Retry the specified latest terminal attempts. Idempotency-Key is required; repla
 **Parameters:**
 
 - `idempotency_key` (required)
-
-### `client.rollouts.get_filters`
-
-`GET /v1/rollouts/filters`
-
-**Parameters:**
-
-- `field` (required)
-- `task`
-- `state`
-- `name`
-- `q`
-- `agent_name`
-- `agent_version`
-- `model_name`
-- `model_provider`
-- `reasoning_effort`
-- `source`
-- `created_after`
-- `created_before`
-- `job_id`
-- `limit`
-
-### `client.rollouts.list`
-
-`GET /v1/rollouts`
-
-**Parameters:**
-
-- `task`
-- `state`
-- `name`
-- `q`
-- `agent_name`
-- `agent_version`
-- `model_name`
-- `model_provider`
-- `reasoning_effort`
-- `source`
-- `created_after`
-- `created_before`
-- `job_id`
-- `page_size`
-- `page_token`
-- `sort`
 
 ## AccountClient
 

@@ -9,8 +9,10 @@ from .utils.base_model import BaseModel
 class TrialActionRequest(BaseModel):
     """TrialActionRequest
 
-    :param trial_ids: trial_ids
+    :param trial_ids: One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order.
     :type trial_ids: List[str]
     """
 
-    trial_ids: List[str]
+    trial_ids: List[str] = Field(
+        description="One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+    )

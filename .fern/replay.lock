@@ -42,14 +42,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
+  - commit_sha: 31ef43dc36e6013029aaa6b79d61e7a31709817f
+    tree_hash: 56ffe94c7e239a6625aa53b62c9d461c64dd065a
+    timestamp: 2026-11-13T00:23:29.272Z
+    cli_version: 5.199.0
+    generator_versions:
+      python: 6.17.0
+current_generation: 31ef43dc36e6013029aaa6b79d61e7a31709817f
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:c6e614f9fa41dfb09c54a3a1269b06eb8d9a408a1c41ec837ef41f7cdb9b0975
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
+    base_generation: 31ef43dc36e6013029aaa6b79d61e7a31709817f
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -16833,7 +16839,7 @@ patches:
     original_commit: 61a37708c2a4e72346405c1176c431715170524c
     original_message: Use native Fern generation PRs and persistent Replay history
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
+    base_generation: 31ef43dc36e6013029aaa6b79d61e7a31709817f
     files:
       - build_support.py
     patch_content: |
@@ -16908,7 +16914,7 @@ patches:
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
+    base_generation: 31ef43dc36e6013029aaa6b79d61e7a31709817f
     files:
       - examples/sample.py
       - src/harbor_client/rollouts/client.py
@@ -18390,36 +18396,15 @@ patches:
                 description="Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
             )
   - id: patch-7c950c27
-    content_hash: sha256:ae6678991ecc9d67d79dff42897c7afce1eac47ec0efa83c76ad5872656b8a30
+    content_hash: sha256:cfb3ead6aff7c3d31a7afef551e1c2c6afde34006f200dd416b91bdcb81fb180
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
+    base_generation: 31ef43dc36e6013029aaa6b79d61e7a31709817f
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
     patch_content: |
-      diff --git a/src/harbor_client/types/trial_summary.py b/src/harbor_client/types/trial_summary.py
-      index e55e2d5..0004203 100644
-      --- a/src/harbor_client/types/trial_summary.py
-      +++ b/src/harbor_client/types/trial_summary.py
-      @@ -56,7 +56,7 @@ class TrialSummary(BaseModel):
-           :param model: model
-           :type model: ModelIdentity
-           :param rewards: rewards
-      -    :type rewards: Dict[str, float]
-      +    :type rewards: Dict[str, Optional[float]]
-           :param usage: usage
-           :type usage: Usage
-           :param error_type: error_type
-      @@ -78,6 +78,6 @@ class TrialSummary(BaseModel):
-           task: TaskIdentity
-           agent: AgentIdentity
-           model: ModelIdentity
-      -    rewards: Optional[Dict[str, float]]
-      +    rewards: Optional[Dict[str, Optional[float]]]
-           usage: Usage
-           error_type: Optional[str]
       diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
       index d52cd18..f1e1462 100644
       --- a/src/harbor_client/types/trial_detail.py
@@ -18442,6 +18427,27 @@ patches:
            usage: Usage
            error_type: Optional[str]
            lock: Optional[Dict[str, Any]] = Field(
+      diff --git a/src/harbor_client/types/trial_summary.py b/src/harbor_client/types/trial_summary.py
+      index e55e2d5..0004203 100644
+      --- a/src/harbor_client/types/trial_summary.py
+      +++ b/src/harbor_client/types/trial_summary.py
+      @@ -56,7 +56,7 @@ class TrialSummary(BaseModel):
+           :param model: model
+           :type model: ModelIdentity
+           :param rewards: rewards
+      -    :type rewards: Dict[str, float]
+      +    :type rewards: Dict[str, Optional[float]]
+           :param usage: usage
+           :type usage: Usage
+           :param error_type: error_type
+      @@ -78,6 +78,6 @@ class TrialSummary(BaseModel):
+           task: TaskIdentity
+           agent: AgentIdentity
+           model: ModelIdentity
+      -    rewards: Optional[Dict[str, float]]
+      +    rewards: Optional[Dict[str, Optional[float]]]
+           usage: Usage
+           error_type: Optional[str]
     theirs_snapshot:
       src/harbor_client/types/trial_detail.py: |
         from __future__ import annotations
@@ -18636,7 +18642,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
+    base_generation: 31ef43dc36e6013029aaa6b79d61e7a31709817f
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |

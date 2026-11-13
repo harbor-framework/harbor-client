@@ -2627,200 +2627,218 @@
         }
       }
     },
-    "/v1/account": {
+    "/v1/trials": {
       "get": {
         "tags": [
-          "account"
+          "trials"
         ],
-        "operationId": "account.get",
+        "operationId": "trials.list",
         "parameters": [
           {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
+            "name": "task",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RunState"
+            },
+            "required": false
+          },
+          {
+            "name": "name",
+            "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
+              "maxLength": 200
+            },
+            "required": false
+          },
           {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "AccountIdentity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountIdentity"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/organizations": {
-      "post": {
-        "tags": [
-          "organizations"
-        ],
-        "operationId": "organizations.ensure",
-        "parameters": [
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
+            "name": "q",
+            "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
+              "maxLength": 200
+            },
+            "required": false
+          },
           {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnsureOrganizationResponse"
-                }
-              }
-            }
+            "name": "agent_name",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
           },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
+          {
+            "name": "agent_version",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
           },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
+          {
+            "name": "model_name",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
           },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
+          {
+            "name": "model_provider",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
           },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
+          {
+            "name": "reasoning_effort",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
           },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConflictEncoded"
-                }
-              }
-            }
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
           },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "organization_name": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "organization_name"
-                ],
-                "additionalProperties": false
-              }
-            }
+          {
+            "name": "created_after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
           },
-          "required": true
-        }
-      }
-    },
-    "/v1/account/organization-memberships": {
-      "get": {
-        "tags": [
-          "account"
-        ],
-        "operationId": "account.listOrganizationMemberships",
-        "parameters": [
+          {
+            "name": "created_before",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
+          },
+          {
+            "name": "job_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": false
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "enum": [
+                    "id",
+                    "-id",
+                    "name",
+                    "-name",
+                    "state",
+                    "-state",
+                    "created_at",
+                    "-created_at",
+                    "updated_at",
+                    "-updated_at",
+                    "started_at",
+                    "-started_at",
+                    "finished_at",
+                    "-finished_at",
+                    "task_name",
+                    "-task_name",
+                    "agent_name",
+                    "-agent_name",
+                    "agent_version",
+                    "-agent_version",
+                    "model_name",
+                    "-model_name",
+                    "model_provider",
+                    "-model_provider",
+                    "reasoning_effort",
+                    "-reasoning_effort",
+                    "source",
+                    "-source",
+                    "n_input_tokens",
+                    "-n_input_tokens",
+                    "n_cached_input_tokens",
+                    "-n_cached_input_tokens",
+                    "n_output_tokens",
+                    "-n_output_tokens",
+                    "cost_usd",
+                    "-cost_usd"
+                  ]
+                }
+              ]
+            },
+            "required": false
+          },
           {
             "name": "Harbor-API-Version",
             "in": "header",
@@ -2842,204 +2860,11 @@
         ],
         "responses": {
           "200": {
-            "description": "MyOrganizations",
+            "description": "TrialPage",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MyOrganizations"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/api-keys": {
-      "post": {
-        "tags": [
-          "apiKeys"
-        ],
-        "operationId": "apiKeys.create",
-        "parameters": [
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "ApiKeyCreated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyCreated"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConflictEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        },
-        "description": "Create a personal API key using a signed-in user session. Harbor API keys and exchanged API-key JWTs cannot create keys. The raw key is returned once. Do not retry an ambiguous creation response.",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApiKeyCreate"
-              }
-            }
-          },
-          "required": true
-        }
-      },
-      "get": {
-        "tags": [
-          "apiKeys"
-        ],
-        "operationId": "apiKeys.list",
-        "parameters": [
-          {
-            "name": "page_size",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "page_token",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "ApiKeyMetadataPage",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyMetadataPage"
+                  "$ref": "#/components/schemas/TrialPage"
                 }
               }
             }
@@ -3108,448 +2933,15 @@
         "x-fern-pagination": {
           "cursor": "$request.page_token",
           "next_cursor": "$response.next_page_token",
-          "results": "$response.api_keys"
+          "results": "$response.items"
         }
-      }
-    },
-    "/v1/api-keys/{key_id}/revoke": {
+      },
       "post": {
-        "tags": [
-          "apiKeys"
-        ],
-        "operationId": "apiKeys.revoke",
-        "parameters": [
-          {
-            "name": "key_id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 100
-            },
-            "required": true
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/agents": {
-      "get": {
-        "tags": [
-          "agents"
-        ],
-        "operationId": "agents.list",
-        "parameters": [
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "AgentsResponse",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentsResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/agents/{name}/options": {
-      "get": {
-        "tags": [
-          "agents"
-        ],
-        "operationId": "agents.getOptions",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "schema": {
-              "type": "string"
-            },
-            "required": true
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "AgentOptions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentOptions"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/jobs/{job_id}/artifacts": {
-      "get": {
-        "tags": [
-          "jobs"
-        ],
-        "operationId": "jobs.getArtifactDownload",
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "required": true
-          },
-          {
-            "name": "artifact_type",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/JobArtifactType"
-            },
-            "required": true
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "StorageDownload",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StorageDownload"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConflictEncoded"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "TooManyRequests",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TooManyRequestsEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/trials/{trial_id}/artifacts": {
-      "get": {
         "tags": [
           "trials"
         ],
-        "operationId": "trials.getArtifactDownload",
+        "operationId": "trials.create",
         "parameters": [
-          {
-            "name": "trial_id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "required": true
-          },
-          {
-            "name": "artifact_type",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TrialArtifactType"
-            },
-            "required": true
-          },
           {
             "name": "Harbor-API-Version",
             "in": "header",
@@ -3566,16 +2958,15 @@
         "security": [
           {
             "bearer": []
-          },
-          {}
+          }
         ],
         "responses": {
           "200": {
-            "description": "StorageDownload",
+            "description": "CreatedResultTrial",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/StorageDownload"
+                  "$ref": "#/components/schemas/CreatedResultTrial"
                 }
               }
             }
@@ -3630,156 +3021,12 @@
               }
             }
           },
-          "429": {
-            "description": "TooManyRequests",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TooManyRequestsEncoded"
-                }
-              }
-            }
-          },
           "500": {
             "description": "InternalServerError",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/jobs/submit": {
-      "post": {
-        "tags": [
-          "jobs"
-        ],
-        "operationId": "jobs.submit",
-        "parameters": [
-          {
-            "name": "idempotency-key",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            },
-            "required": true
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/SubmitJobResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/DryRunResponse"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConflictEncoded"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "TooManyRequests",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TooManyRequestsEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "ServiceUnavailable",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServiceUnavailableEncoded"
                 }
               }
             }
@@ -3789,11 +3036,831 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubmitJobRequest"
+                "$ref": "#/components/schemas/ResultTrialCreate"
               }
             }
           },
           "required": true
+        }
+      }
+    },
+    "/v1/rollouts": {
+      "get": {
+        "tags": [
+          "rollouts"
+        ],
+        "operationId": "rollouts.list",
+        "parameters": [
+          {
+            "name": "task",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RunState"
+            },
+            "required": false
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false
+          },
+          {
+            "name": "agent_name",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "agent_version",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "model_name",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "model_provider",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "reasoning_effort",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "created_after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
+          },
+          {
+            "name": "created_before",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
+          },
+          {
+            "name": "job_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": false
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "enum": [
+                    "id",
+                    "-id",
+                    "name",
+                    "-name",
+                    "state",
+                    "-state",
+                    "created_at",
+                    "-created_at",
+                    "updated_at",
+                    "-updated_at",
+                    "started_at",
+                    "-started_at",
+                    "finished_at",
+                    "-finished_at",
+                    "task_name",
+                    "-task_name",
+                    "agent_name",
+                    "-agent_name",
+                    "agent_version",
+                    "-agent_version",
+                    "model_name",
+                    "-model_name",
+                    "model_provider",
+                    "-model_provider",
+                    "reasoning_effort",
+                    "-reasoning_effort",
+                    "source",
+                    "-source",
+                    "n_input_tokens",
+                    "-n_input_tokens",
+                    "n_cached_input_tokens",
+                    "-n_cached_input_tokens",
+                    "n_output_tokens",
+                    "-n_output_tokens",
+                    "cost_usd",
+                    "-cost_usd"
+                  ]
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "TrialPage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrialPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BadRequestEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidPageSizeEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "x-fern-pagination": {
+          "cursor": "$request.page_token",
+          "next_cursor": "$response.next_page_token",
+          "results": "$response.items"
+        }
+      }
+    },
+    "/v1/trials/filters": {
+      "get": {
+        "tags": [
+          "trials"
+        ],
+        "operationId": "trials.getFilters",
+        "parameters": [
+          {
+            "name": "task",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RunState"
+            },
+            "required": false
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false
+          },
+          {
+            "name": "agent_name",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "agent_version",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "model_name",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "model_provider",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "reasoning_effort",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "created_after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
+          },
+          {
+            "name": "created_before",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
+          },
+          {
+            "name": "job_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": false
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "state",
+                "task",
+                "agent_name",
+                "agent_version",
+                "model_name",
+                "model_provider",
+                "reasoning_effort",
+                "source"
+              ]
+            },
+            "required": true
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "FilterValuesResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterValuesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/rollouts/filters": {
+      "get": {
+        "tags": [
+          "rollouts"
+        ],
+        "operationId": "rollouts.getFilters",
+        "parameters": [
+          {
+            "name": "task",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RunState"
+            },
+            "required": false
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false
+          },
+          {
+            "name": "agent_name",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "agent_version",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "model_name",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "model_provider",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "reasoning_effort",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100
+            },
+            "required": false
+          },
+          {
+            "name": "created_after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
+          },
+          {
+            "name": "created_before",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
+          },
+          {
+            "name": "job_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": false
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "state",
+                "task",
+                "agent_name",
+                "agent_version",
+                "model_name",
+                "model_provider",
+                "reasoning_effort",
+                "source"
+              ]
+            },
+            "required": true
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "FilterValuesResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterValuesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -4693,7 +4760,876 @@
         }
       }
     },
+    "/v1/account": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "account.get",
+        "parameters": [
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AccountIdentity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountIdentity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/organizations": {
+      "post": {
+        "tags": [
+          "organizations"
+        ],
+        "operationId": "organizations.ensure",
+        "parameters": [
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnsureOrganizationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organization_name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "organization_name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/v1/account/organization-memberships": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "operationId": "account.listOrganizationMemberships",
+        "parameters": [
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "MyOrganizations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyOrganizations"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api-keys": {
+      "post": {
+        "tags": [
+          "apiKeys"
+        ],
+        "operationId": "apiKeys.create",
+        "parameters": [
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "ApiKeyCreated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create a personal API key using a signed-in user session. Harbor API keys and exchanged API-key JWTs cannot create keys. The raw key is returned once. Do not retry an ambiguous creation response.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyCreate"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "get": {
+        "tags": [
+          "apiKeys"
+        ],
+        "operationId": "apiKeys.list",
+        "parameters": [
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ApiKeyMetadataPage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyMetadataPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BadRequestEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidPageSizeEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "x-fern-pagination": {
+          "cursor": "$request.page_token",
+          "next_cursor": "$response.next_page_token",
+          "results": "$response.api_keys"
+        }
+      }
+    },
+    "/v1/api-keys/{key_id}/revoke": {
+      "post": {
+        "tags": [
+          "apiKeys"
+        ],
+        "operationId": "apiKeys.revoke",
+        "parameters": [
+          {
+            "name": "key_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": true
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/agents": {
+      "get": {
+        "tags": [
+          "agents"
+        ],
+        "operationId": "agents.list",
+        "parameters": [
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "AgentsResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/agents/{name}/options": {
+      "get": {
+        "tags": [
+          "agents"
+        ],
+        "operationId": "agents.getOptions",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "AgentOptions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "operationId": "jobs.get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "JobResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "tags": [
           "jobs"
@@ -4818,12 +5754,14 @@
           },
           "required": true
         }
-      },
+      }
+    },
+    "/v1/jobs/{job_id}/artifacts": {
       "get": {
         "tags": [
           "jobs"
         ],
-        "operationId": "jobs.get",
+        "operationId": "jobs.getArtifactDownload",
         "parameters": [
           {
             "name": "job_id",
@@ -4831,6 +5769,14 @@
             "schema": {
               "type": "string",
               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "artifact_type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/JobArtifactType"
             },
             "required": true
           },
@@ -4855,11 +5801,11 @@
         ],
         "responses": {
           "200": {
-            "description": "JobResponse",
+            "description": "StorageDownload",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JobResponse"
+                  "$ref": "#/components/schemas/StorageDownload"
                 }
               }
             }
@@ -4904,6 +5850,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictEncoded"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TooManyRequests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsEncoded"
+                }
+              }
+            }
+          },
           "500": {
             "description": "InternalServerError",
             "content": {
@@ -4914,6 +5880,277 @@
               }
             }
           }
+        }
+      }
+    },
+    "/v1/trials/{trial_id}/artifacts": {
+      "get": {
+        "tags": [
+          "trials"
+        ],
+        "operationId": "trials.getArtifactDownload",
+        "parameters": [
+          {
+            "name": "trial_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "artifact_type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TrialArtifactType"
+            },
+            "required": true
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "StorageDownload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageDownload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictEncoded"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TooManyRequests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/submit": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "operationId": "jobs.submit",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "Harbor-API-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-09-10.preview"
+              ],
+              "default": "2026-09-10.preview"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SubmitJobResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DryRunResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundEncoded"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictEncoded"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TooManyRequests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerError",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableEncoded"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitJobRequest"
+              }
+            }
+          },
+          "required": true
         }
       }
     },
@@ -6498,1243 +7735,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JobTaskPage"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/BadRequestEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/InvalidPageSizeEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        },
-        "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.items"
-        }
-      }
-    },
-    "/v1/trials/filters": {
-      "get": {
-        "tags": [
-          "trials"
-        ],
-        "operationId": "trials.getFilters",
-        "parameters": [
-          {
-            "name": "task",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 4096
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/RunState"
-            },
-            "required": false
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "required": false
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "required": false
-          },
-          {
-            "name": "agent_name",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "agent_version",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "model_name",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "model_provider",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "reasoning_effort",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "source",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "created_after",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "ISO datetime; an omitted timezone means UTC"
-            },
-            "required": false
-          },
-          {
-            "name": "created_before",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "ISO datetime; an omitted timezone means UTC"
-            },
-            "required": false
-          },
-          {
-            "name": "job_id",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "required": false
-          },
-          {
-            "name": "field",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "state",
-                "task",
-                "agent_name",
-                "agent_version",
-                "model_name",
-                "model_provider",
-                "reasoning_effort",
-                "source"
-              ]
-            },
-            "required": true
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "FilterValuesResponse",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FilterValuesResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rollouts/filters": {
-      "get": {
-        "tags": [
-          "rollouts"
-        ],
-        "operationId": "rollouts.getFilters",
-        "parameters": [
-          {
-            "name": "task",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 4096
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/RunState"
-            },
-            "required": false
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "required": false
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "required": false
-          },
-          {
-            "name": "agent_name",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "agent_version",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "model_name",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "model_provider",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "reasoning_effort",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "source",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "created_after",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "ISO datetime; an omitted timezone means UTC"
-            },
-            "required": false
-          },
-          {
-            "name": "created_before",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "ISO datetime; an omitted timezone means UTC"
-            },
-            "required": false
-          },
-          {
-            "name": "job_id",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "required": false
-          },
-          {
-            "name": "field",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "state",
-                "task",
-                "agent_name",
-                "agent_version",
-                "model_name",
-                "model_provider",
-                "reasoning_effort",
-                "source"
-              ]
-            },
-            "required": true
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "FilterValuesResponse",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FilterValuesResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/trials": {
-      "get": {
-        "tags": [
-          "trials"
-        ],
-        "operationId": "trials.list",
-        "parameters": [
-          {
-            "name": "task",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 4096
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/RunState"
-            },
-            "required": false
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "required": false
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "required": false
-          },
-          {
-            "name": "agent_name",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "agent_version",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "model_name",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "model_provider",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "reasoning_effort",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "source",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "created_after",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "ISO datetime; an omitted timezone means UTC"
-            },
-            "required": false
-          },
-          {
-            "name": "created_before",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "ISO datetime; an omitted timezone means UTC"
-            },
-            "required": false
-          },
-          {
-            "name": "job_id",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "required": false
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "page_token",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "allOf": [
-                {
-                  "enum": [
-                    "id",
-                    "-id",
-                    "name",
-                    "-name",
-                    "state",
-                    "-state",
-                    "created_at",
-                    "-created_at",
-                    "updated_at",
-                    "-updated_at",
-                    "started_at",
-                    "-started_at",
-                    "finished_at",
-                    "-finished_at",
-                    "task_name",
-                    "-task_name",
-                    "agent_name",
-                    "-agent_name",
-                    "agent_version",
-                    "-agent_version",
-                    "model_name",
-                    "-model_name",
-                    "model_provider",
-                    "-model_provider",
-                    "reasoning_effort",
-                    "-reasoning_effort",
-                    "source",
-                    "-source",
-                    "n_input_tokens",
-                    "-n_input_tokens",
-                    "n_cached_input_tokens",
-                    "-n_cached_input_tokens",
-                    "n_output_tokens",
-                    "-n_output_tokens",
-                    "cost_usd",
-                    "-cost_usd"
-                  ]
-                }
-              ]
-            },
-            "required": false
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "TrialPage",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TrialPage"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/BadRequestEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/InvalidPageSizeEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        },
-        "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.items"
-        }
-      },
-      "post": {
-        "tags": [
-          "trials"
-        ],
-        "operationId": "trials.create",
-        "parameters": [
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "CreatedResultTrial",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreatedResultTrial"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BadRequest",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedEncoded"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFound",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundEncoded"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConflictEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerErrorEncoded"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResultTrialCreate"
-              }
-            }
-          },
-          "required": true
-        }
-      }
-    },
-    "/v1/rollouts": {
-      "get": {
-        "tags": [
-          "rollouts"
-        ],
-        "operationId": "rollouts.list",
-        "parameters": [
-          {
-            "name": "task",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 4096
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/RunState"
-            },
-            "required": false
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "required": false
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "required": false
-          },
-          {
-            "name": "agent_name",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "agent_version",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "model_name",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "model_provider",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "reasoning_effort",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "source",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 100
-            },
-            "required": false
-          },
-          {
-            "name": "created_after",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "ISO datetime; an omitted timezone means UTC"
-            },
-            "required": false
-          },
-          {
-            "name": "created_before",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "ISO datetime; an omitted timezone means UTC"
-            },
-            "required": false
-          },
-          {
-            "name": "job_id",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "required": false
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "page_token",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "allOf": [
-                {
-                  "enum": [
-                    "id",
-                    "-id",
-                    "name",
-                    "-name",
-                    "state",
-                    "-state",
-                    "created_at",
-                    "-created_at",
-                    "updated_at",
-                    "-updated_at",
-                    "started_at",
-                    "-started_at",
-                    "finished_at",
-                    "-finished_at",
-                    "task_name",
-                    "-task_name",
-                    "agent_name",
-                    "-agent_name",
-                    "agent_version",
-                    "-agent_version",
-                    "model_name",
-                    "-model_name",
-                    "model_provider",
-                    "-model_provider",
-                    "reasoning_effort",
-                    "-reasoning_effort",
-                    "source",
-                    "-source",
-                    "n_input_tokens",
-                    "-n_input_tokens",
-                    "n_cached_input_tokens",
-                    "-n_cached_input_tokens",
-                    "n_output_tokens",
-                    "-n_output_tokens",
-                    "cost_usd",
-                    "-cost_usd"
-                  ]
-                }
-              ]
-            },
-            "required": false
-          },
-          {
-            "name": "Harbor-API-Version",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-09-10.preview"
-              ],
-              "default": "2026-09-10.preview"
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "TrialPage",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TrialPage"
                 }
               }
             }
@@ -16305,664 +16305,6 @@
         ],
         "additionalProperties": false
       },
-      "JobResponse": {
-        "type": "object",
-        "properties": {
-          "job": {
-            "$ref": "#/components/schemas/JobDetail"
-          }
-        },
-        "required": [
-          "job"
-        ],
-        "additionalProperties": false
-      },
-      "JobDetail": {
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "name": {
-            "type": "string"
-          },
-          "state": {
-            "$ref": "#/components/schemas/RunState"
-          },
-          "rollouts": {
-            "$ref": "#/components/schemas/TrialCounts"
-          },
-          "trials": {
-            "$ref": "#/components/schemas/TrialCounts"
-          },
-          "n_retries": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "n_errors": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "agent_names": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "model_names": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "model_providers": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "reasoning_efforts": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "sources": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "rewards": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/MeanAggregate"
-            }
-          },
-          "usage": {
-            "$ref": "#/components/schemas/UsageAggregates"
-          },
-          "lock_uri": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Null when no standalone job lock was stored. Artifact downloads use the storage API."
-          },
-          "config": {
-            "type": "object"
-          },
-          "session_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "created_at",
-          "updated_at",
-          "started_at",
-          "finished_at",
-          "id",
-          "name",
-          "state",
-          "rollouts",
-          "n_retries",
-          "n_errors",
-          "agent_names",
-          "model_names",
-          "model_providers",
-          "reasoning_efforts",
-          "sources",
-          "rewards",
-          "usage",
-          "lock_uri",
-          "config",
-          "session_id"
-        ],
-        "additionalProperties": false
-      },
-      "UsageAggregates": {
-        "type": "object",
-        "properties": {
-          "n_input_tokens": {
-            "$ref": "#/components/schemas/SumAggregate"
-          },
-          "n_cached_input_tokens": {
-            "$ref": "#/components/schemas/SumAggregate"
-          },
-          "n_output_tokens": {
-            "$ref": "#/components/schemas/SumAggregate"
-          },
-          "cost_usd": {
-            "$ref": "#/components/schemas/SumAggregate"
-          }
-        },
-        "required": [
-          "n_input_tokens",
-          "n_cached_input_tokens",
-          "n_output_tokens",
-          "cost_usd"
-        ],
-        "additionalProperties": false
-      },
-      "SumAggregate": {
-        "type": "object",
-        "properties": {
-          "sum": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "count": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "sum",
-          "count"
-        ],
-        "additionalProperties": false
-      },
-      "MeanAggregate": {
-        "type": "object",
-        "properties": {
-          "mean": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "count": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "mean",
-          "count"
-        ],
-        "additionalProperties": false
-      },
-      "TrialCounts": {
-        "type": "object",
-        "properties": {
-          "n_total": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "n_queued": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "n_running": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "n_paused": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "n_cancelling": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "n_cancelled": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "n_finished": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "n_total",
-          "n_queued",
-          "n_running",
-          "n_paused",
-          "n_cancelling",
-          "n_cancelled",
-          "n_finished"
-        ],
-        "additionalProperties": false
-      },
-      "RunState": {
-        "type": "string",
-        "enum": [
-          "queued",
-          "running",
-          "paused",
-          "cancelling",
-          "finished",
-          "cancelled"
-        ]
-      },
-      "TrialPage": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TrialSummary"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "next_page_token": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "items",
-          "total",
-          "next_page_token"
-        ],
-        "additionalProperties": false
-      },
-      "TrialSummary": {
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "job_id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "name": {
-            "type": "string"
-          },
-          "state": {
-            "$ref": "#/components/schemas/RunState"
-          },
-          "retry_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "description": "All readable attempts of this logical trial, newest first, including this attempt."
-          },
-          "phase": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "environment_setup",
-                  "agent_setup",
-                  "agent_execution",
-                  "verifier",
-                  "collection",
-                  "cleanup"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "task": {
-            "$ref": "#/components/schemas/TaskIdentity"
-          },
-          "agent": {
-            "$ref": "#/components/schemas/AgentIdentity"
-          },
-          "model": {
-            "$ref": "#/components/schemas/ModelIdentity"
-          },
-          "rewards": {
-            "anyOf": [
-              {
-                "type": "object",
-                "additionalProperties": {
-                  "$ref": "#/components/schemas/RewardValue"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "usage": {
-            "$ref": "#/components/schemas/Usage"
-          },
-          "error_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "created_at",
-          "updated_at",
-          "started_at",
-          "finished_at",
-          "id",
-          "job_id",
-          "name",
-          "state",
-          "retry_ids",
-          "phase",
-          "task",
-          "agent",
-          "model",
-          "rewards",
-          "usage",
-          "error_type"
-        ],
-        "additionalProperties": false
-      },
-      "Usage": {
-        "type": "object",
-        "properties": {
-          "n_input_tokens": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "n_cached_input_tokens": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "n_output_tokens": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "cost_usd": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "n_input_tokens",
-          "n_cached_input_tokens",
-          "n_output_tokens",
-          "cost_usd"
-        ],
-        "additionalProperties": false
-      },
-      "RewardValue": {
-        "anyOf": [
-          {
-            "type": "number"
-          },
-          {
-            "type": "null"
-          }
-        ]
-      },
-      "ModelIdentity": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "provider": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "reasoning_effort": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "name",
-          "provider",
-          "reasoning_effort"
-        ],
-        "additionalProperties": false
-      },
-      "AgentIdentity": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "name",
-          "version"
-        ],
-        "additionalProperties": false
-      },
-      "TaskIdentity": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "digest": {
-            "type": "string"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "name",
-          "digest",
-          "source"
-        ],
-        "additionalProperties": false
-      },
-      "FilterValuesResponse": {
-        "type": "object",
-        "properties": {
-          "field": {
-            "type": "string",
-            "enum": [
-              "state",
-              "task",
-              "agent_name",
-              "agent_version",
-              "model_name",
-              "model_provider",
-              "reasoning_effort",
-              "source"
-            ]
-          },
-          "values": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "value": {
-                  "type": "string"
-                },
-                "count": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                }
-              },
-              "required": [
-                "value",
-                "count"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "truncated": {
-            "type": "boolean",
-            "enum": [
-              true
-            ]
-          }
-        },
-        "required": [
-          "field",
-          "values"
-        ],
-        "additionalProperties": false
-      },
       "JobTaskPage": {
         "type": "object",
         "properties": {
@@ -17212,6 +16554,67 @@
         ],
         "additionalProperties": false
       },
+      "FilterValuesResponse": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "state",
+              "task",
+              "agent_name",
+              "agent_version",
+              "model_name",
+              "model_provider",
+              "reasoning_effort",
+              "source"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "value",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "truncated": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "field",
+          "values"
+        ],
+        "additionalProperties": false
+      },
+      "RunState": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "paused",
+          "cancelling",
+          "finished",
+          "cancelled"
+        ]
+      },
       "JobPage": {
         "type": "object",
         "properties": {
@@ -17357,6 +16760,130 @@
         ],
         "additionalProperties": false
       },
+      "UsageAggregates": {
+        "type": "object",
+        "properties": {
+          "n_input_tokens": {
+            "$ref": "#/components/schemas/SumAggregate"
+          },
+          "n_cached_input_tokens": {
+            "$ref": "#/components/schemas/SumAggregate"
+          },
+          "n_output_tokens": {
+            "$ref": "#/components/schemas/SumAggregate"
+          },
+          "cost_usd": {
+            "$ref": "#/components/schemas/SumAggregate"
+          }
+        },
+        "required": [
+          "n_input_tokens",
+          "n_cached_input_tokens",
+          "n_output_tokens",
+          "cost_usd"
+        ],
+        "additionalProperties": false
+      },
+      "SumAggregate": {
+        "type": "object",
+        "properties": {
+          "sum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "sum",
+          "count"
+        ],
+        "additionalProperties": false
+      },
+      "MeanAggregate": {
+        "type": "object",
+        "properties": {
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "mean",
+          "count"
+        ],
+        "additionalProperties": false
+      },
+      "TrialCounts": {
+        "type": "object",
+        "properties": {
+          "n_total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "n_queued": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "n_running": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "n_paused": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "n_cancelling": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "n_cancelled": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "n_finished": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "n_total",
+          "n_queued",
+          "n_running",
+          "n_paused",
+          "n_cancelling",
+          "n_cancelled",
+          "n_finished"
+        ],
+        "additionalProperties": false
+      },
       "JobActionResponse": {
         "type": "object",
         "properties": {
@@ -17372,6 +16899,153 @@
         ],
         "additionalProperties": false
       },
+      "JobDetail": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/RunState"
+          },
+          "rollouts": {
+            "$ref": "#/components/schemas/TrialCounts"
+          },
+          "trials": {
+            "$ref": "#/components/schemas/TrialCounts"
+          },
+          "n_retries": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "n_errors": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "agent_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "model_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "model_providers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reasoning_efforts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rewards": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MeanAggregate"
+            }
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageAggregates"
+          },
+          "lock_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when no standalone job lock was stored. Artifact downloads use the storage API."
+          },
+          "config": {
+            "type": "object"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "created_at",
+          "updated_at",
+          "started_at",
+          "finished_at",
+          "id",
+          "name",
+          "state",
+          "rollouts",
+          "n_retries",
+          "n_errors",
+          "agent_names",
+          "model_names",
+          "model_providers",
+          "reasoning_efforts",
+          "sources",
+          "rewards",
+          "usage",
+          "lock_uri",
+          "config",
+          "session_id"
+        ],
+        "additionalProperties": false
+      },
       "CancelJobsRequest": {
         "type": "object",
         "properties": {
@@ -17381,7 +17055,9 @@
               "type": "string",
               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
             },
-            "minItems": 1
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
           },
           "force": {
             "type": "boolean",
@@ -17402,7 +17078,9 @@
               "type": "string",
               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
             },
-            "minItems": 1
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
           }
         },
         "required": [
@@ -17619,336 +17297,6 @@
           "job_id",
           "job_name",
           "title"
-        ],
-        "additionalProperties": false
-      },
-      "RetryRolloutsResponse": {
-        "type": "object",
-        "properties": {
-          "rollout_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            }
-          }
-        },
-        "required": [
-          "rollout_ids"
-        ],
-        "additionalProperties": false
-      },
-      "RetryRolloutsRequest": {
-        "type": "object",
-        "properties": {
-          "rollout_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1
-          }
-        },
-        "required": [
-          "rollout_ids"
-        ],
-        "additionalProperties": false
-      },
-      "RetryTrialsResponse": {
-        "type": "object",
-        "properties": {
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            }
-          }
-        },
-        "required": [
-          "trial_ids"
-        ],
-        "additionalProperties": false
-      },
-      "RetryTrialsRequest": {
-        "type": "object",
-        "properties": {
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1
-          }
-        },
-        "required": [
-          "trial_ids"
-        ],
-        "additionalProperties": false
-      },
-      "TrialActionResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TrialDetail"
-            }
-          }
-        },
-        "required": [
-          "items"
-        ],
-        "additionalProperties": false
-      },
-      "TrialDetail": {
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "job_id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "name": {
-            "type": "string"
-          },
-          "state": {
-            "$ref": "#/components/schemas/RunState"
-          },
-          "retry_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "description": "All readable attempts of this logical trial, newest first, including this attempt."
-          },
-          "phase": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "environment_setup",
-                  "agent_setup",
-                  "agent_execution",
-                  "verifier",
-                  "collection",
-                  "cleanup"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "task": {
-            "$ref": "#/components/schemas/TaskIdentity"
-          },
-          "agent": {
-            "$ref": "#/components/schemas/AgentIdentity"
-          },
-          "model": {
-            "$ref": "#/components/schemas/ModelIdentity"
-          },
-          "rewards": {
-            "anyOf": [
-              {
-                "type": "object",
-                "additionalProperties": {
-                  "$ref": "#/components/schemas/RewardValue"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "usage": {
-            "$ref": "#/components/schemas/Usage"
-          },
-          "error_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "lock": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "The persisted trial lock, or null for historical uploads without a lock."
-          },
-          "artifacts": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "Stored artifact paths by role; use the storage API to obtain authorized download URLs."
-          },
-          "storage_error": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Structured storage failure when available; otherwise null."
-          },
-          "result": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
-          }
-        },
-        "required": [
-          "created_at",
-          "updated_at",
-          "started_at",
-          "finished_at",
-          "id",
-          "job_id",
-          "name",
-          "state",
-          "retry_ids",
-          "phase",
-          "task",
-          "agent",
-          "model",
-          "rewards",
-          "usage",
-          "error_type",
-          "lock",
-          "artifacts",
-          "storage_error",
-          "result"
-        ],
-        "additionalProperties": false
-      },
-      "CancelRolloutsRequest": {
-        "type": "object",
-        "properties": {
-          "rollout_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1
-          },
-          "force": {
-            "type": "boolean",
-            "default": true
-          }
-        },
-        "required": [
-          "rollout_ids"
-        ],
-        "additionalProperties": false
-      },
-      "CancelTrialsRequest": {
-        "type": "object",
-        "properties": {
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1
-          },
-          "force": {
-            "type": "boolean",
-            "default": true
-          }
-        },
-        "required": [
-          "trial_ids"
-        ],
-        "additionalProperties": false
-      },
-      "RolloutActionRequest": {
-        "type": "object",
-        "properties": {
-          "rollout_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1
-          }
-        },
-        "required": [
-          "rollout_ids"
-        ],
-        "additionalProperties": false
-      },
-      "TrialActionRequest": {
-        "type": "object",
-        "properties": {
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1
-          }
-        },
-        "required": [
-          "trial_ids"
         ],
         "additionalProperties": false
       },
@@ -19204,6 +18552,18 @@
         },
         "additionalProperties": false
       },
+      "JobResponse": {
+        "type": "object",
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobDetail"
+          }
+        },
+        "required": [
+          "job"
+        ],
+        "additionalProperties": false
+      },
       "AgentOptions": {
         "type": "object"
       },
@@ -19501,6 +18861,662 @@
         },
         "required": [
           "id"
+        ],
+        "additionalProperties": false
+      },
+      "RetryRolloutsResponse": {
+        "type": "object",
+        "properties": {
+          "rollout_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            }
+          }
+        },
+        "required": [
+          "rollout_ids"
+        ],
+        "additionalProperties": false
+      },
+      "RetryRolloutsRequest": {
+        "type": "object",
+        "properties": {
+          "rollout_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+          }
+        },
+        "required": [
+          "rollout_ids"
+        ],
+        "additionalProperties": false
+      },
+      "RetryTrialsResponse": {
+        "type": "object",
+        "properties": {
+          "trial_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            }
+          }
+        },
+        "required": [
+          "trial_ids"
+        ],
+        "additionalProperties": false
+      },
+      "RetryTrialsRequest": {
+        "type": "object",
+        "properties": {
+          "trial_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+          }
+        },
+        "required": [
+          "trial_ids"
+        ],
+        "additionalProperties": false
+      },
+      "TrialActionResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrialDetail"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "TrialDetail": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "job_id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/RunState"
+          },
+          "retry_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "description": "All readable attempts of this logical trial, newest first, including this attempt."
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "environment_setup",
+                  "agent_setup",
+                  "agent_execution",
+                  "verifier",
+                  "collection",
+                  "cleanup"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "$ref": "#/components/schemas/TaskIdentity"
+          },
+          "agent": {
+            "$ref": "#/components/schemas/AgentIdentity"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelIdentity"
+          },
+          "rewards": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/RewardValue"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          },
+          "error_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lock": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The persisted trial lock, or null for historical uploads without a lock."
+          },
+          "artifacts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+          },
+          "storage_error": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Structured storage failure when available; otherwise null."
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
+          }
+        },
+        "required": [
+          "created_at",
+          "updated_at",
+          "started_at",
+          "finished_at",
+          "id",
+          "job_id",
+          "name",
+          "state",
+          "retry_ids",
+          "phase",
+          "task",
+          "agent",
+          "model",
+          "rewards",
+          "usage",
+          "error_type",
+          "lock",
+          "artifacts",
+          "storage_error",
+          "result"
+        ],
+        "additionalProperties": false
+      },
+      "Usage": {
+        "type": "object",
+        "properties": {
+          "n_input_tokens": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "n_cached_input_tokens": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "n_output_tokens": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "n_input_tokens",
+          "n_cached_input_tokens",
+          "n_output_tokens",
+          "cost_usd"
+        ],
+        "additionalProperties": false
+      },
+      "RewardValue": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "ModelIdentity": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reasoning_effort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "provider",
+          "reasoning_effort"
+        ],
+        "additionalProperties": false
+      },
+      "AgentIdentity": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "TaskIdentity": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "digest",
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "CancelRolloutsRequest": {
+        "type": "object",
+        "properties": {
+          "rollout_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+          },
+          "force": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "rollout_ids"
+        ],
+        "additionalProperties": false
+      },
+      "CancelTrialsRequest": {
+        "type": "object",
+        "properties": {
+          "trial_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+          },
+          "force": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "trial_ids"
+        ],
+        "additionalProperties": false
+      },
+      "RolloutActionRequest": {
+        "type": "object",
+        "properties": {
+          "rollout_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+          }
+        },
+        "required": [
+          "rollout_ids"
+        ],
+        "additionalProperties": false
+      },
+      "TrialActionRequest": {
+        "type": "object",
+        "properties": {
+          "trial_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+          }
+        },
+        "required": [
+          "trial_ids"
+        ],
+        "additionalProperties": false
+      },
+      "TrialPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrialSummary"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "next_page_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_page_token"
+        ],
+        "additionalProperties": false
+      },
+      "TrialSummary": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "job_id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/RunState"
+          },
+          "retry_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "description": "All readable attempts of this logical trial, newest first, including this attempt."
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "environment_setup",
+                  "agent_setup",
+                  "agent_execution",
+                  "verifier",
+                  "collection",
+                  "cleanup"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "$ref": "#/components/schemas/TaskIdentity"
+          },
+          "agent": {
+            "$ref": "#/components/schemas/AgentIdentity"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelIdentity"
+          },
+          "rewards": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/RewardValue"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          },
+          "error_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "created_at",
+          "updated_at",
+          "started_at",
+          "finished_at",
+          "id",
+          "job_id",
+          "name",
+          "state",
+          "retry_ids",
+          "phase",
+          "task",
+          "agent",
+          "model",
+          "rewards",
+          "usage",
+          "error_type"
         ],
         "additionalProperties": false
       },
