@@ -125,8 +125,8 @@ def test_open_agent_config_stays_open_and_valid_submission_works():
     assert sent[0]["config"]["agents"][0]["future_field"] == {"allowed": True}
 
 
-@pytest.mark.parametrize("value", [0, "invalid", [], {}])
-def test_null_only_response_is_rejected_before_generated_decoder(value):
+@pytest.mark.parametrize("value", [0, "invalid", [], True])
+def test_non_object_detail_data_is_rejected_before_generated_decoder(value):
     payload = response_fixture("/v1/trials/{trial_id}")
     payload["trial"]["result"] = value
     with sync_client(

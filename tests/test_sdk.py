@@ -260,10 +260,18 @@ def test_forbidden_properties_should_be_rejected(config, field, value):
         )
 
 
-def test_null_only_should_reject_non_null():
-    field = TrialDetail.model_fields["result"]
-    with pytest.raises(ValidationError):
-        TypeAdapter(field.annotation).validate_python({"unexpected": True})
+@pytest.mark.parametrize("name", ["result", "storage_error"])
+def test_nullable_detail_data_accepts_objects_and_rejects_primitives(name):
+    field = TrialDetail.model_fields[name]
+    adapter = TypeAdapter(field.annotation)
+    assert field.is_required()
+    assert adapter.validate_python(None) is None
+    assert adapter.validate_python({"metadata": {"future": True}}) == {
+        "metadata": {"future": True}
+    }
+    for value in ["invalid", 1, False, []]:
+        with pytest.raises(ValidationError):
+            adapter.validate_python(value)
 
 
 def test_token_should_reach_identity_dependent_public_reads():
