@@ -96,7 +96,7 @@ class JobTrialSummary(BaseModel):
     cache_tokens: Optional[JobTrialSummaryCacheTokens]
     cost_usd: Optional[JobTrialSummaryCostUsd]
     id: str
-    config_values: Dict[str, str]
+    config_values: Dict[str, Optional[str]]
     name: str
     reward: Optional[JobTrialSummaryReward]
     evals: Dict[str, JobRewardMetricSet]
@@ -113,7 +113,7 @@ class JobTrialSummary(BaseModel):
     max_retries: Optional[int] = Field(default=None)
     is_paused: bool
     paused_at: Optional[str]
-    paused_by_user: JobCreator
+    paused_by_user: Optional[JobCreator]
     attempt: int
     n_attempts: int
     is_scored: bool

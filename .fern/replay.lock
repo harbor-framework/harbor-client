@@ -30,14 +30,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: cf4f0b52bc8d3edd932fc828265a636f425e483c
+  - commit_sha: 177eba664eb449e73476133e722da9b6dc9d2007
+    tree_hash: 458127233e759e429fbdd773dc1214557860fa7c
+    timestamp: 2026-11-13T00:32:59.300Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: 177eba664eb449e73476133e722da9b6dc9d2007
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:7b22dadcbc1060f1f792da467acc8472e74941e064c6c5c04f61b0b9dc8d8b8d
+    content_hash: sha256:44635575bf0e52fb3f2d91b7d5b3556734be2468ad151c63484df208e7704a0e
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: cf4f0b52bc8d3edd932fc828265a636f425e483c
+    base_generation: 177eba664eb449e73476133e722da9b6dc9d2007
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -64,7 +70,7 @@ patches:
       - src/harbor_client/types/utils/cast_models.py
     patch_content: |
       diff --git a/pyproject.toml b/pyproject.toml
-      index ace1658..7ae02b9 100644
+      index b5632aa..e3f81e7 100644
       --- a/pyproject.toml
       +++ b/pyproject.toml
       @@ -1,3 +1,9 @@
@@ -78,7 +84,7 @@ patches:
        requires = ["setuptools>=61.0"]
        build-backend = "setuptools.build_meta"
       @@ -7,12 +13,15 @@ name = "harbor-framework-client"
-       version = "0.1.0"
+       version = "1.0.0"
        description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
        readme = "PyPI_README.md"
       -requires-python = ">=3.9"
@@ -232,19 +238,19 @@ patches:
            additional_headers: typing.Dict[str, typing.Any]
            additional_query_parameters: typing.Dict[str, typing.Any]
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 10267e6..b8f0d35 100644
+      index 6210c51..de073cf 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
-      @@ -909,7 +909,7 @@ class JobsClient(BaseService):
-               soft: bool,
+      @@ -907,7 +907,7 @@ class JobsClient(BaseService):
                reason: Union[str, None] = SENTINEL,
+               finish_running: Union[bool, None] = SENTINEL,
                request_options: Optional[RequestOptions] = None,
       -    ) -> Any:
       +    ) -> Optional[Any]:
                """cancel
        
                :param request_body: The request body.
-      @@ -1022,6 +1022,7 @@ class JobsClient(BaseService):
+      @@ -1026,6 +1026,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobSummary]
                """
@@ -252,7 +258,7 @@ patches:
        
                Validator(str).is_optional().validate(page_size, "page_size")
                Validator(str).is_optional().validate(page_token, "page_token")
-      @@ -1096,9 +1097,6 @@ class JobsClient(BaseService):
+      @@ -1100,9 +1101,6 @@ class JobsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -262,7 +268,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1156,6 +1154,7 @@ class JobsClient(BaseService):
+      @@ -1160,6 +1158,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobTaskSummary]
                """
@@ -270,7 +276,7 @@ patches:
        
                Validator(str).validate(job_id, "job_id")
                Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -1214,9 +1213,6 @@ class JobsClient(BaseService):
+      @@ -1218,9 +1217,6 @@ class JobsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -280,25 +286,25 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1621,7 +1617,7 @@ class RawJobsClient:
-               soft: bool,
+      @@ -1623,7 +1619,7 @@ class RawJobsClient:
                reason: Union[str, None] = SENTINEL,
+               finish_running: Union[bool, None] = SENTINEL,
                request_options: Optional[RequestOptions] = None,
       -    ) -> HttpResponse[Any]:
       +    ) -> HttpResponse[Optional[Any]]:
                data = JobsClient.cancel(
                    self._client,
                    job_id=job_id,
-      @@ -1981,7 +1977,7 @@ class AsyncJobsClient(JobsClient):
-               soft: bool,
+      @@ -1987,7 +1983,7 @@ class AsyncJobsClient(JobsClient):
                reason: Union[str, None] = SENTINEL,
+               finish_running: Union[bool, None] = SENTINEL,
                request_options: Optional[RequestOptions] = None,
       -    ) -> Awaitable[Any]:  # type: ignore[override]
       +    ) -> Awaitable[Optional[Any]]:  # type: ignore[override]
                return to_async(super().cancel)(
                    job_id=job_id,
-                   soft=soft,
-      @@ -2045,7 +2041,11 @@ class AsyncJobsClient(JobsClient):
+                   **dict[str, Any](
+      @@ -2057,7 +2053,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -311,7 +317,7 @@ patches:
                        yield page
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2090,7 +2090,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2102,7 +2102,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -324,9 +330,9 @@ patches:
                        yield page
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2359,7 +2363,7 @@ class AsyncRawJobsClient:
-               soft: bool,
+      @@ -2369,7 +2373,7 @@ class AsyncRawJobsClient:
                reason: Union[str, None] = SENTINEL,
+               finish_running: Union[bool, None] = SENTINEL,
                request_options: Optional[RequestOptions] = None,
       -    ) -> HttpResponse[Any]:
       +    ) -> HttpResponse[Optional[Any]]:
@@ -431,7 +437,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/net/transport/serializer.py b/src/harbor_client/net/transport/serializer.py
-      index ddba9ae..f5bc0b8 100644
+      index 62be074..0ba698d 100644
       --- a/src/harbor_client/net/transport/serializer.py
       +++ b/src/harbor_client/net/transport/serializer.py
       @@ -481,7 +481,7 @@ class Serializer:
@@ -444,7 +450,7 @@ patches:
                    return str(data).lower()
                if isinstance(data, (int, float)):
       diff --git a/src/harbor_client/packages/client.py b/src/harbor_client/packages/client.py
-      index e9d3824..c3094ad 100644
+      index d975e0d..0e87ef7 100644
       --- a/src/harbor_client/packages/client.py
       +++ b/src/harbor_client/packages/client.py
       @@ -631,6 +631,7 @@ class PackagesClient(BaseService):
@@ -576,10 +582,10 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index ad71f1a..75d4290 100644
+      index 60a1347..6553258 100644
       --- a/src/harbor_client/trials/client.py
       +++ b/src/harbor_client/trials/client.py
-      @@ -493,6 +493,7 @@ class TrialsClient(BaseService):
+      @@ -561,6 +561,7 @@ class TrialsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobTrialSummary]
                """
@@ -587,7 +593,7 @@ patches:
        
                Validator(str).validate(job_ids, "job_ids")
                Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -563,9 +564,6 @@ class TrialsClient(BaseService):
+      @@ -631,9 +632,6 @@ class TrialsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -597,7 +603,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -999,7 +997,11 @@ class AsyncTrialsClient(TrialsClient):
+      @@ -1203,7 +1201,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
                async def _paginate():
@@ -667,23 +673,8 @@ patches:
        
        
        JobCancellationSummaryRunningCountOne = typing.Union[
-      diff --git a/src/harbor_client/types/job_detail.py b/src/harbor_client/types/job_detail.py
-      index a2e2da9..4916656 100644
-      --- a/src/harbor_client/types/job_detail.py
-      +++ b/src/harbor_client/types/job_detail.py
-      @@ -135,8 +135,8 @@ class JobDetail(BaseModel):
-           finished_at: Optional[str]
-           visibility: JobDetailVisibility
-           created_by: Optional[str]
-      -    created_by_user: JobCreator
-      -    owner_organization: JobOwnerOrganization
-      +    created_by_user: Optional[JobCreator]
-      +    owner_organization: Optional[JobOwnerOrganization]
-           access_relation: Optional[JobDetailAccessRelation]
-           can_operate: bool
-           can_manage_access: bool
       diff --git a/src/harbor_client/types/job_overview.py b/src/harbor_client/types/job_overview.py
-      index 0ea4b22..99bdb59 100644
+      index 75cafc8..99bdb59 100644
       --- a/src/harbor_client/types/job_overview.py
       +++ b/src/harbor_client/types/job_overview.py
       @@ -126,8 +126,8 @@ class JobOverview(BaseModel):
@@ -697,24 +688,6 @@ patches:
            access_relation: Optional[JobOverviewAccessRelation]
            can_operate: bool
            can_manage_access: bool
-      @@ -135,13 +135,13 @@ class JobOverview(BaseModel):
-           can_transfer: bool
-           is_hosted: Optional[bool]
-           billing_blocked: bool
-      -    manual_pause: JobManualPauseSummary
-      -    cancellation: JobCancellationSummary
-      +    manual_pause: Optional[JobManualPauseSummary]
-      +    cancellation: Optional[JobCancellationSummary]
-           config: Any
-           datasets: Optional[List[str]]
-           run_targets: Optional[List[JobOverviewRunTargetsItem]]
-      -    stats: JobOverviewStatistics
-      -    circuit: JobCircuitState
-      +    stats: Optional[JobOverviewStatistics]
-      +    circuit: Optional[JobCircuitState]
-           circuits: Optional[List[JobBucketCircuitState]]
-       
-       
       diff --git a/src/harbor_client/types/job_summary.py b/src/harbor_client/types/job_summary.py
       index 301fcff..a214a0f 100644
       --- a/src/harbor_client/types/job_summary.py
@@ -852,7 +825,7 @@ patches:
 
         [project]
         name = "harbor-framework-client"
-        version = "0.1.0"
+        version = "1.0.0"
         description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
         readme = "PyPI_README.md"
         requires-python = ">=3.12"
@@ -2247,7 +2220,7 @@ patches:
         from ..types.jobs_list_bad_request_response import JobsListBadRequestResponse_adapter
         from ..types import (
             BadRequestEncoded,
-            CancelJobWithIdRequest,
+            CancelHostedJobRequest,
             ConflictEncoded,
             CreatedResultJob,
             DeleteJobsRequest,
@@ -2256,7 +2229,6 @@ patches:
             ForbiddenEncoded,
             InternalServerErrorEncoded,
             JobArtifactType,
-            JobDetail,
             JobOverview,
             JobPage,
             JobsCopyRequest,
@@ -2272,12 +2244,14 @@ patches:
             JobsListTasksRequestSortOrder,
             JobsRenameRequest,
             JobsTransferRequest,
+            JobSubmission,
             JobSummary,
             JobTaskPage,
             JobTaskSummary,
             JobTrialStatusItem,
             NotFoundEncoded,
             RenameJobResponse,
+            ResultJob,
             ResultJobCreate,
             ResultJobCreateVisibility,
             ServiceUnavailableEncoded,
@@ -2286,7 +2260,6 @@ patches:
             SubmitJobRequest,
             SubmitJobRequestConfig,
             SubmitJobRequestRegrade,
-            SubmitJobResponse,
             TooManyRequestsEncoded,
             TransferJobResponse,
             UnauthorizedEncoded,
@@ -2749,16 +2722,15 @@ patches:
                 self,
                 *,
                 config: SubmitJobRequestConfig,
-                relay_inference: bool,
                 idempotency_key: str,
-                dry_run: bool = SENTINEL,
-                job_secrets: Union[dict, None] = SENTINEL,
-                registry_credentials: Union[dict, None] = SENTINEL,
                 regrade: SubmitJobRequestRegrade = SENTINEL,
                 organization_id: str = SENTINEL,
-                session_id: Union[str, None] = SENTINEL,
+                job_secrets: Union[dict, None] = SENTINEL,
+                job_credentials: Union[dict, None] = SENTINEL,
+                registry_credentials: Union[dict, None] = SENTINEL,
+                dry_run: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> SubmitJobResponse:
+            ) -> JobSubmission:
                 """submit
 
                 :param request_body: The request body.
@@ -2769,7 +2741,7 @@ patches:
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: SubmitJobResponse
+                :rtype: JobSubmission
                 """
 
                 Validator(str).validate(idempotency_key, "idempotency_key")
@@ -2780,17 +2752,16 @@ patches:
 
                 request_body = SubmitJobRequest(
                     config=config,
-                    relay_inference=relay_inference,
                     **dict[str, Any](
                         {
                             k: v
                             for k, v in {
-                                "dry_run": dry_run,
-                                "job_secrets": job_secrets,
-                                "registry_credentials": registry_credentials,
                                 "regrade": regrade,
                                 "organization_id": organization_id,
-                                "session_id": session_id,
+                                "job_secrets": job_secrets,
+                                "job_credentials": job_credentials,
+                                "registry_credentials": registry_credentials,
+                                "dry_run": dry_run,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -2823,16 +2794,16 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        SubmitJobResponse.model_validate(response)
+                        JobSubmission.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(SubmitJobResponse, response)
+                        else construct_lenient(JobSubmission, response)
                     )
                 )
 
             @cast_models
             def get(
                 self, job_id: str, *, request_options: Optional[RequestOptions] = None
-            ) -> JobDetail:
+            ) -> ResultJob:
                 """get
 
                 :param job_id: job_id
@@ -2841,7 +2812,7 @@ patches:
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: JobDetail
+                :rtype: ResultJob
                 """
 
                 Validator(str).validate(job_id, "job_id")
@@ -2871,9 +2842,9 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        JobDetail.model_validate(response)
+                        ResultJob.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(JobDetail, response)
+                        else construct_lenient(ResultJob, response)
                     )
                 )
 
@@ -3143,14 +3114,14 @@ patches:
                 self,
                 *,
                 job_id: str,
-                soft: bool,
                 reason: Union[str, None] = SENTINEL,
+                finish_running: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> Optional[Any]:
                 """cancel
 
                 :param request_body: The request body.
-                :type request_body: CancelJobWithIdRequest
+                :type request_body: CancelHostedJobRequest
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
@@ -3162,14 +3133,20 @@ patches:
                     self._cancel_config, request_options
                 )
 
-                request_body = CancelJobWithIdRequest(
+                request_body = CancelHostedJobRequest(
                     job_id=job_id,
-                    soft=soft,
                     **dict[str, Any](
-                        {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                        {
+                            k: v
+                            for k, v in {
+                                "reason": reason,
+                                "finish_running": finish_running,
+                            }.items()
+                            if v is not SENTINEL
+                        }
                     ),
                 )
-                Validator(CancelJobWithIdRequest).validate(request_body, "request_body")
+                Validator(CancelHostedJobRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
                         f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/cancel",
@@ -3727,31 +3704,29 @@ patches:
                 self,
                 *,
                 config: SubmitJobRequestConfig,
-                relay_inference: bool,
                 idempotency_key: str,
-                dry_run: bool = SENTINEL,
-                job_secrets: Union[dict, None] = SENTINEL,
-                registry_credentials: Union[dict, None] = SENTINEL,
                 regrade: SubmitJobRequestRegrade = SENTINEL,
                 organization_id: str = SENTINEL,
-                session_id: Union[str, None] = SENTINEL,
+                job_secrets: Union[dict, None] = SENTINEL,
+                job_credentials: Union[dict, None] = SENTINEL,
+                registry_credentials: Union[dict, None] = SENTINEL,
+                dry_run: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[SubmitJobResponse]:
+            ) -> HttpResponse[JobSubmission]:
                 data = JobsClient.submit(
                     self._client,
                     config=config,
-                    relay_inference=relay_inference,
                     idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {
                             k: v
                             for k, v in {
-                                "dry_run": dry_run,
-                                "job_secrets": job_secrets,
-                                "registry_credentials": registry_credentials,
                                 "regrade": regrade,
                                 "organization_id": organization_id,
-                                "session_id": session_id,
+                                "job_secrets": job_secrets,
+                                "job_credentials": job_credentials,
+                                "registry_credentials": registry_credentials,
+                                "dry_run": dry_run,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -3762,7 +3737,7 @@ patches:
 
             def get(
                 self, job_id: str, *, request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobDetail]:
+            ) -> HttpResponse[ResultJob]:
                 data = JobsClient.get(self._client, job_id, request_options=request_options)
                 return HttpResponse(data=data, response=self._client._last_response)
 
@@ -3851,16 +3826,22 @@ patches:
                 self,
                 *,
                 job_id: str,
-                soft: bool,
                 reason: Union[str, None] = SENTINEL,
+                finish_running: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[Optional[Any]]:
                 data = JobsClient.cancel(
                     self._client,
                     job_id=job_id,
-                    soft=soft,
                     **dict[str, Any](
-                        {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                        {
+                            k: v
+                            for k, v in {
+                                "reason": reason,
+                                "finish_running": finish_running,
+                            }.items()
+                            if v is not SENTINEL
+                        }
                     ),
                     request_options=request_options,
                 )
@@ -4097,30 +4078,28 @@ patches:
                 self,
                 *,
                 config: SubmitJobRequestConfig,
-                relay_inference: bool,
                 idempotency_key: str,
-                dry_run: bool = SENTINEL,
-                job_secrets: Union[dict, None] = SENTINEL,
-                registry_credentials: Union[dict, None] = SENTINEL,
                 regrade: SubmitJobRequestRegrade = SENTINEL,
                 organization_id: str = SENTINEL,
-                session_id: Union[str, None] = SENTINEL,
+                job_secrets: Union[dict, None] = SENTINEL,
+                job_credentials: Union[dict, None] = SENTINEL,
+                registry_credentials: Union[dict, None] = SENTINEL,
+                dry_run: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[SubmitJobResponse]:  # type: ignore[override]
+            ) -> Awaitable[JobSubmission]:  # type: ignore[override]
                 return to_async(super().submit)(
                     config=config,
-                    relay_inference=relay_inference,
                     idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {
                             k: v
                             for k, v in {
-                                "dry_run": dry_run,
-                                "job_secrets": job_secrets,
-                                "registry_credentials": registry_credentials,
                                 "regrade": regrade,
                                 "organization_id": organization_id,
-                                "session_id": session_id,
+                                "job_secrets": job_secrets,
+                                "job_credentials": job_credentials,
+                                "registry_credentials": registry_credentials,
+                                "dry_run": dry_run,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -4130,7 +4109,7 @@ patches:
 
             def get(
                 self, job_id: str, *, request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[JobDetail]:  # type: ignore[override]
+            ) -> Awaitable[ResultJob]:  # type: ignore[override]
                 return to_async(super().get)(job_id, request_options=request_options)
 
             def rename(
@@ -4211,15 +4190,21 @@ patches:
                 self,
                 *,
                 job_id: str,
-                soft: bool,
                 reason: Union[str, None] = SENTINEL,
+                finish_running: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> Awaitable[Optional[Any]]:  # type: ignore[override]
                 return to_async(super().cancel)(
                     job_id=job_id,
-                    soft=soft,
                     **dict[str, Any](
-                        {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                        {
+                            k: v
+                            for k, v in {
+                                "reason": reason,
+                                "finish_running": finish_running,
+                            }.items()
+                            if v is not SENTINEL
+                        }
                     ),
                     request_options=request_options,
                 )
@@ -4471,31 +4456,29 @@ patches:
                 self,
                 *,
                 config: SubmitJobRequestConfig,
-                relay_inference: bool,
                 idempotency_key: str,
-                dry_run: bool = SENTINEL,
-                job_secrets: Union[dict, None] = SENTINEL,
-                registry_credentials: Union[dict, None] = SENTINEL,
                 regrade: SubmitJobRequestRegrade = SENTINEL,
                 organization_id: str = SENTINEL,
-                session_id: Union[str, None] = SENTINEL,
+                job_secrets: Union[dict, None] = SENTINEL,
+                job_credentials: Union[dict, None] = SENTINEL,
+                registry_credentials: Union[dict, None] = SENTINEL,
+                dry_run: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[SubmitJobResponse]:
+            ) -> HttpResponse[JobSubmission]:
                 data = await AsyncJobsClient.submit(
                     self._client,
                     config=config,
-                    relay_inference=relay_inference,
                     idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {
                             k: v
                             for k, v in {
-                                "dry_run": dry_run,
-                                "job_secrets": job_secrets,
-                                "registry_credentials": registry_credentials,
                                 "regrade": regrade,
                                 "organization_id": organization_id,
-                                "session_id": session_id,
+                                "job_secrets": job_secrets,
+                                "job_credentials": job_credentials,
+                                "registry_credentials": registry_credentials,
+                                "dry_run": dry_run,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -4506,7 +4489,7 @@ patches:
 
             async def get(
                 self, job_id: str, *, request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobDetail]:
+            ) -> HttpResponse[ResultJob]:
                 data = await AsyncJobsClient.get(
                     self._client, job_id, request_options=request_options
                 )
@@ -4597,16 +4580,22 @@ patches:
                 self,
                 *,
                 job_id: str,
-                soft: bool,
                 reason: Union[str, None] = SENTINEL,
+                finish_running: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[Optional[Any]]:
                 data = await AsyncJobsClient.cancel(
                     self._client,
                     job_id=job_id,
-                    soft=soft,
                     **dict[str, Any](
-                        {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                        {
+                            k: v
+                            for k, v in {
+                                "reason": reason,
+                                "finish_running": finish_running,
+                            }.items()
+                            if v is not SENTINEL
+                        }
                     ),
                     request_options=request_options,
                 )
@@ -6173,14 +6162,14 @@ patches:
                 self.errors: dict[int, ApiError] = {}
                 self.config: Optional["SdkConfig"] = config
 
-                self.headers["User-Agent"] = "harbor-framework-client/0.1.0"
+                self.headers["User-Agent"] = "harbor-framework-client/1.0.0"
                 self.headers["X-Fern-Language"] = "Python"
                 self.headers["X-Fern-Runtime"] = f"python/{platform.python_version()}"
                 self.headers["X-Fern-Platform"] = (
                     f"{platform.system().lower()}/{platform.release()}"
                 )
                 self.headers["X-Fern-SDK-Name"] = "harbor-framework-client"
-                self.headers["X-Fern-SDK-Version"] = "0.1.0"
+                self.headers["X-Fern-SDK-Version"] = "1.0.0"
 
                 # Apply default headers, FIRST contributor of a header name winning (FSDK-1671).
                 #
@@ -7561,7 +7550,7 @@ patches:
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 offset: str = SENTINEL,
-                organization_name: str = SENTINEL,
+                organization_id: str = SENTINEL,
                 include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> SyncPager[PackageVersionSummary]:
@@ -7575,8 +7564,8 @@ patches:
                 :type page_token: str, optional
                 :param offset: offset, defaults to None
                 :type offset: str, optional
-                :param organization_name: organization_name, defaults to None
-                :type organization_name: str, optional
+                :param organization_id: organization_id, defaults to None
+                :type organization_id: str, optional
                 :param include_yanked: include_yanked, defaults to None
                 :type include_yanked: PackagesListVersionCatalogRequestIncludeYanked, optional
                 ...
@@ -7591,7 +7580,7 @@ patches:
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
                 Validator(str).is_optional().validate(offset, "offset")
-                Validator(str).is_optional().validate(organization_name, "organization_name")
+                Validator(str).is_optional().validate(organization_id, "organization_id")
                 Validator(
                     PackagesListVersionCatalogRequestIncludeYanked
                 ).is_optional().validate(include_yanked, "include_yanked")
@@ -7617,7 +7606,7 @@ patches:
                             .add_query("page_token", page_token)
                             .add_query("offset", offset)
                             .add_query("type", type)
-                            .add_query("organization_name", organization_name)
+                            .add_query("organization_id", organization_id)
                             .add_query("include_yanked", include_yanked)
                             .add_error(401, UnauthorizedEncoded)
                             .add_error(403, ForbiddenEncoded)
@@ -8134,7 +8123,7 @@ patches:
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 offset: str = SENTINEL,
-                organization_name: str = SENTINEL,
+                organization_id: str = SENTINEL,
                 include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[SyncPager[PackageVersionSummary]]:
@@ -8148,7 +8137,7 @@ patches:
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "offset": offset,
-                                "organization_name": organization_name,
+                                "organization_id": organization_id,
                                 "include_yanked": include_yanked,
                             }.items()
                             if v is not SENTINEL
@@ -8463,7 +8452,7 @@ patches:
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 offset: str = SENTINEL,
-                organization_name: str = SENTINEL,
+                organization_id: str = SENTINEL,
                 include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> AsyncPager[PackageVersionSummary]:  # type: ignore[override]
@@ -8476,7 +8465,7 @@ patches:
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "offset": offset,
-                                "organization_name": organization_name,
+                                "organization_id": organization_id,
                                 "include_yanked": include_yanked,
                             }.items()
                             if v is not SENTINEL
@@ -8803,7 +8792,7 @@ patches:
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
                 offset: str = SENTINEL,
-                organization_name: str = SENTINEL,
+                organization_id: str = SENTINEL,
                 include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[AsyncPager[PackageVersionSummary]]:
@@ -8817,7 +8806,7 @@ patches:
                                 "page_size": page_size,
                                 "page_token": page_token,
                                 "offset": offset,
-                                "organization_name": organization_name,
+                                "organization_id": organization_id,
                                 "include_yanked": include_yanked,
                             }.items()
                             if v is not SENTINEL
@@ -10498,10 +10487,23 @@ patches:
             def cancel(
                 self,
                 *,
-                request: CancelTrialsRequest,
+                job_id: Union[str, None] = SENTINEL,
+                trial_ids: Union[List[str], None] = SENTINEL,
+                search: Union[str, None] = SENTINEL,
+                agents: Union[List[str], None] = SENTINEL,
+                agent_version: Union[str, None] = SENTINEL,
+                providers: Union[List[str], None] = SENTINEL,
+                models: Union[List[str], None] = SENTINEL,
+                tasks: Union[List[str], None] = SENTINEL,
+                exceptions: Union[List[str], None] = SENTINEL,
+                failed_only: Union[bool, None] = SENTINEL,
+                config_filters: Union[dict, None] = SENTINEL,
+                all_: Union[bool, None] = SENTINEL,
+                reason: Union[str, None] = SENTINEL,
+                finish_running: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> CancelTrialsResponse:
-                """Cancel the latest active attempts. Send {job_id: null, trial_ids: [...], soft: false} for IDs across jobs, or select a job with explicit filters or all: true.
+                """Cancel the latest active attempts. Send trial_ids alone to select trials across jobs. An optional job_id asserts that every trial belongs to that job. For job-scoped selection, send job_id with filters or all: true. The server resolves jobs and validates the batch before making changes. The response includes counts by job.
 
                 :param request_body: The request body.
                 :type request_body: CancelTrialsRequest
@@ -10516,7 +10518,30 @@ patches:
                     self._cancel_config, request_options
                 )
 
-                request_body = request
+                request_body = CancelTrialsRequest(
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "job_id": job_id,
+                                "trial_ids": trial_ids,
+                                "search": search,
+                                "agents": agents,
+                                "agent_version": agent_version,
+                                "providers": providers,
+                                "models": models,
+                                "tasks": tasks,
+                                "exceptions": exceptions,
+                                "failed_only": failed_only,
+                                "config_filters": config_filters,
+                                "all_": all_,
+                                "reason": reason,
+                                "finish_running": finish_running,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    )
+                )
                 Validator(CancelTrialsRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
@@ -10551,10 +10576,21 @@ patches:
             def retry(
                 self,
                 *,
-                request: RetryTrialsRequest,
+                job_id: Union[str, None] = SENTINEL,
+                trial_ids: Union[List[str], None] = SENTINEL,
+                search: Union[str, None] = SENTINEL,
+                agents: Union[List[str], None] = SENTINEL,
+                agent_version: Union[str, None] = SENTINEL,
+                providers: Union[List[str], None] = SENTINEL,
+                models: Union[List[str], None] = SENTINEL,
+                tasks: Union[List[str], None] = SENTINEL,
+                exceptions: Union[List[str], None] = SENTINEL,
+                failed_only: Union[bool, None] = SENTINEL,
+                config_filters: Union[dict, None] = SENTINEL,
+                all_: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> RetryTrialsResponse:
-                """Retry the latest terminal attempts. Send {job_id: null, trial_ids: [...]} for IDs across jobs, or select a job with explicit filters or all: true.
+                """Retry the latest terminal attempts. Send trial_ids alone to select trials across jobs. An optional job_id asserts that every trial belongs to that job. For job-scoped selection, send job_id with filters or all: true. The server resolves jobs and validates the batch before making changes. The response includes counts by job.
 
                 :param request_body: The request body.
                 :type request_body: RetryTrialsRequest
@@ -10567,7 +10603,28 @@ patches:
 
                 resolved_config = self._get_resolved_config(self._retry_config, request_options)
 
-                request_body = request
+                request_body = RetryTrialsRequest(
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "job_id": job_id,
+                                "trial_ids": trial_ids,
+                                "search": search,
+                                "agents": agents,
+                                "agent_version": agent_version,
+                                "providers": providers,
+                                "models": models,
+                                "tasks": tasks,
+                                "exceptions": exceptions,
+                                "failed_only": failed_only,
+                                "config_filters": config_filters,
+                                "all_": all_,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    )
+                )
                 Validator(RetryTrialsRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
@@ -10954,22 +11011,90 @@ patches:
             def cancel(
                 self,
                 *,
-                request: CancelTrialsRequest,
+                job_id: Union[str, None] = SENTINEL,
+                trial_ids: Union[List[str], None] = SENTINEL,
+                search: Union[str, None] = SENTINEL,
+                agents: Union[List[str], None] = SENTINEL,
+                agent_version: Union[str, None] = SENTINEL,
+                providers: Union[List[str], None] = SENTINEL,
+                models: Union[List[str], None] = SENTINEL,
+                tasks: Union[List[str], None] = SENTINEL,
+                exceptions: Union[List[str], None] = SENTINEL,
+                failed_only: Union[bool, None] = SENTINEL,
+                config_filters: Union[dict, None] = SENTINEL,
+                all_: Union[bool, None] = SENTINEL,
+                reason: Union[str, None] = SENTINEL,
+                finish_running: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[CancelTrialsResponse]:
                 data = TrialsClient.cancel(
-                    self._client, request=request, request_options=request_options
+                    self._client,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "job_id": job_id,
+                                "trial_ids": trial_ids,
+                                "search": search,
+                                "agents": agents,
+                                "agent_version": agent_version,
+                                "providers": providers,
+                                "models": models,
+                                "tasks": tasks,
+                                "exceptions": exceptions,
+                                "failed_only": failed_only,
+                                "config_filters": config_filters,
+                                "all_": all_,
+                                "reason": reason,
+                                "finish_running": finish_running,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def retry(
                 self,
                 *,
-                request: RetryTrialsRequest,
+                job_id: Union[str, None] = SENTINEL,
+                trial_ids: Union[List[str], None] = SENTINEL,
+                search: Union[str, None] = SENTINEL,
+                agents: Union[List[str], None] = SENTINEL,
+                agent_version: Union[str, None] = SENTINEL,
+                providers: Union[List[str], None] = SENTINEL,
+                models: Union[List[str], None] = SENTINEL,
+                tasks: Union[List[str], None] = SENTINEL,
+                exceptions: Union[List[str], None] = SENTINEL,
+                failed_only: Union[bool, None] = SENTINEL,
+                config_filters: Union[dict, None] = SENTINEL,
+                all_: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[RetryTrialsResponse]:
                 data = TrialsClient.retry(
-                    self._client, request=request, request_options=request_options
+                    self._client,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "job_id": job_id,
+                                "trial_ids": trial_ids,
+                                "search": search,
+                                "agents": agents,
+                                "agent_version": agent_version,
+                                "providers": providers,
+                                "models": models,
+                                "tasks": tasks,
+                                "exceptions": exceptions,
+                                "failed_only": failed_only,
+                                "config_filters": config_filters,
+                                "all_": all_,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
@@ -11146,20 +11271,88 @@ patches:
             def cancel(
                 self,
                 *,
-                request: CancelTrialsRequest,
+                job_id: Union[str, None] = SENTINEL,
+                trial_ids: Union[List[str], None] = SENTINEL,
+                search: Union[str, None] = SENTINEL,
+                agents: Union[List[str], None] = SENTINEL,
+                agent_version: Union[str, None] = SENTINEL,
+                providers: Union[List[str], None] = SENTINEL,
+                models: Union[List[str], None] = SENTINEL,
+                tasks: Union[List[str], None] = SENTINEL,
+                exceptions: Union[List[str], None] = SENTINEL,
+                failed_only: Union[bool, None] = SENTINEL,
+                config_filters: Union[dict, None] = SENTINEL,
+                all_: Union[bool, None] = SENTINEL,
+                reason: Union[str, None] = SENTINEL,
+                finish_running: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> Awaitable[CancelTrialsResponse]:  # type: ignore[override]
                 return to_async(super().cancel)(
-                    request=request, request_options=request_options
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "job_id": job_id,
+                                "trial_ids": trial_ids,
+                                "search": search,
+                                "agents": agents,
+                                "agent_version": agent_version,
+                                "providers": providers,
+                                "models": models,
+                                "tasks": tasks,
+                                "exceptions": exceptions,
+                                "failed_only": failed_only,
+                                "config_filters": config_filters,
+                                "all_": all_,
+                                "reason": reason,
+                                "finish_running": finish_running,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
                 )
 
             def retry(
                 self,
                 *,
-                request: RetryTrialsRequest,
+                job_id: Union[str, None] = SENTINEL,
+                trial_ids: Union[List[str], None] = SENTINEL,
+                search: Union[str, None] = SENTINEL,
+                agents: Union[List[str], None] = SENTINEL,
+                agent_version: Union[str, None] = SENTINEL,
+                providers: Union[List[str], None] = SENTINEL,
+                models: Union[List[str], None] = SENTINEL,
+                tasks: Union[List[str], None] = SENTINEL,
+                exceptions: Union[List[str], None] = SENTINEL,
+                failed_only: Union[bool, None] = SENTINEL,
+                config_filters: Union[dict, None] = SENTINEL,
+                all_: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
-                return to_async(super().retry)(request=request, request_options=request_options)
+                return to_async(super().retry)(
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "job_id": job_id,
+                                "trial_ids": trial_ids,
+                                "search": search,
+                                "agents": agents,
+                                "agent_version": agent_version,
+                                "providers": providers,
+                                "models": models,
+                                "tasks": tasks,
+                                "exceptions": exceptions,
+                                "failed_only": failed_only,
+                                "config_filters": config_filters,
+                                "all_": all_,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
+                )
 
             def copy(
                 self,
@@ -11340,22 +11533,90 @@ patches:
             async def cancel(
                 self,
                 *,
-                request: CancelTrialsRequest,
+                job_id: Union[str, None] = SENTINEL,
+                trial_ids: Union[List[str], None] = SENTINEL,
+                search: Union[str, None] = SENTINEL,
+                agents: Union[List[str], None] = SENTINEL,
+                agent_version: Union[str, None] = SENTINEL,
+                providers: Union[List[str], None] = SENTINEL,
+                models: Union[List[str], None] = SENTINEL,
+                tasks: Union[List[str], None] = SENTINEL,
+                exceptions: Union[List[str], None] = SENTINEL,
+                failed_only: Union[bool, None] = SENTINEL,
+                config_filters: Union[dict, None] = SENTINEL,
+                all_: Union[bool, None] = SENTINEL,
+                reason: Union[str, None] = SENTINEL,
+                finish_running: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[CancelTrialsResponse]:
                 data = await AsyncTrialsClient.cancel(
-                    self._client, request=request, request_options=request_options
+                    self._client,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "job_id": job_id,
+                                "trial_ids": trial_ids,
+                                "search": search,
+                                "agents": agents,
+                                "agent_version": agent_version,
+                                "providers": providers,
+                                "models": models,
+                                "tasks": tasks,
+                                "exceptions": exceptions,
+                                "failed_only": failed_only,
+                                "config_filters": config_filters,
+                                "all_": all_,
+                                "reason": reason,
+                                "finish_running": finish_running,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def retry(
                 self,
                 *,
-                request: RetryTrialsRequest,
+                job_id: Union[str, None] = SENTINEL,
+                trial_ids: Union[List[str], None] = SENTINEL,
+                search: Union[str, None] = SENTINEL,
+                agents: Union[List[str], None] = SENTINEL,
+                agent_version: Union[str, None] = SENTINEL,
+                providers: Union[List[str], None] = SENTINEL,
+                models: Union[List[str], None] = SENTINEL,
+                tasks: Union[List[str], None] = SENTINEL,
+                exceptions: Union[List[str], None] = SENTINEL,
+                failed_only: Union[bool, None] = SENTINEL,
+                config_filters: Union[dict, None] = SENTINEL,
+                all_: Union[bool, None] = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[RetryTrialsResponse]:
                 data = await AsyncTrialsClient.retry(
-                    self._client, request=request, request_options=request_options
+                    self._client,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "job_id": job_id,
+                                "trial_ids": trial_ids,
+                                "search": search,
+                                "agents": agents,
+                                "agent_version": agent_version,
+                                "providers": providers,
+                                "models": models,
+                                "tasks": tasks,
+                                "exceptions": exceptions,
+                                "failed_only": failed_only,
+                                "config_filters": config_filters,
+                                "all_": all_,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
@@ -11747,337 +12008,6 @@ patches:
 
         # Rebuild model to resolve forward references from submodels
         JobCancellationSummary.model_rebuild()
-      src/harbor_client/types/job_detail.py: |
-        from __future__ import annotations
-        import typing
-        from typing import Union
-        from typing import List
-        from pydantic import Field
-        from typing import Optional
-        from typing import Any
-        from typing import Annotated
-        from pydantic import TypeAdapter
-        from typing import Dict
-        from .utils.base_model import BaseModel
-        from .evaluation_job_reference import EvaluationJobReference
-        from .evaluation_summary import EvaluationSummary
-        from .job_creator import JobCreator
-        from .job_owner_organization import JobOwnerOrganization
-        from .job_manual_pause_summary import JobManualPauseSummary
-        from .job_cancellation_summary import JobCancellationSummary
-        from .job_overview_statistics import JobOverviewStatistics
-        from .job_circuit_state import JobCircuitState
-        from .job_bucket_circuit_state import JobBucketCircuitState
-        from .job_package_run_target import JobPackageRunTarget
-        from .job_path_run_target import JobPathRunTarget
-
-
-        class JobDetail(BaseModel):
-            """JobDetail
-
-            :param jobs: jobs
-            :type jobs: List[EvaluationJobReference]
-            :param n_total_trials: n_total_trials
-            :type n_total_trials: JobDetailNTotalTrials
-            :param n_completed_trials: n_completed_trials
-            :type n_completed_trials: JobDetailNCompletedTrials
-            :param n_pending_trials: n_pending_trials
-            :type n_pending_trials: JobDetailNPendingTrials
-            :param n_running_trials: n_running_trials
-            :type n_running_trials: JobDetailNRunningTrials
-            :param n_planned_trials: n_planned_trials
-            :type n_planned_trials: int
-            :param n_errors: n_errors
-            :type n_errors: JobDetailNErrors
-            :param n_retries: n_retries
-            :type n_retries: JobDetailNRetries
-            :param input_tokens: input_tokens
-            :type input_tokens: JobDetailInputTokens
-            :param output_tokens: output_tokens
-            :type output_tokens: JobDetailOutputTokens
-            :param cache_tokens: cache_tokens
-            :type cache_tokens: JobDetailCacheTokens
-            :param cost_usd: cost_usd
-            :type cost_usd: JobDetailCostUsd
-            :param providers: providers
-            :type providers: List[str]
-            :param models: models
-            :type models: List[str]
-            :param evals: evals
-            :type evals: EvaluationSummary
-            :param sandbox_cost_usd: sandbox_cost_usd
-            :type sandbox_cost_usd: str
-            :param sandbox_cost_status: sandbox_cost_status
-            :type sandbox_cost_status: JobDetailSandboxCostStatus
-            :param name: name
-            :type name: str
-            :param started_at: started_at
-            :type started_at: str
-            :param finished_at: finished_at
-            :type finished_at: str
-            :param visibility: visibility
-            :type visibility: JobDetailVisibility
-            :param created_by: created_by
-            :type created_by: str
-            :param created_by_user: created_by_user
-            :type created_by_user: JobCreator
-            :param owner_organization: owner_organization
-            :type owner_organization: JobOwnerOrganization
-            :param access_relation: access_relation
-            :type access_relation: JobDetailAccessRelation
-            :param can_operate: can_operate
-            :type can_operate: bool
-            :param can_manage_access: can_manage_access
-            :type can_manage_access: bool
-            :param can_delete: can_delete
-            :type can_delete: bool
-            :param can_transfer: can_transfer
-            :type can_transfer: bool
-            :param is_hosted: is_hosted
-            :type is_hosted: bool
-            :param billing_blocked: billing_blocked
-            :type billing_blocked: bool
-            :param manual_pause: manual_pause
-            :type manual_pause: JobManualPauseSummary
-            :param cancellation: cancellation
-            :type cancellation: JobCancellationSummary
-            :param config: config
-            :type config: Dict[str, Any]
-            :param datasets: datasets
-            :type datasets: List[str]
-            :param run_targets: run_targets
-            :type run_targets: List[JobDetailRunTargetsItem]
-            :param stats: stats
-            :type stats: JobOverviewStatistics
-            :param circuit: circuit
-            :type circuit: JobCircuitState
-            :param circuits: circuits
-            :type circuits: List[JobBucketCircuitState]
-            :param id: id
-            :type id: str
-            :param job_name: job_name
-            :type job_name: str
-            :param archive_path: archive_path
-            :type archive_path: str
-            :param organization_id: organization_id
-            :type organization_id: str
-            """
-
-            jobs: List[EvaluationJobReference]
-            n_total_trials: JobDetailNTotalTrials
-            n_completed_trials: JobDetailNCompletedTrials
-            n_pending_trials: JobDetailNPendingTrials
-            n_running_trials: JobDetailNRunningTrials
-            n_planned_trials: Optional[int]
-            n_errors: JobDetailNErrors
-            n_retries: JobDetailNRetries
-            input_tokens: Optional[JobDetailInputTokens]
-            output_tokens: Optional[JobDetailOutputTokens]
-            cache_tokens: Optional[JobDetailCacheTokens]
-            cost_usd: Optional[JobDetailCostUsd]
-            providers: List[str]
-            models: List[str]
-            evals: EvaluationSummary
-            sandbox_cost_usd: Optional[str]
-            sandbox_cost_status: Optional[JobDetailSandboxCostStatus]
-            name: Optional[str]
-            started_at: Optional[str]
-            finished_at: Optional[str]
-            visibility: JobDetailVisibility
-            created_by: Optional[str]
-            created_by_user: Optional[JobCreator]
-            owner_organization: Optional[JobOwnerOrganization]
-            access_relation: Optional[JobDetailAccessRelation]
-            can_operate: bool
-            can_manage_access: bool
-            can_delete: bool
-            can_transfer: bool
-            is_hosted: Optional[bool]
-            billing_blocked: bool
-            manual_pause: Optional[JobManualPauseSummary]
-            cancellation: Optional[JobCancellationSummary]
-            config: Dict[str, Any]
-            datasets: Optional[List[str]]
-            run_targets: Optional[List[JobDetailRunTargetsItem]]
-            stats: Optional[JobOverviewStatistics]
-            circuit: Optional[JobCircuitState]
-            circuits: Optional[List[JobBucketCircuitState]]
-            id: str
-            job_name: str
-            archive_path: Optional[str]
-            organization_id: str
-
-
-        JobDetailNTotalTrialsOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailNTotalTrials
-        # Pydantic will attempt to validate against each type in order
-        JobDetailNTotalTrials = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailNTotalTrials
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailNTotalTrials_adapter = TypeAdapter(JobDetailNTotalTrials)
-
-
-        JobDetailNCompletedTrialsOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailNCompletedTrials
-        # Pydantic will attempt to validate against each type in order
-        JobDetailNCompletedTrials = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailNCompletedTrials
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailNCompletedTrials_adapter = TypeAdapter(JobDetailNCompletedTrials)
-
-
-        JobDetailNPendingTrialsOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailNPendingTrials
-        # Pydantic will attempt to validate against each type in order
-        JobDetailNPendingTrials = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailNPendingTrials
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailNPendingTrials_adapter = TypeAdapter(JobDetailNPendingTrials)
-
-
-        JobDetailNRunningTrialsOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailNRunningTrials
-        # Pydantic will attempt to validate against each type in order
-        JobDetailNRunningTrials = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailNRunningTrials
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailNRunningTrials_adapter = TypeAdapter(JobDetailNRunningTrials)
-
-
-        JobDetailNErrorsOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailNErrors
-        # Pydantic will attempt to validate against each type in order
-        JobDetailNErrors = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailNErrors
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailNErrors_adapter = TypeAdapter(JobDetailNErrors)
-
-
-        JobDetailNRetriesOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailNRetries
-        # Pydantic will attempt to validate against each type in order
-        JobDetailNRetries = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailNRetries
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailNRetries_adapter = TypeAdapter(JobDetailNRetries)
-
-
-        JobDetailInputTokensOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailInputTokens
-        # Pydantic will attempt to validate against each type in order
-        JobDetailInputTokens = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailInputTokens
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailInputTokens_adapter = TypeAdapter(JobDetailInputTokens)
-
-
-        JobDetailOutputTokensOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailOutputTokens
-        # Pydantic will attempt to validate against each type in order
-        JobDetailOutputTokens = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailOutputTokens
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailOutputTokens_adapter = TypeAdapter(JobDetailOutputTokens)
-
-
-        JobDetailCacheTokensOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailCacheTokens
-        # Pydantic will attempt to validate against each type in order
-        JobDetailCacheTokens = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailCacheTokens
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailCacheTokens_adapter = TypeAdapter(JobDetailCacheTokens)
-
-
-        JobDetailCostUsdOne = typing.Union[
-            typing.Literal["Infinity", "-Infinity", "NaN"], typing.Any
-        ]
-
-
-        # Union type for JobDetailCostUsd
-        # Pydantic will attempt to validate against each type in order
-        JobDetailCostUsd = Union[float, str]
-        # TypeAdapter for runtime validation of JobDetailCostUsd
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailCostUsd_adapter = TypeAdapter(JobDetailCostUsd)
-
-
-        JobDetailSandboxCostStatus = typing.Union[
-            typing.Literal["pending", "partial", "recorded", "empty"], typing.Any
-        ]
-
-        JobDetailVisibility = typing.Union[typing.Literal["public", "private"], typing.Any]
-
-        JobDetailAccessRelation = typing.Union[typing.Literal["owned", "shared"], typing.Any]
-
-        # Union type for JobDetailRunTargetsItem
-        # Pydantic will attempt to validate against each type in order
-        JobDetailRunTargetsItem = Union[JobPackageRunTarget, JobPathRunTarget]
-        # TypeAdapter for runtime validation of JobDetailRunTargetsItem
-        # This allows validation of Union types which are not directly instantiable
-        from pydantic import TypeAdapter
-
-        JobDetailRunTargetsItem_adapter = TypeAdapter(JobDetailRunTargetsItem)
-
-
-        # Rebuild model to resolve forward references from submodels
-        JobDetail.model_rebuild()
       src/harbor_client/types/job_overview.py: |
         from __future__ import annotations
         import typing
