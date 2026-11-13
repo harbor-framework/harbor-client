@@ -35,7 +35,6 @@ patches:
       - src/harbor_client/leaderboards/client.py
       - src/harbor_client/net/transport/serializer.py
       - src/harbor_client/packages/client.py
-      - src/harbor_client/py.typed
       - src/harbor_client/secrets/client.py
       - src/harbor_client/trials/client.py
       - src/harbor_client/types/api_keys_list_bad_request_response.py
