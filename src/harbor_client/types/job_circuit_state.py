@@ -51,7 +51,6 @@ JobCircuitStateLevelOne = typing.Union[
 JobCircuitStateLevel = Union[float, str]
 # TypeAdapter for runtime validation of JobCircuitStateLevel
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 JobCircuitStateLevel_adapter = TypeAdapter(JobCircuitStateLevel)
 
