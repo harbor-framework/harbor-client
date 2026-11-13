@@ -11,7 +11,7 @@ from ..types.jobs_list_tasks_bad_request_response import (
 from ..types.jobs_list_bad_request_response import JobsListBadRequestResponse_adapter
 from ..types import (
     BadRequestEncoded,
-    CancelJobsRequest,
+    CancelJobRequest,
     ConflictEncoded,
     CreatedResultJob,
     DeleteJobsRequest,
@@ -20,8 +20,6 @@ from ..types import (
     FilterValuesResponse,
     ForbiddenEncoded,
     InternalServerErrorEncoded,
-    JobActionRequest,
-    JobActionResponse,
     JobArtifactType,
     JobOverview,
     JobPage,
@@ -939,39 +937,47 @@ class JobsClient(BaseService):
 
     @cast_models
     def pause(
-        self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> JobActionResponse:
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> JobResponse:
         """pause
 
-        :param request_body: The request body.
-        :type request_body: JobActionRequest
+        :param job_id: job_id
+        :type job_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: JobActionResponse
+        :rtype: JobResponse
         """
+
+        Validator(str).validate(job_id, "job_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
 
         resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-        request_body = JobActionRequest(job_ids=job_ids)
-        Validator(JobActionRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/pause",
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
             .add_header(
                 "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
             )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("job_id", job_id)
             .add_error(401, UnauthorizedEncoded)
             .add_error(403, ForbiddenEncoded)
             .add_error(404, NotFoundEncoded)
             .add_error(500, InternalServerErrorEncoded)
             .serialize()
             .set_method("POST")
-            .set_body(request_body)
         )
 
         response, status, content = self.send_request(serialized_request)
@@ -979,49 +985,57 @@ class JobsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                JobActionResponse.model_validate(response)
+                JobResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(JobActionResponse, response)
+                else construct_lenient(JobResponse, response)
             )
         )
 
     @cast_models
     def resume(
-        self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> JobActionResponse:
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> JobResponse:
         """resume
 
-        :param request_body: The request body.
-        :type request_body: JobActionRequest
+        :param job_id: job_id
+        :type job_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: JobActionResponse
+        :rtype: JobResponse
         """
+
+        Validator(str).validate(job_id, "job_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
 
         resolved_config = self._get_resolved_config(
             self._resume_config, request_options
         )
 
-        request_body = JobActionRequest(job_ids=job_ids)
-        Validator(JobActionRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/resume",
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
             .add_header(
                 "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
             )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("job_id", job_id)
             .add_error(401, UnauthorizedEncoded)
             .add_error(403, ForbiddenEncoded)
             .add_error(404, NotFoundEncoded)
             .add_error(500, InternalServerErrorEncoded)
             .serialize()
             .set_method("POST")
-            .set_body(request_body)
         )
 
         response, status, content = self.send_request(serialized_request)
@@ -1029,51 +1043,60 @@ class JobsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                JobActionResponse.model_validate(response)
+                JobResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(JobActionResponse, response)
+                else construct_lenient(JobResponse, response)
             )
         )
 
     @cast_models
     def cancel(
         self,
+        job_id: str,
         *,
-        job_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> JobActionResponse:
+    ) -> JobResponse:
         """cancel
 
         :param request_body: The request body.
-        :type request_body: CancelJobsRequest
+        :type request_body: CancelJobRequest
+        :param job_id: job_id
+        :type job_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: JobActionResponse
+        :rtype: JobResponse
         """
+
+        Validator(str).validate(job_id, "job_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
 
         resolved_config = self._get_resolved_config(
             self._cancel_config, request_options
         )
 
-        request_body = CancelJobsRequest(
-            job_ids=job_ids,
+        request_body = CancelJobRequest(
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-            ),
+            )
         )
-        Validator(CancelJobsRequest).validate(request_body, "request_body")
+        Validator(CancelJobRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/cancel",
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
             .add_header(
                 "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
             )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("job_id", job_id)
             .add_error(401, UnauthorizedEncoded)
             .add_error(403, ForbiddenEncoded)
             .add_error(404, NotFoundEncoded)
@@ -1088,9 +1111,9 @@ class JobsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                JobActionResponse.model_validate(response)
+                JobResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(JobActionResponse, response)
+                else construct_lenient(JobResponse, response)
             )
         )
 
@@ -1153,7 +1176,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -1219,6 +1241,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1399,7 +1424,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobTaskSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -1457,6 +1481,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobTaskPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1856,31 +1883,47 @@ class RawJobsClient:
         return HttpResponse(data=data, response=self._client._last_response)
 
     def pause(
-        self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobActionResponse]:
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[JobResponse]:
         data = JobsClient.pause(
-            self._client, job_ids=job_ids, request_options=request_options
+            self._client,
+            job_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     def resume(
-        self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobActionResponse]:
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[JobResponse]:
         data = JobsClient.resume(
-            self._client, job_ids=job_ids, request_options=request_options
+            self._client,
+            job_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     def cancel(
         self,
+        job_id: str,
         *,
-        job_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[JobActionResponse]:
+    ) -> HttpResponse[JobResponse]:
         data = JobsClient.cancel(
             self._client,
-            job_ids=job_ids,
+            job_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
@@ -2271,26 +2314,38 @@ class AsyncJobsClient(JobsClient):
         )
 
     def pause(
-        self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
-        return to_async(super().pause)(job_ids=job_ids, request_options=request_options)
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[JobResponse]:  # type: ignore[override]
+        return to_async(super().pause)(
+            job_id, idempotency_key=idempotency_key, request_options=request_options
+        )
 
     def resume(
-        self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[JobResponse]:  # type: ignore[override]
         return to_async(super().resume)(
-            job_ids=job_ids, request_options=request_options
+            job_id, idempotency_key=idempotency_key, request_options=request_options
         )
 
     def cancel(
         self,
+        job_id: str,
         *,
-        job_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
+    ) -> Awaitable[JobResponse]:  # type: ignore[override]
         return to_async(super().cancel)(
-            job_ids=job_ids,
+            job_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
@@ -2345,11 +2400,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2439,11 +2490,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2706,31 +2753,47 @@ class AsyncRawJobsClient:
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def pause(
-        self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobActionResponse]:
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[JobResponse]:
         data = await AsyncJobsClient.pause(
-            self._client, job_ids=job_ids, request_options=request_options
+            self._client,
+            job_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def resume(
-        self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobActionResponse]:
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[JobResponse]:
         data = await AsyncJobsClient.resume(
-            self._client, job_ids=job_ids, request_options=request_options
+            self._client,
+            job_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def cancel(
         self,
+        job_id: str,
         *,
-        job_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[JobActionResponse]:
+    ) -> HttpResponse[JobResponse]:
         data = await AsyncJobsClient.cancel(
             self._client,
-            job_ids=job_ids,
+            job_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),

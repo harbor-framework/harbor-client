@@ -252,15 +252,30 @@
 
 ### `client.jobs.pause`
 
-`POST /v1/jobs/pause`
+`POST /v1/jobs/{job_id}/pause`
+
+**Parameters:**
+
+- `job_id` (required)
+- `idempotency_key` (required)
 
 ### `client.jobs.resume`
 
-`POST /v1/jobs/resume`
+`POST /v1/jobs/{job_id}/resume`
+
+**Parameters:**
+
+- `job_id` (required)
+- `idempotency_key` (required)
 
 ### `client.jobs.cancel`
 
-`POST /v1/jobs/cancel`
+`POST /v1/jobs/{job_id}/cancel`
+
+**Parameters:**
+
+- `job_id` (required)
+- `idempotency_key` (required)
 
 ### `client.jobs.list`
 
@@ -405,26 +420,46 @@
 
 ### `client.trials.pause`
 
-`POST /v1/trials/pause`
+`POST /v1/trials/{trial_id}/pause`
 
-### `client.trials.resume`
-
-`POST /v1/trials/resume`
-
-### `client.trials.cancel`
-
-`POST /v1/trials/cancel`
-
-Cancel the specified physical trial attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-### `client.trials.retry`
-
-`POST /v1/trials/retry`
-
-Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new trial IDs. Stale or active attempts return 409.
+Pause this physical trial. Reusing the same Idempotency-Key does not reapply the command.
 
 **Parameters:**
 
+- `trial_id` (required)
+- `idempotency_key` (required)
+
+### `client.trials.resume`
+
+`POST /v1/trials/{trial_id}/resume`
+
+Resume this physical trial. Reusing the same Idempotency-Key does not reapply the command.
+
+**Parameters:**
+
+- `trial_id` (required)
+- `idempotency_key` (required)
+
+### `client.trials.cancel`
+
+`POST /v1/trials/{trial_id}/cancel`
+
+Cancel this physical trial. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+**Parameters:**
+
+- `trial_id` (required)
+- `idempotency_key` (required)
+
+### `client.trials.retry`
+
+`POST /v1/trials/{trial_id}/retry`
+
+Retry this physical trial. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+**Parameters:**
+
+- `trial_id` (required)
 - `idempotency_key` (required)
 
 ### `client.trials.get_artifact_download`
@@ -501,26 +536,46 @@ Retry the specified latest terminal attempts. Idempotency-Key is required; repla
 
 ### `client.rollouts.pause`
 
-`POST /v1/rollouts/pause`
+`POST /v1/rollouts/{rollout_id}/pause`
 
-### `client.rollouts.resume`
-
-`POST /v1/rollouts/resume`
-
-### `client.rollouts.cancel`
-
-`POST /v1/rollouts/cancel`
-
-Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-### `client.rollouts.retry`
-
-`POST /v1/rollouts/retry`
-
-Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.
+Pause this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
 
 **Parameters:**
 
+- `rollout_id` (required)
+- `idempotency_key` (required)
+
+### `client.rollouts.resume`
+
+`POST /v1/rollouts/{rollout_id}/resume`
+
+Resume this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
+
+**Parameters:**
+
+- `rollout_id` (required)
+- `idempotency_key` (required)
+
+### `client.rollouts.cancel`
+
+`POST /v1/rollouts/{rollout_id}/cancel`
+
+Cancel this physical rollout. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+**Parameters:**
+
+- `rollout_id` (required)
+- `idempotency_key` (required)
+
+### `client.rollouts.retry`
+
+`POST /v1/rollouts/{rollout_id}/retry`
+
+Retry this physical rollout. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+**Parameters:**
+
+- `rollout_id` (required)
 - `idempotency_key` (required)
 
 ## AccountClient

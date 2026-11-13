@@ -9,21 +9,18 @@ from ..types.rollouts_list_bad_request_response import (
 )
 from ..types import (
     BadRequestEncoded,
-    CancelRolloutsRequest,
+    CancelTrialRequest,
     ConflictEncoded,
     FilterValuesResponse,
     ForbiddenEncoded,
     InternalServerErrorEncoded,
     NotFoundEncoded,
-    RetryRolloutsRequest,
-    RetryRolloutsResponse,
-    RolloutActionRequest,
+    RetryRolloutResponse,
     RolloutResponse,
     RolloutsGetFiltersRequestField,
     RolloutsListBadRequestResponse,
     RolloutsListRequestSort,
     RunState,
-    TrialActionResponse,
     TrialPage,
     TrialSummary,
     UnauthorizedEncoded,
@@ -250,7 +247,6 @@ class RolloutsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[TrialSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -318,6 +314,9 @@ class RolloutsClient(BaseService):
                     else construct_lenient(TrialPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -459,196 +458,32 @@ class RolloutsClient(BaseService):
     @cast_models
     def pause(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
-        request_options: Optional[RequestOptions] = None,
-    ) -> TrialActionResponse:
-        """pause
-
-        :param request_body: The request body.
-        :type request_body: RolloutActionRequest
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: TrialActionResponse
-        """
-
-        resolved_config = self._get_resolved_config(self._pause_config, request_options)
-
-        request_body = RolloutActionRequest(rollout_ids=rollout_ids)
-        Validator(RolloutActionRequest).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/pause",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("POST")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                TrialActionResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(TrialActionResponse, response)
-            )
-        )
-
-    @cast_models
-    def resume(
-        self,
-        *,
-        rollout_ids: List[str],
-        request_options: Optional[RequestOptions] = None,
-    ) -> TrialActionResponse:
-        """resume
-
-        :param request_body: The request body.
-        :type request_body: RolloutActionRequest
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: TrialActionResponse
-        """
-
-        resolved_config = self._get_resolved_config(
-            self._resume_config, request_options
-        )
-
-        request_body = RolloutActionRequest(rollout_ids=rollout_ids)
-        Validator(RolloutActionRequest).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/resume",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("POST")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                TrialActionResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(TrialActionResponse, response)
-            )
-        )
-
-    @cast_models
-    def cancel(
-        self,
-        *,
-        rollout_ids: List[str],
-        force: bool = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> TrialActionResponse:
-        """Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-        :param request_body: The request body.
-        :type request_body: CancelRolloutsRequest
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: TrialActionResponse
-        """
-
-        resolved_config = self._get_resolved_config(
-            self._cancel_config, request_options
-        )
-
-        request_body = CancelRolloutsRequest(
-            rollout_ids=rollout_ids,
-            **dict[str, Any](
-                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-            ),
-        )
-        Validator(CancelRolloutsRequest).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/cancel",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("POST")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                TrialActionResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(TrialActionResponse, response)
-            )
-        )
-
-    @cast_models
-    def retry(
-        self,
-        *,
-        rollout_ids: List[str],
         idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> RetryRolloutsResponse:
-        """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.
+    ) -> RolloutResponse:
+        """Pause this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
 
-        :param request_body: The request body.
-        :type request_body: RetryRolloutsRequest
+        :param rollout_id: rollout_id
+        :type rollout_id: str
         :param idempotency_key: idempotency_key
         :type idempotency_key: str
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: RetryRolloutsResponse
+        :rtype: RolloutResponse
         """
 
+        Validator(str).validate(rollout_id, "rollout_id")
         Validator(str).validate(idempotency_key, "idempotency_key")
 
-        resolved_config = self._get_resolved_config(self._retry_config, request_options)
+        resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-        request_body = RetryRolloutsRequest(rollout_ids=rollout_ids)
-        Validator(RetryRolloutsRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/retry",
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/pause",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -656,6 +491,132 @@ class RolloutsClient(BaseService):
                 "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
             )
             .add_header("idempotency-key", idempotency_key)
+            .add_path("rollout_id", rollout_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                RolloutResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(RolloutResponse, response)
+            )
+        )
+
+    @cast_models
+    def resume(
+        self,
+        rollout_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> RolloutResponse:
+        """Resume this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
+
+        :param rollout_id: rollout_id
+        :type rollout_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: RolloutResponse
+        """
+
+        Validator(str).validate(rollout_id, "rollout_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(
+            self._resume_config, request_options
+        )
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/resume",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("rollout_id", rollout_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                RolloutResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(RolloutResponse, response)
+            )
+        )
+
+    @cast_models
+    def cancel(
+        self,
+        rollout_id: str,
+        *,
+        idempotency_key: str,
+        force: bool = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> RolloutResponse:
+        """Cancel this physical rollout. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+        :param request_body: The request body.
+        :type request_body: CancelTrialRequest
+        :param rollout_id: rollout_id
+        :type rollout_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: RolloutResponse
+        """
+
+        Validator(str).validate(rollout_id, "rollout_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(
+            self._cancel_config, request_options
+        )
+
+        request_body = CancelTrialRequest(
+            **dict[str, Any](
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+            )
+        )
+        Validator(CancelTrialRequest).validate(request_body, "request_body")
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/cancel",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("rollout_id", rollout_id)
             .add_error(401, UnauthorizedEncoded)
             .add_error(403, ForbiddenEncoded)
             .add_error(404, NotFoundEncoded)
@@ -670,9 +631,65 @@ class RolloutsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                RetryRolloutsResponse.model_validate(response)
+                RolloutResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(RetryRolloutsResponse, response)
+                else construct_lenient(RolloutResponse, response)
+            )
+        )
+
+    @cast_models
+    def retry(
+        self,
+        rollout_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> RetryRolloutResponse:
+        """Retry this physical rollout. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+        :param rollout_id: rollout_id
+        :type rollout_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: RetryRolloutResponse
+        """
+
+        Validator(str).validate(rollout_id, "rollout_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(self._retry_config, request_options)
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/retry",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("rollout_id", rollout_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                RetryRolloutResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(RetryRolloutResponse, response)
             )
         )
 
@@ -800,36 +817,46 @@ class RawRolloutsClient:
 
     def pause(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
+    ) -> HttpResponse[RolloutResponse]:
         data = RolloutsClient.pause(
-            self._client, rollout_ids=rollout_ids, request_options=request_options
+            self._client,
+            rollout_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     def resume(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
+    ) -> HttpResponse[RolloutResponse]:
         data = RolloutsClient.resume(
-            self._client, rollout_ids=rollout_ids, request_options=request_options
+            self._client,
+            rollout_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     def cancel(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
+    ) -> HttpResponse[RolloutResponse]:
         data = RolloutsClient.cancel(
             self._client,
-            rollout_ids=rollout_ids,
+            rollout_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
@@ -839,14 +866,14 @@ class RawRolloutsClient:
 
     def retry(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
         idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RetryRolloutsResponse]:
+    ) -> HttpResponse[RetryRolloutResponse]:
         data = RolloutsClient.retry(
             self._client,
-            rollout_ids=rollout_ids,
+            rollout_id,
             idempotency_key=idempotency_key,
             request_options=request_options,
         )
@@ -922,11 +949,7 @@ class AsyncRolloutsClient(RolloutsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -980,33 +1003,37 @@ class AsyncRolloutsClient(RolloutsClient):
 
     def pause(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+    ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
         return to_async(super().pause)(
-            rollout_ids=rollout_ids, request_options=request_options
+            rollout_id, idempotency_key=idempotency_key, request_options=request_options
         )
 
     def resume(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+    ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
         return to_async(super().resume)(
-            rollout_ids=rollout_ids, request_options=request_options
+            rollout_id, idempotency_key=idempotency_key, request_options=request_options
         )
 
     def cancel(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+    ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
         return to_async(super().cancel)(
-            rollout_ids=rollout_ids,
+            rollout_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
@@ -1015,15 +1042,13 @@ class AsyncRolloutsClient(RolloutsClient):
 
     def retry(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
         idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[RetryRolloutsResponse]:  # type: ignore[override]
+    ) -> Awaitable[RetryRolloutResponse]:  # type: ignore[override]
         return to_async(super().retry)(
-            rollout_ids=rollout_ids,
-            idempotency_key=idempotency_key,
-            request_options=request_options,
+            rollout_id, idempotency_key=idempotency_key, request_options=request_options
         )
 
 
@@ -1146,36 +1171,46 @@ class AsyncRawRolloutsClient:
 
     async def pause(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
+    ) -> HttpResponse[RolloutResponse]:
         data = await AsyncRolloutsClient.pause(
-            self._client, rollout_ids=rollout_ids, request_options=request_options
+            self._client,
+            rollout_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def resume(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
+    ) -> HttpResponse[RolloutResponse]:
         data = await AsyncRolloutsClient.resume(
-            self._client, rollout_ids=rollout_ids, request_options=request_options
+            self._client,
+            rollout_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def cancel(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
+    ) -> HttpResponse[RolloutResponse]:
         data = await AsyncRolloutsClient.cancel(
             self._client,
-            rollout_ids=rollout_ids,
+            rollout_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
@@ -1185,14 +1220,14 @@ class AsyncRawRolloutsClient:
 
     async def retry(
         self,
+        rollout_id: str,
         *,
-        rollout_ids: List[str],
         idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RetryRolloutsResponse]:
+    ) -> HttpResponse[RetryRolloutResponse]:
         data = await AsyncRolloutsClient.retry(
             self._client,
-            rollout_ids=rollout_ids,
+            rollout_id,
             idempotency_key=idempotency_key,
             request_options=request_options,
         )

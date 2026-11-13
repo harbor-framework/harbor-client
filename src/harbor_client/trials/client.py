@@ -9,7 +9,7 @@ from ..types.trials_list_bad_request_response import (
 )
 from ..types import (
     BadRequestEncoded,
-    CancelTrialsRequest,
+    CancelTrialRequest,
     ConflictEncoded,
     CreatedResultTrial,
     FilterValuesResponse,
@@ -19,14 +19,11 @@ from ..types import (
     ResultModelUsage,
     ResultTrialCreate,
     ResultTrialCreateAgent,
-    RetryTrialsRequest,
-    RetryTrialsResponse,
+    RetryTrialResponse,
     RunState,
     StorageCopyResult,
     StorageDownload,
     TooManyRequestsEncoded,
-    TrialActionRequest,
-    TrialActionResponse,
     TrialArtifactType,
     TrialPage,
     TrialResponse,
@@ -292,7 +289,6 @@ class TrialsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[TrialSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -360,6 +356,9 @@ class TrialsClient(BaseService):
                     else construct_lenient(TrialPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -603,191 +602,33 @@ class TrialsClient(BaseService):
 
     @cast_models
     def pause(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> TrialActionResponse:
-        """pause
-
-        :param request_body: The request body.
-        :type request_body: TrialActionRequest
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: TrialActionResponse
-        """
-
-        resolved_config = self._get_resolved_config(self._pause_config, request_options)
-
-        request_body = TrialActionRequest(trial_ids=trial_ids)
-        Validator(TrialActionRequest).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/pause",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("POST")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                TrialActionResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(TrialActionResponse, response)
-            )
-        )
-
-    @cast_models
-    def resume(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> TrialActionResponse:
-        """resume
-
-        :param request_body: The request body.
-        :type request_body: TrialActionRequest
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: TrialActionResponse
-        """
-
-        resolved_config = self._get_resolved_config(
-            self._resume_config, request_options
-        )
-
-        request_body = TrialActionRequest(trial_ids=trial_ids)
-        Validator(TrialActionRequest).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/resume",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("POST")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                TrialActionResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(TrialActionResponse, response)
-            )
-        )
-
-    @cast_models
-    def cancel(
         self,
+        trial_id: str,
         *,
-        trial_ids: List[str],
-        force: bool = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> TrialActionResponse:
-        """Cancel the specified physical trial attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-        :param request_body: The request body.
-        :type request_body: CancelTrialsRequest
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: TrialActionResponse
-        """
-
-        resolved_config = self._get_resolved_config(
-            self._cancel_config, request_options
-        )
-
-        request_body = CancelTrialsRequest(
-            trial_ids=trial_ids,
-            **dict[str, Any](
-                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-            ),
-        )
-        Validator(CancelTrialsRequest).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/cancel",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("POST")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                TrialActionResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(TrialActionResponse, response)
-            )
-        )
-
-    @cast_models
-    def retry(
-        self,
-        *,
-        trial_ids: List[str],
         idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> RetryTrialsResponse:
-        """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new trial IDs. Stale or active attempts return 409.
+    ) -> TrialResponse:
+        """Pause this physical trial. Reusing the same Idempotency-Key does not reapply the command.
 
-        :param request_body: The request body.
-        :type request_body: RetryTrialsRequest
+        :param trial_id: trial_id
+        :type trial_id: str
         :param idempotency_key: idempotency_key
         :type idempotency_key: str
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: RetryTrialsResponse
+        :rtype: TrialResponse
         """
 
+        Validator(str).validate(trial_id, "trial_id")
         Validator(str).validate(idempotency_key, "idempotency_key")
 
-        resolved_config = self._get_resolved_config(self._retry_config, request_options)
+        resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-        request_body = RetryTrialsRequest(trial_ids=trial_ids)
-        Validator(RetryTrialsRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/retry",
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/pause",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -795,6 +636,132 @@ class TrialsClient(BaseService):
                 "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
             )
             .add_header("idempotency-key", idempotency_key)
+            .add_path("trial_id", trial_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                TrialResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(TrialResponse, response)
+            )
+        )
+
+    @cast_models
+    def resume(
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> TrialResponse:
+        """Resume this physical trial. Reusing the same Idempotency-Key does not reapply the command.
+
+        :param trial_id: trial_id
+        :type trial_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: TrialResponse
+        """
+
+        Validator(str).validate(trial_id, "trial_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(
+            self._resume_config, request_options
+        )
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/resume",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("trial_id", trial_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                TrialResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(TrialResponse, response)
+            )
+        )
+
+    @cast_models
+    def cancel(
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        force: bool = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> TrialResponse:
+        """Cancel this physical trial. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+        :param request_body: The request body.
+        :type request_body: CancelTrialRequest
+        :param trial_id: trial_id
+        :type trial_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: TrialResponse
+        """
+
+        Validator(str).validate(trial_id, "trial_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(
+            self._cancel_config, request_options
+        )
+
+        request_body = CancelTrialRequest(
+            **dict[str, Any](
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+            )
+        )
+        Validator(CancelTrialRequest).validate(request_body, "request_body")
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/cancel",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("trial_id", trial_id)
             .add_error(401, UnauthorizedEncoded)
             .add_error(403, ForbiddenEncoded)
             .add_error(404, NotFoundEncoded)
@@ -809,9 +776,65 @@ class TrialsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                RetryTrialsResponse.model_validate(response)
+                TrialResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(RetryTrialsResponse, response)
+                else construct_lenient(TrialResponse, response)
+            )
+        )
+
+    @cast_models
+    def retry(
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> RetryTrialResponse:
+        """Retry this physical trial. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+        :param trial_id: trial_id
+        :type trial_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: RetryTrialResponse
+        """
+
+        Validator(str).validate(trial_id, "trial_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(self._retry_config, request_options)
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/retry",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("trial_id", trial_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                RetryTrialResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(RetryTrialResponse, response)
             )
         )
 
@@ -1128,31 +1151,47 @@ class RawTrialsClient:
         return HttpResponse(data=data, response=self._client._last_response)
 
     def pause(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialActionResponse]:
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[TrialResponse]:
         data = TrialsClient.pause(
-            self._client, trial_ids=trial_ids, request_options=request_options
+            self._client,
+            trial_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     def resume(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialActionResponse]:
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[TrialResponse]:
         data = TrialsClient.resume(
-            self._client, trial_ids=trial_ids, request_options=request_options
+            self._client,
+            trial_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     def cancel(
         self,
+        trial_id: str,
         *,
-        trial_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
+    ) -> HttpResponse[TrialResponse]:
         data = TrialsClient.cancel(
             self._client,
-            trial_ids=trial_ids,
+            trial_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
@@ -1162,14 +1201,14 @@ class RawTrialsClient:
 
     def retry(
         self,
+        trial_id: str,
         *,
-        trial_ids: List[str],
         idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RetryTrialsResponse]:
+    ) -> HttpResponse[RetryTrialResponse]:
         data = TrialsClient.retry(
             self._client,
-            trial_ids=trial_ids,
+            trial_id,
             idempotency_key=idempotency_key,
             request_options=request_options,
         )
@@ -1287,11 +1326,7 @@ class AsyncTrialsClient(TrialsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1403,28 +1438,38 @@ class AsyncTrialsClient(TrialsClient):
         )
 
     def pause(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[TrialResponse]:  # type: ignore[override]
         return to_async(super().pause)(
-            trial_ids=trial_ids, request_options=request_options
+            trial_id, idempotency_key=idempotency_key, request_options=request_options
         )
 
     def resume(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[TrialResponse]:  # type: ignore[override]
         return to_async(super().resume)(
-            trial_ids=trial_ids, request_options=request_options
+            trial_id, idempotency_key=idempotency_key, request_options=request_options
         )
 
     def cancel(
         self,
+        trial_id: str,
         *,
-        trial_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+    ) -> Awaitable[TrialResponse]:  # type: ignore[override]
         return to_async(super().cancel)(
-            trial_ids=trial_ids,
+            trial_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
@@ -1433,15 +1478,13 @@ class AsyncTrialsClient(TrialsClient):
 
     def retry(
         self,
+        trial_id: str,
         *,
-        trial_ids: List[str],
         idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
+    ) -> Awaitable[RetryTrialResponse]:  # type: ignore[override]
         return to_async(super().retry)(
-            trial_ids=trial_ids,
-            idempotency_key=idempotency_key,
-            request_options=request_options,
+            trial_id, idempotency_key=idempotency_key, request_options=request_options
         )
 
     def get_artifact_download(
@@ -1660,31 +1703,47 @@ class AsyncRawTrialsClient:
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def pause(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialActionResponse]:
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[TrialResponse]:
         data = await AsyncTrialsClient.pause(
-            self._client, trial_ids=trial_ids, request_options=request_options
+            self._client,
+            trial_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def resume(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialActionResponse]:
+        self,
+        trial_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[TrialResponse]:
         data = await AsyncTrialsClient.resume(
-            self._client, trial_ids=trial_ids, request_options=request_options
+            self._client,
+            trial_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
     async def cancel(
         self,
+        trial_id: str,
         *,
-        trial_ids: List[str],
+        idempotency_key: str,
         force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
+    ) -> HttpResponse[TrialResponse]:
         data = await AsyncTrialsClient.cancel(
             self._client,
-            trial_ids=trial_ids,
+            trial_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
                 {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
@@ -1694,14 +1753,14 @@ class AsyncRawTrialsClient:
 
     async def retry(
         self,
+        trial_id: str,
         *,
-        trial_ids: List[str],
         idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RetryTrialsResponse]:
+    ) -> HttpResponse[RetryTrialResponse]:
         data = await AsyncTrialsClient.retry(
             self._client,
-            trial_ids=trial_ids,
+            trial_id,
             idempotency_key=idempotency_key,
             request_options=request_options,
         )
