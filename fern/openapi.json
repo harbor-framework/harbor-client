@@ -3864,7 +3864,7 @@
         }
       }
     },
-    "/v1/trials/pause": {
+    "/v1/trials/{trial_id}/pause": {
       "post": {
         "tags": [
           "trials"
@@ -3872,6 +3872,25 @@
         "operationId": "trials.pause",
         "parameters": [
           {
+            "name": "trial_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -3891,11 +3910,11 @@
         ],
         "responses": {
           "200": {
-            "description": "TrialActionResponse",
+            "description": "TrialResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TrialActionResponse"
+                  "$ref": "#/components/schemas/TrialResponse"
                 }
               }
             }
@@ -3961,19 +3980,10 @@
             }
           }
         },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TrialActionRequest"
-              }
-            }
-          },
-          "required": true
-        }
+        "description": "Pause this physical trial. Reusing the same Idempotency-Key does not reapply the command."
       }
     },
-    "/v1/rollouts/pause": {
+    "/v1/rollouts/{rollout_id}/pause": {
       "post": {
         "tags": [
           "rollouts"
@@ -3981,6 +3991,25 @@
         "operationId": "rollouts.pause",
         "parameters": [
           {
+            "name": "rollout_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -4000,11 +4029,11 @@
         ],
         "responses": {
           "200": {
-            "description": "TrialActionResponse",
+            "description": "RolloutResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TrialActionResponse"
+                  "$ref": "#/components/schemas/RolloutResponse"
                 }
               }
             }
@@ -4070,19 +4099,10 @@
             }
           }
         },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RolloutActionRequest"
-              }
-            }
-          },
-          "required": true
-        }
+        "description": "Pause this physical rollout. Reusing the same Idempotency-Key does not reapply the command."
       }
     },
-    "/v1/trials/resume": {
+    "/v1/trials/{trial_id}/resume": {
       "post": {
         "tags": [
           "trials"
@@ -4090,6 +4110,25 @@
         "operationId": "trials.resume",
         "parameters": [
           {
+            "name": "trial_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -4109,11 +4148,11 @@
         ],
         "responses": {
           "200": {
-            "description": "TrialActionResponse",
+            "description": "TrialResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TrialActionResponse"
+                  "$ref": "#/components/schemas/TrialResponse"
                 }
               }
             }
@@ -4179,19 +4218,10 @@
             }
           }
         },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TrialActionRequest"
-              }
-            }
-          },
-          "required": true
-        }
+        "description": "Resume this physical trial. Reusing the same Idempotency-Key does not reapply the command."
       }
     },
-    "/v1/rollouts/resume": {
+    "/v1/rollouts/{rollout_id}/resume": {
       "post": {
         "tags": [
           "rollouts"
@@ -4199,6 +4229,25 @@
         "operationId": "rollouts.resume",
         "parameters": [
           {
+            "name": "rollout_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -4218,11 +4267,11 @@
         ],
         "responses": {
           "200": {
-            "description": "TrialActionResponse",
+            "description": "RolloutResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TrialActionResponse"
+                  "$ref": "#/components/schemas/RolloutResponse"
                 }
               }
             }
@@ -4288,19 +4337,10 @@
             }
           }
         },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RolloutActionRequest"
-              }
-            }
-          },
-          "required": true
-        }
+        "description": "Resume this physical rollout. Reusing the same Idempotency-Key does not reapply the command."
       }
     },
-    "/v1/trials/cancel": {
+    "/v1/trials/{trial_id}/cancel": {
       "post": {
         "tags": [
           "trials"
@@ -4308,6 +4348,25 @@
         "operationId": "trials.cancel",
         "parameters": [
           {
+            "name": "trial_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -4327,11 +4386,11 @@
         ],
         "responses": {
           "200": {
-            "description": "TrialActionResponse",
+            "description": "TrialResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TrialActionResponse"
+                  "$ref": "#/components/schemas/TrialResponse"
                 }
               }
             }
@@ -4397,12 +4456,12 @@
             }
           }
         },
-        "description": "Cancel the specified physical trial attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.",
+        "description": "Cancel this physical trial. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CancelTrialsRequest"
+                "$ref": "#/components/schemas/CancelTrialRequest"
               }
             }
           },
@@ -4410,7 +4469,7 @@
         }
       }
     },
-    "/v1/rollouts/cancel": {
+    "/v1/rollouts/{rollout_id}/cancel": {
       "post": {
         "tags": [
           "rollouts"
@@ -4418,6 +4477,25 @@
         "operationId": "rollouts.cancel",
         "parameters": [
           {
+            "name": "rollout_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -4437,11 +4515,11 @@
         ],
         "responses": {
           "200": {
-            "description": "TrialActionResponse",
+            "description": "RolloutResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TrialActionResponse"
+                  "$ref": "#/components/schemas/RolloutResponse"
                 }
               }
             }
@@ -4507,12 +4585,12 @@
             }
           }
         },
-        "description": "Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.",
+        "description": "Cancel this physical rollout. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CancelRolloutsRequest"
+                "$ref": "#/components/schemas/CancelTrialRequest"
               }
             }
           },
@@ -4520,7 +4598,7 @@
         }
       }
     },
-    "/v1/trials/retry": {
+    "/v1/trials/{trial_id}/retry": {
       "post": {
         "tags": [
           "trials"
@@ -4528,6 +4606,15 @@
         "operationId": "trials.retry",
         "parameters": [
           {
+            "name": "trial_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
             "name": "idempotency-key",
             "in": "header",
             "schema": {
@@ -4557,11 +4644,11 @@
         ],
         "responses": {
           "200": {
-            "description": "RetryTrialsResponse",
+            "description": "RetryTrialResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RetryTrialsResponse"
+                  "$ref": "#/components/schemas/RetryTrialResponse"
                 }
               }
             }
@@ -4627,20 +4714,10 @@
             }
           }
         },
-        "description": "Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new trial IDs. Stale or active attempts return 409.",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RetryTrialsRequest"
-              }
-            }
-          },
-          "required": true
-        }
+        "description": "Retry this physical trial. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID."
       }
     },
-    "/v1/rollouts/retry": {
+    "/v1/rollouts/{rollout_id}/retry": {
       "post": {
         "tags": [
           "rollouts"
@@ -4648,6 +4725,15 @@
         "operationId": "rollouts.retry",
         "parameters": [
           {
+            "name": "rollout_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
             "name": "idempotency-key",
             "in": "header",
             "schema": {
@@ -4677,11 +4763,11 @@
         ],
         "responses": {
           "200": {
-            "description": "RetryTrialsResponse",
+            "description": "RetryTrialResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RetryRolloutsResponse"
+                  "$ref": "#/components/schemas/RetryRolloutResponse"
                 }
               }
             }
@@ -4747,17 +4833,7 @@
             }
           }
         },
-        "description": "Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RetryRolloutsRequest"
-              }
-            }
-          },
-          "required": true
-        }
+        "description": "Retry this physical rollout. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID."
       }
     },
     "/v1/account": {
@@ -6735,7 +6811,7 @@
         }
       }
     },
-    "/v1/jobs/pause": {
+    "/v1/jobs/{job_id}/pause": {
       "post": {
         "tags": [
           "jobs"
@@ -6743,6 +6819,25 @@
         "operationId": "jobs.pause",
         "parameters": [
           {
+            "name": "job_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -6762,11 +6857,11 @@
         ],
         "responses": {
           "200": {
-            "description": "JobActionResponse",
+            "description": "JobResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JobActionResponse"
+                  "$ref": "#/components/schemas/JobResponse"
                 }
               }
             }
@@ -6831,20 +6926,10 @@
               }
             }
           }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JobActionRequest"
-              }
-            }
-          },
-          "required": true
         }
       }
     },
-    "/v1/jobs/resume": {
+    "/v1/jobs/{job_id}/resume": {
       "post": {
         "tags": [
           "jobs"
@@ -6852,6 +6937,25 @@
         "operationId": "jobs.resume",
         "parameters": [
           {
+            "name": "job_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -6871,11 +6975,11 @@
         ],
         "responses": {
           "200": {
-            "description": "JobActionResponse",
+            "description": "JobResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JobActionResponse"
+                  "$ref": "#/components/schemas/JobResponse"
                 }
               }
             }
@@ -6940,20 +7044,10 @@
               }
             }
           }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JobActionRequest"
-              }
-            }
-          },
-          "required": true
         }
       }
     },
-    "/v1/jobs/cancel": {
+    "/v1/jobs/{job_id}/cancel": {
       "post": {
         "tags": [
           "jobs"
@@ -6961,6 +7055,25 @@
         "operationId": "jobs.cancel",
         "parameters": [
           {
+            "name": "job_id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+            },
+            "required": true
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -6980,11 +7093,11 @@
         ],
         "responses": {
           "200": {
-            "description": "JobActionResponse",
+            "description": "JobResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JobActionResponse"
+                  "$ref": "#/components/schemas/JobResponse"
                 }
               }
             }
@@ -7054,7 +7167,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CancelJobsRequest"
+                "$ref": "#/components/schemas/CancelJobRequest"
               }
             }
           },
@@ -16884,18 +16997,15 @@
         ],
         "additionalProperties": false
       },
-      "JobActionResponse": {
+      "JobResponse": {
         "type": "object",
         "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/JobDetail"
-            }
+          "job": {
+            "$ref": "#/components/schemas/JobDetail"
           }
         },
         "required": [
-          "items"
+          "job"
         ],
         "additionalProperties": false
       },
@@ -17046,46 +17156,14 @@
         ],
         "additionalProperties": false
       },
-      "CancelJobsRequest": {
+      "CancelJobRequest": {
         "type": "object",
         "properties": {
-          "job_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1,
-            "maxItems": 100,
-            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
-          },
           "force": {
             "type": "boolean",
             "default": true
           }
         },
-        "required": [
-          "job_ids"
-        ],
-        "additionalProperties": false
-      },
-      "JobActionRequest": {
-        "type": "object",
-        "properties": {
-          "job_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1,
-            "maxItems": 100,
-            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
-          }
-        },
-        "required": [
-          "job_ids"
-        ],
         "additionalProperties": false
       },
       "StorageCopyResult": {
@@ -18552,18 +18630,6 @@
         },
         "additionalProperties": false
       },
-      "JobResponse": {
-        "type": "object",
-        "properties": {
-          "job": {
-            "$ref": "#/components/schemas/JobDetail"
-          }
-        },
-        "required": [
-          "job"
-        ],
-        "additionalProperties": false
-      },
       "AgentOptions": {
         "type": "object"
       },
@@ -18864,88 +18930,41 @@
         ],
         "additionalProperties": false
       },
-      "RetryRolloutsResponse": {
+      "RetryRolloutResponse": {
         "type": "object",
         "properties": {
-          "rollout_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            }
+          "rollout_id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           }
         },
         "required": [
-          "rollout_ids"
+          "rollout_id"
         ],
         "additionalProperties": false
       },
-      "RetryRolloutsRequest": {
+      "RetryTrialResponse": {
         "type": "object",
         "properties": {
-          "rollout_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1,
-            "maxItems": 100,
-            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+          "trial_id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           }
         },
         "required": [
-          "rollout_ids"
+          "trial_id"
         ],
         "additionalProperties": false
       },
-      "RetryTrialsResponse": {
+      "RolloutResponse": {
         "type": "object",
         "properties": {
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            }
+          "rollout": {
+            "$ref": "#/components/schemas/TrialDetail"
           }
         },
         "required": [
-          "trial_ids"
-        ],
-        "additionalProperties": false
-      },
-      "RetryTrialsRequest": {
-        "type": "object",
-        "properties": {
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1,
-            "maxItems": 100,
-            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
-          }
-        },
-        "required": [
-          "trial_ids"
-        ],
-        "additionalProperties": false
-      },
-      "TrialActionResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TrialDetail"
-            }
-          }
-        },
-        "required": [
-          "items"
+          "rollout"
         ],
         "additionalProperties": false
       },
@@ -19282,87 +19301,25 @@
         ],
         "additionalProperties": false
       },
-      "CancelRolloutsRequest": {
+      "CancelTrialRequest": {
         "type": "object",
         "properties": {
-          "rollout_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1,
-            "maxItems": 100,
-            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
-          },
           "force": {
             "type": "boolean",
             "default": true
           }
         },
-        "required": [
-          "rollout_ids"
-        ],
         "additionalProperties": false
       },
-      "CancelTrialsRequest": {
+      "TrialResponse": {
         "type": "object",
         "properties": {
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1,
-            "maxItems": 100,
-            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
-          },
-          "force": {
-            "type": "boolean",
-            "default": true
+          "trial": {
+            "$ref": "#/components/schemas/TrialDetail"
           }
         },
         "required": [
-          "trial_ids"
-        ],
-        "additionalProperties": false
-      },
-      "RolloutActionRequest": {
-        "type": "object",
-        "properties": {
-          "rollout_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1,
-            "maxItems": 100,
-            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
-          }
-        },
-        "required": [
-          "rollout_ids"
-        ],
-        "additionalProperties": false
-      },
-      "TrialActionRequest": {
-        "type": "object",
-        "properties": {
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "minItems": 1,
-            "maxItems": 100,
-            "description": "One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
-          }
-        },
-        "required": [
-          "trial_ids"
+          "trial"
         ],
         "additionalProperties": false
       },
@@ -19517,30 +19474,6 @@
           "rewards",
           "usage",
           "error_type"
-        ],
-        "additionalProperties": false
-      },
-      "RolloutResponse": {
-        "type": "object",
-        "properties": {
-          "rollout": {
-            "$ref": "#/components/schemas/TrialDetail"
-          }
-        },
-        "required": [
-          "rollout"
-        ],
-        "additionalProperties": false
-      },
-      "TrialResponse": {
-        "type": "object",
-        "properties": {
-          "trial": {
-            "$ref": "#/components/schemas/TrialDetail"
-          }
-        },
-        "required": [
-          "trial"
         ],
         "additionalProperties": false
       },
