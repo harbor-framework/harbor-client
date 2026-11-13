@@ -71,3 +71,4 @@ class JobSummary(BaseModel):
     sources: List[str]
     rewards: Dict[str, MeanAggregate]
     usage: UsageAggregates
+

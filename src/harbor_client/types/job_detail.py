@@ -82,3 +82,4 @@ class JobDetail(BaseModel):
     )
     config: Dict[str, Any]
     session_id: Optional[str]
+
