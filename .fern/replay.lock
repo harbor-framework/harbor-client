@@ -54,14 +54,20 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-python-sdk: 6.17.0
-current_generation: 31e7c7679ecec263f4a09a519538964afcff65eb
+  - commit_sha: f357ba3ab976b36cb10c7bf019ef8030b477710d
+    tree_hash: 108db1684fa0a15dcd8a661cda90937a96e70a63
+    timestamp: 2026-11-13T18:11:30.724Z
+    cli_version: 5.199.0
+    generator_versions:
+      python: 6.17.0
+current_generation: f357ba3ab976b36cb10c7bf019ef8030b477710d
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:e85a4552ebacea8b40a07ecb0a494ea83609123ddbf569c5000be824a817709d
+    content_hash: sha256:32c68b7e4c7ec04a02298b1ed95f2f4e2297bd3ebab40a7c1f17a1197c13c2ee
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 31ef43dc36e6013029aaa6b79d61e7a31709817f
+    base_generation: f357ba3ab976b36cb10c7bf019ef8030b477710d
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -83,6 +89,40 @@ patches:
       - src/harbor_client/types/utils/base_model.py
       - src/harbor_client/types/utils/cast_models.py
     patch_content: |
+      diff --git a/pyproject.toml b/pyproject.toml
+      index ace1658..e4e794b 100644
+      --- a/pyproject.toml
+      +++ b/pyproject.toml
+      @@ -1,3 +1,9 @@
+      +[project.optional-dependencies]
+      +tus = ["tuspy>=1.1.0,<2"]
+      +
+      +[tool.setuptools.package-data]
+      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
+      +
+       [build-system]
+       requires = ["setuptools>=61.0"]
+       build-backend = "setuptools.build_meta"
+      @@ -7,8 +13,18 @@ name = "harbor-framework-client"
+       version = "0.1.0"
+       description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
+       readme = "PyPI_README.md"
+      -requires-python = ">=3.9"
+      +requires-python = ">=3.12"
+       dependencies = [
+      +    "requests>=2.31.0",
+      +    "pydantic>=2.14.0,<3",
+      +    "httpx>=0.27.0",
+      +    "jsonschema>=4.23.0"
+      +]
+      +
+      +
+      +[project.urls]
+      +Repository = "https://github.com/harbor-framework/harbor-client"
+      +
+           "requests>=2.31.0",
+           "pydantic>=2.14.0,<3",
+           "httpx>=0.21.2"
       diff --git a/src/harbor_client/api_keys/client.py b/src/harbor_client/api_keys/client.py
       index cd20bb2..d641f1f 100644
       --- a/src/harbor_client/api_keys/client.py
@@ -220,7 +260,7 @@ patches:
            additional_headers: typing.Dict[str, typing.Any]
            additional_query_parameters: typing.Dict[str, typing.Any]
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 3b68182..cbdaa3e 100644
+      index 7d91a06..20423f1 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
       @@ -1153,6 +1153,7 @@ class JobsClient(BaseService):
@@ -383,7 +423,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/net/transport/serializer.py b/src/harbor_client/net/transport/serializer.py
-      index cbe696e..a1b0588 100644
+      index ddba9ae..f5bc0b8 100644
       --- a/src/harbor_client/net/transport/serializer.py
       +++ b/src/harbor_client/net/transport/serializer.py
       @@ -481,7 +481,7 @@ class Serializer:
@@ -515,41 +555,6 @@ patches:
        
                        next_cursor = parsed_response.next_page_token
       @@ -935,7 +933,11 @@ class AsyncSecretsClient(SecretsClient):
-               )
-       
-               async def _paginate():
-      -            for page in sync_pager.iter_pages():
-      +            pages = sync_pager.iter_pages()
-      +            while True:
-      +                page = await to_async(next)(pages, None)
-      +                if page is None:
-      +                    return
-                       yield page
-       
-               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index fe07cb7..c70e5de 100644
-      --- a/src/harbor_client/trials/client.py
-      +++ b/src/harbor_client/trials/client.py
-      @@ -764,6 +764,7 @@ class TrialsClient(BaseService):
-               :return: The parsed response data.
-               :rtype: SyncPager[TrialSummary]
-               """
-      +        self = self._for_one_call()
-       
-               Validator(str).is_array().is_optional().validate(task, "task")
-               Validator(RunState).is_optional().validate(state, "state")
-      @@ -832,9 +833,6 @@ class TrialsClient(BaseService):
-                       )
-                       current_page = parsed_response.items
-       
-      -                if not current_page:
-      -                    break
-      -
-                       yield current_page
-       
-                       next_cursor = parsed_response.next_page_token
-      @@ -1414,7 +1412,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
                async def _paginate():
@@ -701,42 +706,1868 @@ patches:
                    # Pydantic models: use model_validate() for each item. Validated one at a time so the
                    # failing element's index reaches the error message.
                    if hasattr(element_type, "model_validate"):
-      diff --git a/pyproject.toml b/pyproject.toml
-      index e7dc55e..7ae02b9 100644
-      --- a/pyproject.toml
-      +++ b/pyproject.toml
-      @@ -1,15 +1,27 @@
-      +[project.optional-dependencies]
-      +tus = ["tuspy>=1.1.0,<2"]
-      +
-      +[tool.setuptools.package-data]
-      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
-      +
-       [build-system]
-       requires = ["setuptools>=61.0"]
-       build-backend = "setuptools.build_meta"
+      diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
+      index 93c1e26..c70e5de 100644
+      --- a/src/harbor_client/trials/client.py
+      +++ b/src/harbor_client/trials/client.py
+      @@ -63,15 +63,15 @@ class TrialsClient(BaseService):
+               super().__init__(*args, **kwargs)
+               self._raw_client = self.with_raw_response
+               self._get_config: SdkConfig = {}
+      -        self._list_config: SdkConfig = {}
+      -        self._create_config: SdkConfig = {}
+      -        self._get_filters_config: SdkConfig = {}
+      +        self._get_artifact_download_config: SdkConfig = {}
+               self._pause_config: SdkConfig = {}
+               self._resume_config: SdkConfig = {}
+               self._cancel_config: SdkConfig = {}
+               self._retry_config: SdkConfig = {}
+      -        self._get_artifact_download_config: SdkConfig = {}
+               self._copy_config: SdkConfig = {}
+      +        self._get_filters_config: SdkConfig = {}
+      +        self._list_config: SdkConfig = {}
+      +        self._create_config: SdkConfig = {}
        
-       [project]
-      -name = "harbor-client"
-      +name = "harbor-framework-client"
-       version = "0.1.0"
-       description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
-       readme = "PyPI_README.md"
-      -requires-python = ">=3.9"
-      +requires-python = ">=3.12"
-       dependencies = [
-           "requests>=2.31.0",
-      -    "pydantic>=2.0.0,<3.0.0",
-      -    "httpx>=0.21.2"
-      +    "pydantic>=2.14.0,<3",
-      +    "httpx>=0.27.0",
-      +    "jsonschema>=4.23.0"
-       ]
+           def set_get_config(self, config: SdkConfig):
+               """
+      @@ -83,94 +83,94 @@ class TrialsClient(BaseService):
+               self._get_config = config
+               return self
+       
+      -    def set_list_config(self, config: SdkConfig):
+      +    def set_get_artifact_download_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for list.
+      +        Sets method-level configuration for get_artifact_download.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._list_config = config
+      +        self._get_artifact_download_config = config
+               return self
+       
+      -    def set_create_config(self, config: SdkConfig):
+      +    def set_pause_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for create.
+      +        Sets method-level configuration for pause.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._create_config = config
+      +        self._pause_config = config
+               return self
+       
+      -    def set_get_filters_config(self, config: SdkConfig):
+      +    def set_resume_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for get_filters.
+      +        Sets method-level configuration for resume.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._get_filters_config = config
+      +        self._resume_config = config
+               return self
+       
+      -    def set_pause_config(self, config: SdkConfig):
+      +    def set_cancel_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for pause.
+      +        Sets method-level configuration for cancel.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._pause_config = config
+      +        self._cancel_config = config
+               return self
+       
+      -    def set_resume_config(self, config: SdkConfig):
+      +    def set_retry_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for resume.
+      +        Sets method-level configuration for retry.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._resume_config = config
+      +        self._retry_config = config
+               return self
+       
+      -    def set_cancel_config(self, config: SdkConfig):
+      +    def set_copy_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for cancel.
+      +        Sets method-level configuration for copy.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._cancel_config = config
+      +        self._copy_config = config
+               return self
+       
+      -    def set_retry_config(self, config: SdkConfig):
+      +    def set_get_filters_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for retry.
+      +        Sets method-level configuration for get_filters.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._retry_config = config
+      +        self._get_filters_config = config
+               return self
+       
+      -    def set_get_artifact_download_config(self, config: SdkConfig):
+      +    def set_list_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for get_artifact_download.
+      +        Sets method-level configuration for list.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._get_artifact_download_config = config
+      +        self._list_config = config
+               return self
+       
+      -    def set_copy_config(self, config: SdkConfig):
+      +    def set_create_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for copy.
+      +        Sets method-level configuration for create.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._copy_config = config
+      +        self._create_config = config
+               return self
+       
+           @property
+      @@ -231,394 +231,80 @@ class TrialsClient(BaseService):
+               )
+       
+           @cast_models
+      -    def list(
+      +    def get_artifact_download(
+               self,
+      +        trial_id: str,
+               *,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      -        agent_version: List[str] = SENTINEL,
+      -        model_name: List[str] = SENTINEL,
+      -        model_provider: List[str] = SENTINEL,
+      -        reasoning_effort: List[str] = SENTINEL,
+      -        source: List[str] = SENTINEL,
+      -        created_after: str = SENTINEL,
+      -        created_before: str = SENTINEL,
+      -        job_id: str = SENTINEL,
+      -        page_size: str = SENTINEL,
+      -        page_token: str = SENTINEL,
+      -        sort: TrialsListRequestSort = SENTINEL,
+      +        artifact_type: TrialArtifactType,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> SyncPager[TrialSummary]:
+      -        """list
+      +    ) -> StorageDownload:
+      +        """get_artifact_download
+       
+      -        :param task: task, defaults to None
+      -        :type task: List[str], optional
+      -        :param state: state, defaults to None
+      -        :type state: RunState, optional
+      -        :param name: name, defaults to None
+      -        :type name: str, optional
+      -        :param q: q, defaults to None
+      -        :type q: str, optional
+      -        :param agent_name: agent_name, defaults to None
+      -        :type agent_name: List[str], optional
+      -        :param agent_version: agent_version, defaults to None
+      -        :type agent_version: List[str], optional
+      -        :param model_name: model_name, defaults to None
+      -        :type model_name: List[str], optional
+      -        :param model_provider: model_provider, defaults to None
+      -        :type model_provider: List[str], optional
+      -        :param reasoning_effort: reasoning_effort, defaults to None
+      -        :type reasoning_effort: List[str], optional
+      -        :param source: source, defaults to None
+      -        :type source: List[str], optional
+      -        :param created_after: created_after, defaults to None
+      -        :type created_after: str, optional
+      -        :param created_before: created_before, defaults to None
+      -        :type created_before: str, optional
+      -        :param job_id: job_id, defaults to None
+      -        :type job_id: str, optional
+      -        :param page_size: page_size, defaults to None
+      -        :type page_size: str, optional
+      -        :param page_token: page_token, defaults to None
+      -        :type page_token: str, optional
+      -        :param sort: sort, defaults to None
+      -        :type sort: TrialsListRequestSort, optional
+      +        :param trial_id: trial_id
+      +        :type trial_id: str
+      +        :param artifact_type: artifact_type
+      +        :type artifact_type: TrialArtifactType
+               ...
+               :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+               ...
+               :return: The parsed response data.
+      -        :rtype: SyncPager[TrialSummary]
+      +        :rtype: StorageDownload
+               """
+       
+      -        Validator(str).is_array().is_optional().validate(task, "task")
+      -        Validator(RunState).is_optional().validate(state, "state")
+      -        Validator(str).is_optional().validate(name, "name")
+      -        Validator(str).is_optional().validate(q, "q")
+      -        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+      -        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+      -        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+      -        Validator(str).is_array().is_optional().validate(
+      -            model_provider, "model_provider"
+      -        )
+      -        Validator(str).is_array().is_optional().validate(
+      -            reasoning_effort, "reasoning_effort"
+      -        )
+      -        Validator(str).is_array().is_optional().validate(source, "source")
+      -        Validator(str).is_optional().validate(created_after, "created_after")
+      -        Validator(str).is_optional().validate(created_before, "created_before")
+      -        Validator(str).is_optional().validate(job_id, "job_id")
+      -        Validator(str).is_optional().validate(page_size, "page_size")
+      -        Validator(str).is_optional().validate(page_token, "page_token")
+      -        Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
+      -
+      -        resolved_config = self._get_resolved_config(self._list_config, request_options)
+      +        Validator(str).validate(trial_id, "trial_id")
+      +        Validator(TrialArtifactType).validate(artifact_type, "artifact_type")
+       
+      -        def _paginate() -> Generator[List[TrialSummary], None, None]:
+      -            nonlocal page_token
+      -            while True:
+      -                serialized_request = (
+      -                    Serializer(
+      -                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+      -                        [self.get_access_token(resolved_config)],
+      -                        resolved_config,
+      -                    )
+      -                    .add_header(
+      -                        "Harbor-API-Version",
+      -                        self._global_headers.get("Harbor-API-Version"),
+      -                    )
+      -                    .add_query("task", task)
+      -                    .add_query("state", state)
+      -                    .add_query("name", name)
+      -                    .add_query("q", q)
+      -                    .add_query("agent_name", agent_name)
+      -                    .add_query("agent_version", agent_version)
+      -                    .add_query("model_name", model_name)
+      -                    .add_query("model_provider", model_provider)
+      -                    .add_query("reasoning_effort", reasoning_effort)
+      -                    .add_query("source", source)
+      -                    .add_query("created_after", created_after)
+      -                    .add_query("created_before", created_before)
+      -                    .add_query("job_id", job_id)
+      -                    .add_query("page_size", page_size)
+      -                    .add_query("page_token", page_token)
+      -                    .add_query("sort", sort)
+      -                    .add_error(401, UnauthorizedEncoded)
+      -                    .add_error(403, ForbiddenEncoded)
+      -                    .add_error(404, NotFoundEncoded)
+      -                    .add_error(500, InternalServerErrorEncoded)
+      -                    .serialize()
+      -                    .set_method("GET")
+      -                )
+      -                response, status, content = self.send_request(serialized_request)
+      -                parsed_response = (
+      -                    TrialPage.model_validate(response)
+      -                    if should_validate_response(resolved_config)
+      -                    else construct_lenient(TrialPage, response)
+      -                )
+      -                current_page = parsed_response.items
+      +        resolved_config = self._get_resolved_config(
+      +            self._get_artifact_download_config, request_options
+      +        )
+       
+      -                if not current_page:
+      -                    break
+      +        serialized_request = (
+      +            Serializer(
+      +                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/artifacts",
+      +                [self.get_access_token(resolved_config)],
+      +                resolved_config,
+      +            )
+      +            .add_header(
+      +                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      +            )
+      +            .add_path("trial_id", trial_id)
+      +            .add_query("artifact_type", artifact_type)
+      +            .add_error(401, UnauthorizedEncoded)
+      +            .add_error(403, ForbiddenEncoded)
+      +            .add_error(404, NotFoundEncoded)
+      +            .add_error(429, TooManyRequestsEncoded)
+      +            .add_error(500, InternalServerErrorEncoded)
+      +            .serialize()
+      +            .set_method("GET")
+      +        )
+       
+      -                yield current_page
+      +        response, status, content = self.send_request(serialized_request)
+      +        return (
+      +            None
+      +            if response in (b"", "")
+      +            else (
+      +                StorageDownload.model_validate(response)
+      +                if should_validate_response(resolved_config)
+      +                else construct_lenient(StorageDownload, response)
+      +            )
+      +        )
+       
+      -                next_cursor = parsed_response.next_page_token
+      -                if not next_cursor:
+      -                    break
+      +    @cast_models
+      +    def pause(
+      +        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      +    ) -> TrialActionResponse:
+      +        """pause
+       
+      -                page_token = next_cursor
+      +        :param request_body: The request body.
+      +        :type request_body: TrialActionRequest
+      +        ...
+      +        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      +        ...
+      +        :return: The parsed response data.
+      +        :rtype: TrialActionResponse
+      +        """
+       
+      -        return SyncPager(_paginate(), lambda: self._last_response)
+      -
+      -    @cast_models
+      -    def create(
+      -        self,
+      -        *,
+      -        trial_id: str,
+      -        job_id: str,
+      -        trial_name: str,
+      -        task_name: str,
+      -        task_content_hash: str,
+      -        agent: ResultTrialCreateAgent,
+      -        config: dict,
+      -        lock: dict,
+      -        started_at: Union[str, None] = SENTINEL,
+      -        finished_at: Union[str, None] = SENTINEL,
+      -        rewards: Union[dict, None] = SENTINEL,
+      -        exception_type: Union[str, None] = SENTINEL,
+      -        models: List[ResultModelUsage] = SENTINEL,
+      -        environment_setup_started_at: Union[str, None] = SENTINEL,
+      -        environment_setup_finished_at: Union[str, None] = SENTINEL,
+      -        agent_setup_started_at: Union[str, None] = SENTINEL,
+      -        agent_setup_finished_at: Union[str, None] = SENTINEL,
+      -        agent_execution_started_at: Union[str, None] = SENTINEL,
+      -        agent_execution_finished_at: Union[str, None] = SENTINEL,
+      -        verifier_started_at: Union[str, None] = SENTINEL,
+      -        verifier_finished_at: Union[str, None] = SENTINEL,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> CreatedResultTrial:
+      -        """create
+      -
+      -        :param request_body: The request body.
+      -        :type request_body: ResultTrialCreate
+      -        ...
+      -        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      -        ...
+      -        :return: The parsed response data.
+      -        :rtype: CreatedResultTrial
+      -        """
+      -
+      -        resolved_config = self._get_resolved_config(
+      -            self._create_config, request_options
+      -        )
+      -
+      -        request_body = ResultTrialCreate(
+      -            trial_id=trial_id,
+      -            job_id=job_id,
+      -            trial_name=trial_name,
+      -            task_name=task_name,
+      -            task_content_hash=task_content_hash,
+      -            agent=agent,
+      -            config=config,
+      -            lock=lock,
+      -            **dict[str, Any](
+      -                {
+      -                    k: v
+      -                    for k, v in {
+      -                        "started_at": started_at,
+      -                        "finished_at": finished_at,
+      -                        "rewards": rewards,
+      -                        "exception_type": exception_type,
+      -                        "models": models,
+      -                        "environment_setup_started_at": environment_setup_started_at,
+      -                        "environment_setup_finished_at": environment_setup_finished_at,
+      -                        "agent_setup_started_at": agent_setup_started_at,
+      -                        "agent_setup_finished_at": agent_setup_finished_at,
+      -                        "agent_execution_started_at": agent_execution_started_at,
+      -                        "agent_execution_finished_at": agent_execution_finished_at,
+      -                        "verifier_started_at": verifier_started_at,
+      -                        "verifier_finished_at": verifier_finished_at,
+      -                    }.items()
+      -                    if v is not SENTINEL
+      -                }
+      -            ),
+      -        )
+      -        Validator(ResultTrialCreate).validate(request_body, "request_body")
+      -        serialized_request = (
+      -            Serializer(
+      -                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+      -                [self.get_access_token(resolved_config)],
+      -                resolved_config,
+      -            )
+      -            .add_header(
+      -                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      -            )
+      -            .add_error(401, UnauthorizedEncoded)
+      -            .add_error(403, ForbiddenEncoded)
+      -            .add_error(404, NotFoundEncoded)
+      -            .add_error(500, InternalServerErrorEncoded)
+      -            .serialize()
+      -            .set_method("POST")
+      -            .set_body(request_body)
+      -        )
+      -
+      -        response, status, content = self.send_request(serialized_request)
+      -        return (
+      -            None
+      -            if response in (b"", "")
+      -            else (
+      -                CreatedResultTrial.model_validate(response)
+      -                if should_validate_response(resolved_config)
+      -                else construct_lenient(CreatedResultTrial, response)
+      -            )
+      -        )
+      -
+      -    @cast_models
+      -    def get_filters(
+      -        self,
+      -        *,
+      -        field: TrialsGetFiltersRequestField,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      -        agent_version: List[str] = SENTINEL,
+      -        model_name: List[str] = SENTINEL,
+      -        model_provider: List[str] = SENTINEL,
+      -        reasoning_effort: List[str] = SENTINEL,
+      -        source: List[str] = SENTINEL,
+      -        created_after: str = SENTINEL,
+      -        created_before: str = SENTINEL,
+      -        job_id: str = SENTINEL,
+      -        limit: str = SENTINEL,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> FilterValuesResponse:
+      -        """get_filters
+      -
+      -        :param field: field
+      -        :type field: TrialsGetFiltersRequestField
+      -        :param task: task, defaults to None
+      -        :type task: List[str], optional
+      -        :param state: state, defaults to None
+      -        :type state: RunState, optional
+      -        :param name: name, defaults to None
+      -        :type name: str, optional
+      -        :param q: q, defaults to None
+      -        :type q: str, optional
+      -        :param agent_name: agent_name, defaults to None
+      -        :type agent_name: List[str], optional
+      -        :param agent_version: agent_version, defaults to None
+      -        :type agent_version: List[str], optional
+      -        :param model_name: model_name, defaults to None
+      -        :type model_name: List[str], optional
+      -        :param model_provider: model_provider, defaults to None
+      -        :type model_provider: List[str], optional
+      -        :param reasoning_effort: reasoning_effort, defaults to None
+      -        :type reasoning_effort: List[str], optional
+      -        :param source: source, defaults to None
+      -        :type source: List[str], optional
+      -        :param created_after: created_after, defaults to None
+      -        :type created_after: str, optional
+      -        :param created_before: created_before, defaults to None
+      -        :type created_before: str, optional
+      -        :param job_id: job_id, defaults to None
+      -        :type job_id: str, optional
+      -        :param limit: limit, defaults to None
+      -        :type limit: str, optional
+      -        ...
+      -        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      -        ...
+      -        :return: The parsed response data.
+      -        :rtype: FilterValuesResponse
+      -        """
+      -
+      -        Validator(TrialsGetFiltersRequestField).validate(field, "field")
+      -        Validator(str).is_array().is_optional().validate(task, "task")
+      -        Validator(RunState).is_optional().validate(state, "state")
+      -        Validator(str).is_optional().validate(name, "name")
+      -        Validator(str).is_optional().validate(q, "q")
+      -        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+      -        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+      -        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+      -        Validator(str).is_array().is_optional().validate(
+      -            model_provider, "model_provider"
+      -        )
+      -        Validator(str).is_array().is_optional().validate(
+      -            reasoning_effort, "reasoning_effort"
+      -        )
+      -        Validator(str).is_array().is_optional().validate(source, "source")
+      -        Validator(str).is_optional().validate(created_after, "created_after")
+      -        Validator(str).is_optional().validate(created_before, "created_before")
+      -        Validator(str).is_optional().validate(job_id, "job_id")
+      -        Validator(str).is_optional().validate(limit, "limit")
+      -
+      -        resolved_config = self._get_resolved_config(
+      -            self._get_filters_config, request_options
+      -        )
+      -
+      -        serialized_request = (
+      -            Serializer(
+      -                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/filters",
+      -                [self.get_access_token(resolved_config)],
+      -                resolved_config,
+      -            )
+      -            .add_header(
+      -                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      -            )
+      -            .add_query("task", task)
+      -            .add_query("state", state)
+      -            .add_query("name", name)
+      -            .add_query("q", q)
+      -            .add_query("agent_name", agent_name)
+      -            .add_query("agent_version", agent_version)
+      -            .add_query("model_name", model_name)
+      -            .add_query("model_provider", model_provider)
+      -            .add_query("reasoning_effort", reasoning_effort)
+      -            .add_query("source", source)
+      -            .add_query("created_after", created_after)
+      -            .add_query("created_before", created_before)
+      -            .add_query("job_id", job_id)
+      -            .add_query("field", field)
+      -            .add_query("limit", limit)
+      -            .add_error(401, UnauthorizedEncoded)
+      -            .add_error(403, ForbiddenEncoded)
+      -            .add_error(404, NotFoundEncoded)
+      -            .add_error(500, InternalServerErrorEncoded)
+      -            .serialize()
+      -            .set_method("GET")
+      -        )
+      -
+      -        response, status, content = self.send_request(serialized_request)
+      -        return (
+      -            None
+      -            if response in (b"", "")
+      -            else (
+      -                FilterValuesResponse.model_validate(response)
+      -                if should_validate_response(resolved_config)
+      -                else construct_lenient(FilterValuesResponse, response)
+      -            )
+      -        )
+      -
+      -    @cast_models
+      -    def pause(
+      -        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      -    ) -> TrialActionResponse:
+      -        """pause
+      -
+      -        :param request_body: The request body.
+      -        :type request_body: TrialActionRequest
+      -        ...
+      -        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      -        ...
+      -        :return: The parsed response data.
+      -        :rtype: TrialActionResponse
+      -        """
+      -
+      -        resolved_config = self._get_resolved_config(self._pause_config, request_options)
+      +        resolved_config = self._get_resolved_config(self._pause_config, request_options)
+       
+               request_body = TrialActionRequest(trial_ids=trial_ids)
+               Validator(TrialActionRequest).validate(request_body, "request_body")
+      @@ -818,48 +504,188 @@ class TrialsClient(BaseService):
+               )
+       
+           @cast_models
+      -    def get_artifact_download(
+      +    def copy(
+               self,
+      -        trial_id: str,
+      +        source_trial_id: str,
+               *,
+      -        artifact_type: TrialArtifactType,
+      +        new_name: Union[str, None] = SENTINEL,
+      +        overwrite: Union[bool, None] = SENTINEL,
+      +        target_organization_id: Union[str, None] = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> StorageDownload:
+      -        """get_artifact_download
+      +    ) -> StorageCopyResult:
+      +        """copy
+       
+      -        :param trial_id: trial_id
+      -        :type trial_id: str
+      -        :param artifact_type: artifact_type
+      -        :type artifact_type: TrialArtifactType
+      +        :param request_body: The request body.
+      +        :type request_body: TrialsCopyRequest
+      +        :param source_trial_id: source_trial_id
+      +        :type source_trial_id: str
+               ...
+               :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+               ...
+               :return: The parsed response data.
+      -        :rtype: StorageDownload
+      +        :rtype: StorageCopyResult
+               """
+       
+      -        Validator(str).validate(trial_id, "trial_id")
+      -        Validator(TrialArtifactType).validate(artifact_type, "artifact_type")
+      +        Validator(str).validate(source_trial_id, "source_trial_id")
       +
+      +        resolved_config = self._get_resolved_config(self._copy_config, request_options)
       +
-      +[project.urls]
-      +Repository = "https://github.com/harbor-framework/harbor-client"
+      +        request_body = TrialsCopyRequest(
+      +            **dict[str, Any](
+      +                {
+      +                    k: v
+      +                    for k, v in {
+      +                        "new_name": new_name,
+      +                        "overwrite": overwrite,
+      +                        "target_organization_id": target_organization_id,
+      +                    }.items()
+      +                    if v is not SENTINEL
+      +                }
+      +            )
+      +        )
+      +        Validator(TrialsCopyRequest).validate(request_body, "request_body")
+      +        serialized_request = (
+      +            Serializer(
+      +                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{source_trial_id}}/copy",
+      +                [self.get_access_token(resolved_config)],
+      +                resolved_config,
+      +            )
+      +            .add_header(
+      +                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      +            )
+      +            .add_path("source_trial_id", source_trial_id)
+      +            .add_error(401, UnauthorizedEncoded)
+      +            .add_error(403, ForbiddenEncoded)
+      +            .add_error(404, NotFoundEncoded)
+      +            .add_error(429, TooManyRequestsEncoded)
+      +            .add_error(500, InternalServerErrorEncoded)
+      +            .serialize()
+      +            .set_method("POST")
+      +            .set_body(request_body)
+      +        )
       +
+      +        response, status, content = self.send_request(serialized_request)
+      +        return (
+      +            None
+      +            if response in (b"", "")
+      +            else (
+      +                StorageCopyResult.model_validate(response)
+      +                if should_validate_response(resolved_config)
+      +                else construct_lenient(StorageCopyResult, response)
+      +            )
+      +        )
+      +
+      +    @cast_models
+      +    def get_filters(
+      +        self,
+      +        *,
+      +        field: TrialsGetFiltersRequestField,
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+      +        agent_version: List[str] = SENTINEL,
+      +        model_name: List[str] = SENTINEL,
+      +        model_provider: List[str] = SENTINEL,
+      +        reasoning_effort: List[str] = SENTINEL,
+      +        source: List[str] = SENTINEL,
+      +        created_after: str = SENTINEL,
+      +        created_before: str = SENTINEL,
+      +        job_id: str = SENTINEL,
+      +        limit: str = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> FilterValuesResponse:
+      +        """get_filters
+      +
+      +        :param field: field
+      +        :type field: TrialsGetFiltersRequestField
+      +        :param task: task, defaults to None
+      +        :type task: List[str], optional
+      +        :param state: state, defaults to None
+      +        :type state: RunState, optional
+      +        :param name: name, defaults to None
+      +        :type name: str, optional
+      +        :param q: q, defaults to None
+      +        :type q: str, optional
+      +        :param agent_name: agent_name, defaults to None
+      +        :type agent_name: List[str], optional
+      +        :param agent_version: agent_version, defaults to None
+      +        :type agent_version: List[str], optional
+      +        :param model_name: model_name, defaults to None
+      +        :type model_name: List[str], optional
+      +        :param model_provider: model_provider, defaults to None
+      +        :type model_provider: List[str], optional
+      +        :param reasoning_effort: reasoning_effort, defaults to None
+      +        :type reasoning_effort: List[str], optional
+      +        :param source: source, defaults to None
+      +        :type source: List[str], optional
+      +        :param created_after: created_after, defaults to None
+      +        :type created_after: str, optional
+      +        :param created_before: created_before, defaults to None
+      +        :type created_before: str, optional
+      +        :param job_id: job_id, defaults to None
+      +        :type job_id: str, optional
+      +        :param limit: limit, defaults to None
+      +        :type limit: str, optional
+      +        ...
+      +        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      +        ...
+      +        :return: The parsed response data.
+      +        :rtype: FilterValuesResponse
+      +        """
+      +
+      +        Validator(TrialsGetFiltersRequestField).validate(field, "field")
+      +        Validator(str).is_array().is_optional().validate(task, "task")
+      +        Validator(RunState).is_optional().validate(state, "state")
+      +        Validator(str).is_optional().validate(name, "name")
+      +        Validator(str).is_optional().validate(q, "q")
+      +        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+      +        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+      +        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+      +        Validator(str).is_array().is_optional().validate(
+      +            model_provider, "model_provider"
+      +        )
+      +        Validator(str).is_array().is_optional().validate(
+      +            reasoning_effort, "reasoning_effort"
+      +        )
+      +        Validator(str).is_array().is_optional().validate(source, "source")
+      +        Validator(str).is_optional().validate(created_after, "created_after")
+      +        Validator(str).is_optional().validate(created_before, "created_before")
+      +        Validator(str).is_optional().validate(job_id, "job_id")
+      +        Validator(str).is_optional().validate(limit, "limit")
+       
+               resolved_config = self._get_resolved_config(
+      -            self._get_artifact_download_config, request_options
+      +            self._get_filters_config, request_options
+               )
+       
+               serialized_request = (
+                   Serializer(
+      -                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/artifacts",
+      +                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/filters",
+                       [self.get_access_token(resolved_config)],
+                       resolved_config,
+                   )
+                   .add_header(
+                       "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                   )
+      -            .add_path("trial_id", trial_id)
+      -            .add_query("artifact_type", artifact_type)
+      +            .add_query("task", task)
+      +            .add_query("state", state)
+      +            .add_query("name", name)
+      +            .add_query("q", q)
+      +            .add_query("agent_name", agent_name)
+      +            .add_query("agent_version", agent_version)
+      +            .add_query("model_name", model_name)
+      +            .add_query("model_provider", model_provider)
+      +            .add_query("reasoning_effort", reasoning_effort)
+      +            .add_query("source", source)
+      +            .add_query("created_after", created_after)
+      +            .add_query("created_before", created_before)
+      +            .add_query("job_id", job_id)
+      +            .add_query("field", field)
+      +            .add_query("limit", limit)
+                   .add_error(401, UnauthorizedEncoded)
+                   .add_error(403, ForbiddenEncoded)
+                   .add_error(404, NotFoundEncoded)
+      -            .add_error(429, TooManyRequestsEncoded)
+                   .add_error(500, InternalServerErrorEncoded)
+                   .serialize()
+                   .set_method("GET")
+      @@ -870,67 +696,239 @@ class TrialsClient(BaseService):
+                   None
+                   if response in (b"", "")
+                   else (
+      -                StorageDownload.model_validate(response)
+      +                FilterValuesResponse.model_validate(response)
+                       if should_validate_response(resolved_config)
+      -                else construct_lenient(StorageDownload, response)
+      +                else construct_lenient(FilterValuesResponse, response)
+                   )
+               )
+       
+           @cast_models
+      -    def copy(
+      +    def list(
+               self,
+      -        source_trial_id: str,
+               *,
+      -        new_name: Union[str, None] = SENTINEL,
+      -        overwrite: Union[bool, None] = SENTINEL,
+      -        target_organization_id: Union[str, None] = SENTINEL,
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+      +        agent_version: List[str] = SENTINEL,
+      +        model_name: List[str] = SENTINEL,
+      +        model_provider: List[str] = SENTINEL,
+      +        reasoning_effort: List[str] = SENTINEL,
+      +        source: List[str] = SENTINEL,
+      +        created_after: str = SENTINEL,
+      +        created_before: str = SENTINEL,
+      +        job_id: str = SENTINEL,
+      +        page_size: str = SENTINEL,
+      +        page_token: str = SENTINEL,
+      +        sort: TrialsListRequestSort = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> StorageCopyResult:
+      -        """copy
+      +    ) -> SyncPager[TrialSummary]:
+      +        """list
+       
+      -        :param request_body: The request body.
+      -        :type request_body: TrialsCopyRequest
+      -        :param source_trial_id: source_trial_id
+      -        :type source_trial_id: str
+      +        :param task: task, defaults to None
+      +        :type task: List[str], optional
+      +        :param state: state, defaults to None
+      +        :type state: RunState, optional
+      +        :param name: name, defaults to None
+      +        :type name: str, optional
+      +        :param q: q, defaults to None
+      +        :type q: str, optional
+      +        :param agent_name: agent_name, defaults to None
+      +        :type agent_name: List[str], optional
+      +        :param agent_version: agent_version, defaults to None
+      +        :type agent_version: List[str], optional
+      +        :param model_name: model_name, defaults to None
+      +        :type model_name: List[str], optional
+      +        :param model_provider: model_provider, defaults to None
+      +        :type model_provider: List[str], optional
+      +        :param reasoning_effort: reasoning_effort, defaults to None
+      +        :type reasoning_effort: List[str], optional
+      +        :param source: source, defaults to None
+      +        :type source: List[str], optional
+      +        :param created_after: created_after, defaults to None
+      +        :type created_after: str, optional
+      +        :param created_before: created_before, defaults to None
+      +        :type created_before: str, optional
+      +        :param job_id: job_id, defaults to None
+      +        :type job_id: str, optional
+      +        :param page_size: page_size, defaults to None
+      +        :type page_size: str, optional
+      +        :param page_token: page_token, defaults to None
+      +        :type page_token: str, optional
+      +        :param sort: sort, defaults to None
+      +        :type sort: TrialsListRequestSort, optional
+               ...
+               :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+               ...
+               :return: The parsed response data.
+      -        :rtype: StorageCopyResult
+      +        :rtype: SyncPager[TrialSummary]
+               """
+      +        self = self._for_one_call()
+       
+      -        Validator(str).validate(source_trial_id, "source_trial_id")
+      +        Validator(str).is_array().is_optional().validate(task, "task")
+      +        Validator(RunState).is_optional().validate(state, "state")
+      +        Validator(str).is_optional().validate(name, "name")
+      +        Validator(str).is_optional().validate(q, "q")
+      +        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+      +        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+      +        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+      +        Validator(str).is_array().is_optional().validate(
+      +            model_provider, "model_provider"
+      +        )
+      +        Validator(str).is_array().is_optional().validate(
+      +            reasoning_effort, "reasoning_effort"
+      +        )
+      +        Validator(str).is_array().is_optional().validate(source, "source")
+      +        Validator(str).is_optional().validate(created_after, "created_after")
+      +        Validator(str).is_optional().validate(created_before, "created_before")
+      +        Validator(str).is_optional().validate(job_id, "job_id")
+      +        Validator(str).is_optional().validate(page_size, "page_size")
+      +        Validator(str).is_optional().validate(page_token, "page_token")
+      +        Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
+       
+      -        resolved_config = self._get_resolved_config(self._copy_config, request_options)
+      +        resolved_config = self._get_resolved_config(self._list_config, request_options)
+       
+      -        request_body = TrialsCopyRequest(
+      +        def _paginate() -> Generator[List[TrialSummary], None, None]:
+      +            nonlocal page_token
+      +            while True:
+      +                serialized_request = (
+      +                    Serializer(
+      +                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+      +                        [self.get_access_token(resolved_config)],
+      +                        resolved_config,
+      +                    )
+      +                    .add_header(
+      +                        "Harbor-API-Version",
+      +                        self._global_headers.get("Harbor-API-Version"),
+      +                    )
+      +                    .add_query("task", task)
+      +                    .add_query("state", state)
+      +                    .add_query("name", name)
+      +                    .add_query("q", q)
+      +                    .add_query("agent_name", agent_name)
+      +                    .add_query("agent_version", agent_version)
+      +                    .add_query("model_name", model_name)
+      +                    .add_query("model_provider", model_provider)
+      +                    .add_query("reasoning_effort", reasoning_effort)
+      +                    .add_query("source", source)
+      +                    .add_query("created_after", created_after)
+      +                    .add_query("created_before", created_before)
+      +                    .add_query("job_id", job_id)
+      +                    .add_query("page_size", page_size)
+      +                    .add_query("page_token", page_token)
+      +                    .add_query("sort", sort)
+      +                    .add_error(401, UnauthorizedEncoded)
+      +                    .add_error(403, ForbiddenEncoded)
+      +                    .add_error(404, NotFoundEncoded)
+      +                    .add_error(500, InternalServerErrorEncoded)
+      +                    .serialize()
+      +                    .set_method("GET")
+      +                )
+      +                response, status, content = self.send_request(serialized_request)
+      +                parsed_response = (
+      +                    TrialPage.model_validate(response)
+      +                    if should_validate_response(resolved_config)
+      +                    else construct_lenient(TrialPage, response)
+      +                )
+      +                current_page = parsed_response.items
+      +
+      +                yield current_page
+      +
+      +                next_cursor = parsed_response.next_page_token
+      +                if not next_cursor:
+      +                    break
+      +
+      +                page_token = next_cursor
+      +
+      +        return SyncPager(_paginate(), lambda: self._last_response)
+      +
+      +    @cast_models
+      +    def create(
+      +        self,
+      +        *,
+      +        trial_id: str,
+      +        job_id: str,
+      +        trial_name: str,
+      +        task_name: str,
+      +        task_content_hash: str,
+      +        agent: ResultTrialCreateAgent,
+      +        config: dict,
+      +        lock: dict,
+      +        started_at: Union[str, None] = SENTINEL,
+      +        finished_at: Union[str, None] = SENTINEL,
+      +        rewards: Union[dict, None] = SENTINEL,
+      +        exception_type: Union[str, None] = SENTINEL,
+      +        models: List[ResultModelUsage] = SENTINEL,
+      +        environment_setup_started_at: Union[str, None] = SENTINEL,
+      +        environment_setup_finished_at: Union[str, None] = SENTINEL,
+      +        agent_setup_started_at: Union[str, None] = SENTINEL,
+      +        agent_setup_finished_at: Union[str, None] = SENTINEL,
+      +        agent_execution_started_at: Union[str, None] = SENTINEL,
+      +        agent_execution_finished_at: Union[str, None] = SENTINEL,
+      +        verifier_started_at: Union[str, None] = SENTINEL,
+      +        verifier_finished_at: Union[str, None] = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> CreatedResultTrial:
+      +        """create
+      +
+      +        :param request_body: The request body.
+      +        :type request_body: ResultTrialCreate
+      +        ...
+      +        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      +        ...
+      +        :return: The parsed response data.
+      +        :rtype: CreatedResultTrial
+      +        """
+      +
+      +        resolved_config = self._get_resolved_config(
+      +            self._create_config, request_options
+      +        )
+      +
+      +        request_body = ResultTrialCreate(
+      +            trial_id=trial_id,
+      +            job_id=job_id,
+      +            trial_name=trial_name,
+      +            task_name=task_name,
+      +            task_content_hash=task_content_hash,
+      +            agent=agent,
+      +            config=config,
+      +            lock=lock,
+                   **dict[str, Any](
+                       {
+                           k: v
+                           for k, v in {
+      -                        "new_name": new_name,
+      -                        "overwrite": overwrite,
+      -                        "target_organization_id": target_organization_id,
+      +                        "started_at": started_at,
+      +                        "finished_at": finished_at,
+      +                        "rewards": rewards,
+      +                        "exception_type": exception_type,
+      +                        "models": models,
+      +                        "environment_setup_started_at": environment_setup_started_at,
+      +                        "environment_setup_finished_at": environment_setup_finished_at,
+      +                        "agent_setup_started_at": agent_setup_started_at,
+      +                        "agent_setup_finished_at": agent_setup_finished_at,
+      +                        "agent_execution_started_at": agent_execution_started_at,
+      +                        "agent_execution_finished_at": agent_execution_finished_at,
+      +                        "verifier_started_at": verifier_started_at,
+      +                        "verifier_finished_at": verifier_finished_at,
+                           }.items()
+                           if v is not SENTINEL
+                       }
+      -            )
+      +            ),
+               )
+      -        Validator(TrialsCopyRequest).validate(request_body, "request_body")
+      +        Validator(ResultTrialCreate).validate(request_body, "request_body")
+               serialized_request = (
+                   Serializer(
+      -                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{source_trial_id}}/copy",
+      +                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+                       [self.get_access_token(resolved_config)],
+                       resolved_config,
+                   )
+                   .add_header(
+                       "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                   )
+      -            .add_path("source_trial_id", source_trial_id)
+                   .add_error(401, UnauthorizedEncoded)
+                   .add_error(403, ForbiddenEncoded)
+                   .add_error(404, NotFoundEncoded)
+      -            .add_error(429, TooManyRequestsEncoded)
+                   .add_error(500, InternalServerErrorEncoded)
+                   .serialize()
+                   .set_method("POST")
+      @@ -942,9 +940,9 @@ class TrialsClient(BaseService):
+                   None
+                   if response in (b"", "")
+                   else (
+      -                StorageCopyResult.model_validate(response)
+      +                CreatedResultTrial.model_validate(response)
+                       if should_validate_response(resolved_config)
+      -                else construct_lenient(StorageCopyResult, response)
+      +                else construct_lenient(CreatedResultTrial, response)
+                   )
+               )
+       
+      @@ -968,6 +966,145 @@ class RawTrialsClient:
+               data = TrialsClient.get(self._client, trial_id, request_options=request_options)
+               return HttpResponse(data=data, response=self._client._last_response)
+       
+      +    def get_artifact_download(
+      +        self,
+      +        trial_id: str,
+      +        *,
+      +        artifact_type: TrialArtifactType,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[StorageDownload]:
+      +        data = TrialsClient.get_artifact_download(
+      +            self._client,
+      +            trial_id,
+      +            artifact_type=artifact_type,
+      +            request_options=request_options,
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    def pause(
+      +        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      +    ) -> HttpResponse[TrialActionResponse]:
+      +        data = TrialsClient.pause(
+      +            self._client, trial_ids=trial_ids, request_options=request_options
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    def resume(
+      +        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      +    ) -> HttpResponse[TrialActionResponse]:
+      +        data = TrialsClient.resume(
+      +            self._client, trial_ids=trial_ids, request_options=request_options
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    def cancel(
+      +        self,
+      +        *,
+      +        trial_ids: List[str],
+      +        force: bool = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[TrialActionResponse]:
+      +        data = TrialsClient.cancel(
+      +            self._client,
+      +            trial_ids=trial_ids,
+      +            **dict[str, Any](
+      +                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+      +            ),
+      +            request_options=request_options,
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    def retry(
+      +        self,
+      +        *,
+      +        trial_ids: List[str],
+      +        idempotency_key: str,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[RetryTrialsResponse]:
+      +        data = TrialsClient.retry(
+      +            self._client,
+      +            trial_ids=trial_ids,
+      +            idempotency_key=idempotency_key,
+      +            request_options=request_options,
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    def copy(
+      +        self,
+      +        source_trial_id: str,
+      +        *,
+      +        new_name: Union[str, None] = SENTINEL,
+      +        overwrite: Union[bool, None] = SENTINEL,
+      +        target_organization_id: Union[str, None] = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[StorageCopyResult]:
+      +        data = TrialsClient.copy(
+      +            self._client,
+      +            source_trial_id,
+      +            **dict[str, Any](
+      +                {
+      +                    k: v
+      +                    for k, v in {
+      +                        "new_name": new_name,
+      +                        "overwrite": overwrite,
+      +                        "target_organization_id": target_organization_id,
+      +                    }.items()
+      +                    if v is not SENTINEL
+      +                }
+      +            ),
+      +            request_options=request_options,
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    def get_filters(
+      +        self,
+      +        *,
+      +        field: TrialsGetFiltersRequestField,
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+      +        agent_version: List[str] = SENTINEL,
+      +        model_name: List[str] = SENTINEL,
+      +        model_provider: List[str] = SENTINEL,
+      +        reasoning_effort: List[str] = SENTINEL,
+      +        source: List[str] = SENTINEL,
+      +        created_after: str = SENTINEL,
+      +        created_before: str = SENTINEL,
+      +        job_id: str = SENTINEL,
+      +        limit: str = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[FilterValuesResponse]:
+      +        data = TrialsClient.get_filters(
+      +            self._client,
+      +            field=field,
+      +            **dict[str, Any](
+      +                {
+      +                    k: v
+      +                    for k, v in {
+      +                        "task": task,
+      +                        "state": state,
+      +                        "name": name,
+      +                        "q": q,
+      +                        "agent_name": agent_name,
+      +                        "agent_version": agent_version,
+      +                        "model_name": model_name,
+      +                        "model_provider": model_provider,
+      +                        "reasoning_effort": reasoning_effort,
+      +                        "source": source,
+      +                        "created_after": created_after,
+      +                        "created_before": created_before,
+      +                        "job_id": job_id,
+      +                        "limit": limit,
+      +                    }.items()
+      +                    if v is not SENTINEL
+      +                }
+      +            ),
+      +            request_options=request_options,
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+           def list(
+               self,
+               *,
+      @@ -1080,70 +1217,50 @@ class RawTrialsClient:
+               )
+               return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def get_filters(
+      +
+      +class AsyncTrialsClient(TrialsClient):
+      +    """
+      +    Async wrapper for TrialsClient. Mirrors the sync client's endpoints (awaitable) and, for a
+      +    resource with sub-resources, its lazy child accessors (returning the async child clients).
+      +    """
+      +
+      +    @property
+      +    def with_raw_response(self) -> "AsyncRawTrialsClient":  # type: ignore[override]
+      +        """
+      +        Returns an async raw-response client whose methods mirror this resource but return
+      +        ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
+      +        """
+      +        return AsyncRawTrialsClient(self)
+      +
+      +    def get(
+      +        self, trial_id: str, *, request_options: Optional[RequestOptions] = None
+      +    ) -> Awaitable[TrialResponse]:  # type: ignore[override]
+      +        return to_async(super().get)(trial_id, request_options=request_options)
+      +
+      +    def get_artifact_download(
+               self,
+      +        trial_id: str,
+               *,
+      -        field: TrialsGetFiltersRequestField,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      -        agent_version: List[str] = SENTINEL,
+      -        model_name: List[str] = SENTINEL,
+      -        model_provider: List[str] = SENTINEL,
+      -        reasoning_effort: List[str] = SENTINEL,
+      -        source: List[str] = SENTINEL,
+      -        created_after: str = SENTINEL,
+      -        created_before: str = SENTINEL,
+      -        job_id: str = SENTINEL,
+      -        limit: str = SENTINEL,
+      +        artifact_type: TrialArtifactType,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[FilterValuesResponse]:
+      -        data = TrialsClient.get_filters(
+      -            self._client,
+      -            field=field,
+      -            **dict[str, Any](
+      -                {
+      -                    k: v
+      -                    for k, v in {
+      -                        "task": task,
+      -                        "state": state,
+      -                        "name": name,
+      -                        "q": q,
+      -                        "agent_name": agent_name,
+      -                        "agent_version": agent_version,
+      -                        "model_name": model_name,
+      -                        "model_provider": model_provider,
+      -                        "reasoning_effort": reasoning_effort,
+      -                        "source": source,
+      -                        "created_after": created_after,
+      -                        "created_before": created_before,
+      -                        "job_id": job_id,
+      -                        "limit": limit,
+      -                    }.items()
+      -                    if v is not SENTINEL
+      -                }
+      -            ),
+      -            request_options=request_options,
+      +    ) -> Awaitable[StorageDownload]:  # type: ignore[override]
+      +        return to_async(super().get_artifact_download)(
+      +            trial_id, artifact_type=artifact_type, request_options=request_options
+               )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+       
+           def pause(
+               self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      -    ) -> HttpResponse[TrialActionResponse]:
+      -        data = TrialsClient.pause(
+      -            self._client, trial_ids=trial_ids, request_options=request_options
+      +    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+      +        return to_async(super().pause)(
+      +            trial_ids=trial_ids, request_options=request_options
+               )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+       
+           def resume(
+               self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      -    ) -> HttpResponse[TrialActionResponse]:
+      -        data = TrialsClient.resume(
+      -            self._client, trial_ids=trial_ids, request_options=request_options
+      +    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+      +        return to_async(super().resume)(
+      +            trial_ids=trial_ids, request_options=request_options
+               )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+       
+           def cancel(
+               self,
+      @@ -1151,16 +1268,14 @@ class RawTrialsClient:
+               trial_ids: List[str],
+               force: bool = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[TrialActionResponse]:
+      -        data = TrialsClient.cancel(
+      -            self._client,
+      +    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+      +        return to_async(super().cancel)(
+                   trial_ids=trial_ids,
+                   **dict[str, Any](
+                       {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                   ),
+                   request_options=request_options,
+               )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+       
+           def retry(
+               self,
+      @@ -1168,29 +1283,12 @@ class RawTrialsClient:
+               trial_ids: List[str],
+               idempotency_key: str,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[RetryTrialsResponse]:
+      -        data = TrialsClient.retry(
+      -            self._client,
+      +    ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
+      +        return to_async(super().retry)(
+                   trial_ids=trial_ids,
+                   idempotency_key=idempotency_key,
+                   request_options=request_options,
+               )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    def get_artifact_download(
+      -        self,
+      -        trial_id: str,
+      -        *,
+      -        artifact_type: TrialArtifactType,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[StorageDownload]:
+      -        data = TrialsClient.get_artifact_download(
+      -            self._client,
+      -            trial_id,
+      -            artifact_type=artifact_type,
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+       
+           def copy(
+               self,
+      @@ -1200,9 +1298,8 @@ class RawTrialsClient:
+               overwrite: Union[bool, None] = SENTINEL,
+               target_organization_id: Union[str, None] = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[StorageCopyResult]:
+      -        data = TrialsClient.copy(
+      -            self._client,
+      +    ) -> Awaitable[StorageCopyResult]:  # type: ignore[override]
+      +        return to_async(super().copy)(
+                   source_trial_id,
+                   **dict[str, Any](
+                       {
+      @@ -1217,27 +1314,53 @@ class RawTrialsClient:
+                   ),
+                   request_options=request_options,
+               )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -
+      -class AsyncTrialsClient(TrialsClient):
+      -    """
+      -    Async wrapper for TrialsClient. Mirrors the sync client's endpoints (awaitable) and, for a
+      -    resource with sub-resources, its lazy child accessors (returning the async child clients).
+      -    """
+      -
+      -    @property
+      -    def with_raw_response(self) -> "AsyncRawTrialsClient":  # type: ignore[override]
+      -        """
+      -        Returns an async raw-response client whose methods mirror this resource but return
+      -        ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
+      -        """
+      -        return AsyncRawTrialsClient(self)
+       
+      -    def get(
+      -        self, trial_id: str, *, request_options: Optional[RequestOptions] = None
+      -    ) -> Awaitable[TrialResponse]:  # type: ignore[override]
+      -        return to_async(super().get)(trial_id, request_options=request_options)
+      +    def get_filters(
+      +        self,
+      +        *,
+      +        field: TrialsGetFiltersRequestField,
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+      +        agent_version: List[str] = SENTINEL,
+      +        model_name: List[str] = SENTINEL,
+      +        model_provider: List[str] = SENTINEL,
+      +        reasoning_effort: List[str] = SENTINEL,
+      +        source: List[str] = SENTINEL,
+      +        created_after: str = SENTINEL,
+      +        created_before: str = SENTINEL,
+      +        job_id: str = SENTINEL,
+      +        limit: str = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+      +        return to_async(super().get_filters)(
+      +            field=field,
+      +            **dict[str, Any](
+      +                {
+      +                    k: v
+      +                    for k, v in {
+      +                        "task": task,
+      +                        "state": state,
+      +                        "name": name,
+      +                        "q": q,
+      +                        "agent_name": agent_name,
+      +                        "agent_version": agent_version,
+      +                        "model_name": model_name,
+      +                        "model_provider": model_provider,
+      +                        "reasoning_effort": reasoning_effort,
+      +                        "source": source,
+      +                        "created_after": created_after,
+      +                        "created_before": created_before,
+      +                        "job_id": job_id,
+      +                        "limit": limit,
+      +                    }.items()
+      +                    if v is not SENTINEL
+      +                }
+      +            ),
+      +            request_options=request_options,
+      +        )
+       
+           def list(
+               self,
+      @@ -1289,7 +1412,11 @@ class AsyncTrialsClient(TrialsClient):
+               )
+       
+               async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+                       yield page
+       
+               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      @@ -1353,107 +1480,88 @@ class AsyncTrialsClient(TrialsClient):
+                   request_options=request_options,
+               )
+       
+      -    def get_filters(
+      +
+      +class AsyncRawTrialsClient:
+      +    """
+      +    Async raw-response client for AsyncTrialsClient.
+      +    """
+      +
+      +    def __init__(self, client: AsyncTrialsClient):
+      +        self._client = client
+      +        self._client_wrapper = client._client_wrapper
+      +
+      +    async def get(
+      +        self, trial_id: str, *, request_options: Optional[RequestOptions] = None
+      +    ) -> HttpResponse[TrialResponse]:
+      +        data = await AsyncTrialsClient.get(
+      +            self._client, trial_id, request_options=request_options
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    async def get_artifact_download(
+               self,
+      +        trial_id: str,
+               *,
+      -        field: TrialsGetFiltersRequestField,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      -        agent_version: List[str] = SENTINEL,
+      -        model_name: List[str] = SENTINEL,
+      -        model_provider: List[str] = SENTINEL,
+      -        reasoning_effort: List[str] = SENTINEL,
+      -        source: List[str] = SENTINEL,
+      -        created_after: str = SENTINEL,
+      -        created_before: str = SENTINEL,
+      -        job_id: str = SENTINEL,
+      -        limit: str = SENTINEL,
+      +        artifact_type: TrialArtifactType,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+      -        return to_async(super().get_filters)(
+      -            field=field,
+      -            **dict[str, Any](
+      -                {
+      -                    k: v
+      -                    for k, v in {
+      -                        "task": task,
+      -                        "state": state,
+      -                        "name": name,
+      -                        "q": q,
+      -                        "agent_name": agent_name,
+      -                        "agent_version": agent_version,
+      -                        "model_name": model_name,
+      -                        "model_provider": model_provider,
+      -                        "reasoning_effort": reasoning_effort,
+      -                        "source": source,
+      -                        "created_after": created_after,
+      -                        "created_before": created_before,
+      -                        "job_id": job_id,
+      -                        "limit": limit,
+      -                    }.items()
+      -                    if v is not SENTINEL
+      -                }
+      -            ),
+      +    ) -> HttpResponse[StorageDownload]:
+      +        data = await AsyncTrialsClient.get_artifact_download(
+      +            self._client,
+      +            trial_id,
+      +            artifact_type=artifact_type,
+                   request_options=request_options,
+               )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def pause(
+      +    async def pause(
+               self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      -    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+      -        return to_async(super().pause)(
+      -            trial_ids=trial_ids, request_options=request_options
+      +    ) -> HttpResponse[TrialActionResponse]:
+      +        data = await AsyncTrialsClient.pause(
+      +            self._client, trial_ids=trial_ids, request_options=request_options
+               )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def resume(
+      +    async def resume(
+               self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      -    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+      -        return to_async(super().resume)(
+      -            trial_ids=trial_ids, request_options=request_options
+      +    ) -> HttpResponse[TrialActionResponse]:
+      +        data = await AsyncTrialsClient.resume(
+      +            self._client, trial_ids=trial_ids, request_options=request_options
+               )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def cancel(
+      +    async def cancel(
+               self,
+               *,
+               trial_ids: List[str],
+               force: bool = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+      -        return to_async(super().cancel)(
+      +    ) -> HttpResponse[TrialActionResponse]:
+      +        data = await AsyncTrialsClient.cancel(
+      +            self._client,
+                   trial_ids=trial_ids,
+                   **dict[str, Any](
+                       {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                   ),
+                   request_options=request_options,
+               )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def retry(
+      +    async def retry(
+               self,
+               *,
+               trial_ids: List[str],
+               idempotency_key: str,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
+      -        return to_async(super().retry)(
+      +    ) -> HttpResponse[RetryTrialsResponse]:
+      +        data = await AsyncTrialsClient.retry(
+      +            self._client,
+                   trial_ids=trial_ids,
+                   idempotency_key=idempotency_key,
+                   request_options=request_options,
+               )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def get_artifact_download(
+      -        self,
+      -        trial_id: str,
+      -        *,
+      -        artifact_type: TrialArtifactType,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> Awaitable[StorageDownload]:  # type: ignore[override]
+      -        return to_async(super().get_artifact_download)(
+      -            trial_id, artifact_type=artifact_type, request_options=request_options
+      -        )
+      -
+      -    def copy(
+      +    async def copy(
+               self,
+               source_trial_id: str,
+               *,
+      @@ -1461,8 +1569,9 @@ class AsyncTrialsClient(TrialsClient):
+               overwrite: Union[bool, None] = SENTINEL,
+               target_organization_id: Union[str, None] = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> Awaitable[StorageCopyResult]:  # type: ignore[override]
+      -        return to_async(super().copy)(
+      +    ) -> HttpResponse[StorageCopyResult]:
+      +        data = await AsyncTrialsClient.copy(
+      +            self._client,
+                   source_trial_id,
+                   **dict[str, Any](
+                       {
+      @@ -1477,22 +1586,54 @@ class AsyncTrialsClient(TrialsClient):
+                   ),
+                   request_options=request_options,
+               )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -
+      -class AsyncRawTrialsClient:
+      -    """
+      -    Async raw-response client for AsyncTrialsClient.
+      -    """
+      -
+      -    def __init__(self, client: AsyncTrialsClient):
+      -        self._client = client
+      -        self._client_wrapper = client._client_wrapper
+      -
+      -    async def get(
+      -        self, trial_id: str, *, request_options: Optional[RequestOptions] = None
+      -    ) -> HttpResponse[TrialResponse]:
+      -        data = await AsyncTrialsClient.get(
+      -            self._client, trial_id, request_options=request_options
+      +    async def get_filters(
+      +        self,
+      +        *,
+      +        field: TrialsGetFiltersRequestField,
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+      +        agent_version: List[str] = SENTINEL,
+      +        model_name: List[str] = SENTINEL,
+      +        model_provider: List[str] = SENTINEL,
+      +        reasoning_effort: List[str] = SENTINEL,
+      +        source: List[str] = SENTINEL,
+      +        created_after: str = SENTINEL,
+      +        created_before: str = SENTINEL,
+      +        job_id: str = SENTINEL,
+      +        limit: str = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[FilterValuesResponse]:
+      +        data = await AsyncTrialsClient.get_filters(
+      +            self._client,
+      +            field=field,
+      +            **dict[str, Any](
+      +                {
+      +                    k: v
+      +                    for k, v in {
+      +                        "task": task,
+      +                        "state": state,
+      +                        "name": name,
+      +                        "q": q,
+      +                        "agent_name": agent_name,
+      +                        "agent_version": agent_version,
+      +                        "model_name": model_name,
+      +                        "model_provider": model_provider,
+      +                        "reasoning_effort": reasoning_effort,
+      +                        "source": source,
+      +                        "created_after": created_after,
+      +                        "created_before": created_before,
+      +                        "job_id": job_id,
+      +                        "limit": limit,
+      +                    }.items()
+      +                    if v is not SENTINEL
+      +                }
+      +            ),
+      +            request_options=request_options,
+               )
+               return HttpResponse(data=data, response=self._client._last_response)
+       
+      @@ -1607,142 +1748,3 @@ class AsyncRawTrialsClient:
+                   request_options=request_options,
+               )
+               return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    async def get_filters(
+      -        self,
+      -        *,
+      -        field: TrialsGetFiltersRequestField,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      -        agent_version: List[str] = SENTINEL,
+      -        model_name: List[str] = SENTINEL,
+      -        model_provider: List[str] = SENTINEL,
+      -        reasoning_effort: List[str] = SENTINEL,
+      -        source: List[str] = SENTINEL,
+      -        created_after: str = SENTINEL,
+      -        created_before: str = SENTINEL,
+      -        job_id: str = SENTINEL,
+      -        limit: str = SENTINEL,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[FilterValuesResponse]:
+      -        data = await AsyncTrialsClient.get_filters(
+      -            self._client,
+      -            field=field,
+      -            **dict[str, Any](
+      -                {
+      -                    k: v
+      -                    for k, v in {
+      -                        "task": task,
+      -                        "state": state,
+      -                        "name": name,
+      -                        "q": q,
+      -                        "agent_name": agent_name,
+      -                        "agent_version": agent_version,
+      -                        "model_name": model_name,
+      -                        "model_provider": model_provider,
+      -                        "reasoning_effort": reasoning_effort,
+      -                        "source": source,
+      -                        "created_after": created_after,
+      -                        "created_before": created_before,
+      -                        "job_id": job_id,
+      -                        "limit": limit,
+      -                    }.items()
+      -                    if v is not SENTINEL
+      -                }
+      -            ),
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    async def pause(
+      -        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      -    ) -> HttpResponse[TrialActionResponse]:
+      -        data = await AsyncTrialsClient.pause(
+      -            self._client, trial_ids=trial_ids, request_options=request_options
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    async def resume(
+      -        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+      -    ) -> HttpResponse[TrialActionResponse]:
+      -        data = await AsyncTrialsClient.resume(
+      -            self._client, trial_ids=trial_ids, request_options=request_options
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    async def cancel(
+      -        self,
+      -        *,
+      -        trial_ids: List[str],
+      -        force: bool = SENTINEL,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[TrialActionResponse]:
+      -        data = await AsyncTrialsClient.cancel(
+      -            self._client,
+      -            trial_ids=trial_ids,
+      -            **dict[str, Any](
+      -                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+      -            ),
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    async def retry(
+      -        self,
+      -        *,
+      -        trial_ids: List[str],
+      -        idempotency_key: str,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[RetryTrialsResponse]:
+      -        data = await AsyncTrialsClient.retry(
+      -            self._client,
+      -            trial_ids=trial_ids,
+      -            idempotency_key=idempotency_key,
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    async def get_artifact_download(
+      -        self,
+      -        trial_id: str,
+      -        *,
+      -        artifact_type: TrialArtifactType,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[StorageDownload]:
+      -        data = await AsyncTrialsClient.get_artifact_download(
+      -            self._client,
+      -            trial_id,
+      -            artifact_type=artifact_type,
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    async def copy(
+      -        self,
+      -        source_trial_id: str,
+      -        *,
+      -        new_name: Union[str, None] = SENTINEL,
+      -        overwrite: Union[bool, None] = SENTINEL,
+      -        target_organization_id: Union[str, None] = SENTINEL,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[StorageCopyResult]:
+      -        data = await AsyncTrialsClient.copy(
+      -            self._client,
+      -            source_trial_id,
+      -            **dict[str, Any](
+      -                {
+      -                    k: v
+      -                    for k, v in {
+      -                        "new_name": new_name,
+      -                        "overwrite": overwrite,
+      -                        "target_organization_id": target_organization_id,
+      -                    }.items()
+      -                    if v is not SENTINEL
+      -                }
+      -            ),
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
     theirs_snapshot:
       pyproject.toml: |+
         [project.optional-dependencies]
@@ -13685,13 +15516,12 @@ patches:
                 return hasattr(cls_type, "__origin__") and cls_type.__origin__ is Union
 
             return cast(F, wrapper)
-    status: unresolved
   - id: patch-54e30fcc
-    content_hash: sha256:de5e774e2e60e9aecad5bf83714041a7f10e09f7c90a6ef8fbd56630d8c412c1
+    content_hash: sha256:df92720822dd364f29d0a5621dbe9252cd552079d642c77aa8c5ed31c8658cdb
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 31ef43dc36e6013029aaa6b79d61e7a31709817f
+    base_generation: f357ba3ab976b36cb10c7bf019ef8030b477710d
     files:
       - examples/sample.py
       - src/harbor_client/rollouts/client.py
@@ -13699,85 +15529,6 @@ patches:
       - src/harbor_client/types/rollouts_list_bad_request_response.py
       - src/harbor_client/types/trial_detail.py
     patch_content: |
-      diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
-      index bef9cbd..4a9cc38 100644
-      --- a/src/harbor_client/rollouts/client.py
-      +++ b/src/harbor_client/rollouts/client.py
-      @@ -597,6 +597,7 @@ class RolloutsClient(BaseService):
-               :return: The parsed response data.
-               :rtype: SyncPager[TrialSummary]
-               """
-      +        self = self._for_one_call()
-       
-               Validator(str).is_array().is_optional().validate(task, "task")
-               Validator(RunState).is_optional().validate(state, "state")
-      @@ -665,9 +666,6 @@ class RolloutsClient(BaseService):
-                       )
-                       current_page = parsed_response.items
-       
-      -                if not current_page:
-      -                    break
-      -
-                       yield current_page
-       
-                       next_cursor = parsed_response.next_page_token
-      @@ -1019,7 +1017,11 @@ class AsyncRolloutsClient(RolloutsClient):
-               )
-       
-               async def _paginate():
-      -            for page in sync_pager.iter_pages():
-      +            pages = sync_pager.iter_pages()
-      +            while True:
-      +                page = await to_async(next)(pages, None)
-      +                if page is None:
-      +                    return
-                       yield page
-       
-               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      diff --git a/src/harbor_client/types/jobs_submit_response.py b/src/harbor_client/types/jobs_submit_response.py
-      index 2e3ca82..53134d6 100644
-      --- a/src/harbor_client/types/jobs_submit_response.py
-      +++ b/src/harbor_client/types/jobs_submit_response.py
-      @@ -11,6 +11,5 @@ from .dry_run_response import DryRunResponse
-       JobsSubmitResponse = Union[SubmitJobResponse, DryRunResponse]
-       # TypeAdapter for runtime validation of JobsSubmitResponse
-       # This allows validation of Union types which are not directly instantiable
-      -from pydantic import TypeAdapter
-       
-       JobsSubmitResponse_adapter = TypeAdapter(JobsSubmitResponse)
-      diff --git a/src/harbor_client/types/rollouts_list_bad_request_response.py b/src/harbor_client/types/rollouts_list_bad_request_response.py
-      index 2e9fe15..02251b5 100644
-      --- a/src/harbor_client/types/rollouts_list_bad_request_response.py
-      +++ b/src/harbor_client/types/rollouts_list_bad_request_response.py
-      @@ -30,6 +30,5 @@ RolloutsListBadRequestResponse = Union[
-       ]
-       # TypeAdapter for runtime validation of RolloutsListBadRequestResponse
-       # This allows validation of Union types which are not directly instantiable
-      -from pydantic import TypeAdapter
-       
-       RolloutsListBadRequestResponse_adapter = TypeAdapter(RolloutsListBadRequestResponse)
-      diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
-      index d52cd18..f1e1462 100644
-      --- a/src/harbor_client/types/trial_detail.py
-      +++ b/src/harbor_client/types/trial_detail.py
-      @@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
-           :param model: model
-           :type model: ModelIdentity
-           :param rewards: rewards
-      -    :type rewards: Dict[str, float]
-      +    :type rewards: Dict[str, Optional[float]]
-           :param usage: usage
-           :type usage: Usage
-           :param error_type: error_type
-      @@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
-           task: TaskIdentity
-           agent: AgentIdentity
-           model: ModelIdentity
-      -    rewards: Optional[Dict[str, float]]
-      +    rewards: Optional[Dict[str, Optional[float]]]
-           usage: Usage
-           error_type: Optional[str]
-           lock: Optional[Dict[str, Any]] = Field(
       diff --git a/examples/sample.py b/examples/sample.py
       index 08ce74b..ba38203 100644
       --- a/examples/sample.py
@@ -13830,6 +15581,1378 @@ patches:
        )
        for item in response:
            print(item)
+      diff --git a/src/harbor_client/types/jobs_submit_response.py b/src/harbor_client/types/jobs_submit_response.py
+      index 2e3ca82..53134d6 100644
+      --- a/src/harbor_client/types/jobs_submit_response.py
+      +++ b/src/harbor_client/types/jobs_submit_response.py
+      @@ -11,6 +11,5 @@ from .dry_run_response import DryRunResponse
+       JobsSubmitResponse = Union[SubmitJobResponse, DryRunResponse]
+       # TypeAdapter for runtime validation of JobsSubmitResponse
+       # This allows validation of Union types which are not directly instantiable
+      -from pydantic import TypeAdapter
+       
+       JobsSubmitResponse_adapter = TypeAdapter(JobsSubmitResponse)
+      diff --git a/src/harbor_client/types/rollouts_list_bad_request_response.py b/src/harbor_client/types/rollouts_list_bad_request_response.py
+      index 2e9fe15..02251b5 100644
+      --- a/src/harbor_client/types/rollouts_list_bad_request_response.py
+      +++ b/src/harbor_client/types/rollouts_list_bad_request_response.py
+      @@ -30,6 +30,5 @@ RolloutsListBadRequestResponse = Union[
+       ]
+       # TypeAdapter for runtime validation of RolloutsListBadRequestResponse
+       # This allows validation of Union types which are not directly instantiable
+      -from pydantic import TypeAdapter
+       
+       RolloutsListBadRequestResponse_adapter = TypeAdapter(RolloutsListBadRequestResponse)
+      diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
+      index d52cd18..f1e1462 100644
+      --- a/src/harbor_client/types/trial_detail.py
+      +++ b/src/harbor_client/types/trial_detail.py
+      @@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
+           :param model: model
+           :type model: ModelIdentity
+           :param rewards: rewards
+      -    :type rewards: Dict[str, float]
+      +    :type rewards: Dict[str, Optional[float]]
+           :param usage: usage
+           :type usage: Usage
+           :param error_type: error_type
+      @@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
+           task: TaskIdentity
+           agent: AgentIdentity
+           model: ModelIdentity
+      -    rewards: Optional[Dict[str, float]]
+      +    rewards: Optional[Dict[str, Optional[float]]]
+           usage: Usage
+           error_type: Optional[str]
+           lock: Optional[Dict[str, Any]] = Field(
+      diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
+      index 55af216..4a9cc38 100644
+      --- a/src/harbor_client/rollouts/client.py
+      +++ b/src/harbor_client/rollouts/client.py
+      @@ -54,12 +54,12 @@ class RolloutsClient(BaseService):
+               super().__init__(*args, **kwargs)
+               self._raw_client = self.with_raw_response
+               self._get_config: SdkConfig = {}
+      -        self._list_config: SdkConfig = {}
+      -        self._get_filters_config: SdkConfig = {}
+               self._pause_config: SdkConfig = {}
+               self._resume_config: SdkConfig = {}
+               self._cancel_config: SdkConfig = {}
+               self._retry_config: SdkConfig = {}
+      +        self._get_filters_config: SdkConfig = {}
+      +        self._list_config: SdkConfig = {}
+       
+           def set_get_config(self, config: SdkConfig):
+               """
+      @@ -71,64 +71,64 @@ class RolloutsClient(BaseService):
+               self._get_config = config
+               return self
+       
+      -    def set_list_config(self, config: SdkConfig):
+      +    def set_pause_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for list.
+      +        Sets method-level configuration for pause.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._list_config = config
+      +        self._pause_config = config
+               return self
+       
+      -    def set_get_filters_config(self, config: SdkConfig):
+      +    def set_resume_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for get_filters.
+      +        Sets method-level configuration for resume.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._get_filters_config = config
+      +        self._resume_config = config
+               return self
+       
+      -    def set_pause_config(self, config: SdkConfig):
+      +    def set_cancel_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for pause.
+      +        Sets method-level configuration for cancel.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._pause_config = config
+      +        self._cancel_config = config
+               return self
+       
+      -    def set_resume_config(self, config: SdkConfig):
+      +    def set_retry_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for resume.
+      +        Sets method-level configuration for retry.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._resume_config = config
+      +        self._retry_config = config
+               return self
+       
+      -    def set_cancel_config(self, config: SdkConfig):
+      +    def set_get_filters_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for cancel.
+      +        Sets method-level configuration for get_filters.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._cancel_config = config
+      +        self._get_filters_config = config
+               return self
+       
+      -    def set_retry_config(self, config: SdkConfig):
+      +    def set_list_config(self, config: SdkConfig):
+               """
+      -        Sets method-level configuration for retry.
+      +        Sets method-level configuration for list.
+       
+               :param SdkConfig config: Configuration dictionary to override service-level defaults.
+               :return: The service instance for method chaining.
+               """
+      -        self._retry_config = config
+      +        self._list_config = config
+               return self
+       
+           @property
+      @@ -189,158 +189,235 @@ class RolloutsClient(BaseService):
+               )
+       
+           @cast_models
+      -    def list(
+      +    def pause(
+               self,
+               *,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      -        agent_version: List[str] = SENTINEL,
+      -        model_name: List[str] = SENTINEL,
+      -        model_provider: List[str] = SENTINEL,
+      -        reasoning_effort: List[str] = SENTINEL,
+      -        source: List[str] = SENTINEL,
+      -        created_after: str = SENTINEL,
+      -        created_before: str = SENTINEL,
+      -        job_id: str = SENTINEL,
+      -        page_size: str = SENTINEL,
+      -        page_token: str = SENTINEL,
+      -        sort: RolloutsListRequestSort = SENTINEL,
+      +        rollout_ids: List[str],
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> SyncPager[TrialSummary]:
+      -        """list
+      +    ) -> TrialActionResponse:
+      +        """pause
+       
+      -        :param task: task, defaults to None
+      -        :type task: List[str], optional
+      -        :param state: state, defaults to None
+      -        :type state: RunState, optional
+      -        :param name: name, defaults to None
+      -        :type name: str, optional
+      -        :param q: q, defaults to None
+      -        :type q: str, optional
+      -        :param agent_name: agent_name, defaults to None
+      -        :type agent_name: List[str], optional
+      -        :param agent_version: agent_version, defaults to None
+      -        :type agent_version: List[str], optional
+      -        :param model_name: model_name, defaults to None
+      -        :type model_name: List[str], optional
+      -        :param model_provider: model_provider, defaults to None
+      -        :type model_provider: List[str], optional
+      -        :param reasoning_effort: reasoning_effort, defaults to None
+      -        :type reasoning_effort: List[str], optional
+      -        :param source: source, defaults to None
+      -        :type source: List[str], optional
+      -        :param created_after: created_after, defaults to None
+      -        :type created_after: str, optional
+      -        :param created_before: created_before, defaults to None
+      -        :type created_before: str, optional
+      -        :param job_id: job_id, defaults to None
+      -        :type job_id: str, optional
+      -        :param page_size: page_size, defaults to None
+      -        :type page_size: str, optional
+      -        :param page_token: page_token, defaults to None
+      -        :type page_token: str, optional
+      -        :param sort: sort, defaults to None
+      -        :type sort: RolloutsListRequestSort, optional
+      +        :param request_body: The request body.
+      +        :type request_body: RolloutActionRequest
+               ...
+               :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+               ...
+               :return: The parsed response data.
+      -        :rtype: SyncPager[TrialSummary]
+      +        :rtype: TrialActionResponse
+               """
+       
+      -        Validator(str).is_array().is_optional().validate(task, "task")
+      -        Validator(RunState).is_optional().validate(state, "state")
+      -        Validator(str).is_optional().validate(name, "name")
+      -        Validator(str).is_optional().validate(q, "q")
+      -        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+      -        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+      -        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+      -        Validator(str).is_array().is_optional().validate(
+      -            model_provider, "model_provider"
+      -        )
+      -        Validator(str).is_array().is_optional().validate(
+      -            reasoning_effort, "reasoning_effort"
+      -        )
+      -        Validator(str).is_array().is_optional().validate(source, "source")
+      -        Validator(str).is_optional().validate(created_after, "created_after")
+      -        Validator(str).is_optional().validate(created_before, "created_before")
+      -        Validator(str).is_optional().validate(job_id, "job_id")
+      -        Validator(str).is_optional().validate(page_size, "page_size")
+      -        Validator(str).is_optional().validate(page_token, "page_token")
+      -        Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
+      +        resolved_config = self._get_resolved_config(self._pause_config, request_options)
+       
+      -        resolved_config = self._get_resolved_config(self._list_config, request_options)
+      +        request_body = RolloutActionRequest(rollout_ids=rollout_ids)
+      +        Validator(RolloutActionRequest).validate(request_body, "request_body")
+      +        serialized_request = (
+      +            Serializer(
+      +                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/pause",
+      +                [self.get_access_token(resolved_config)],
+      +                resolved_config,
+      +            )
+      +            .add_header(
+      +                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      +            )
+      +            .add_error(401, UnauthorizedEncoded)
+      +            .add_error(403, ForbiddenEncoded)
+      +            .add_error(404, NotFoundEncoded)
+      +            .add_error(500, InternalServerErrorEncoded)
+      +            .serialize()
+      +            .set_method("POST")
+      +            .set_body(request_body)
+      +        )
+       
+      -        def _paginate() -> Generator[List[TrialSummary], None, None]:
+      -            nonlocal page_token
+      -            while True:
+      -                serialized_request = (
+      -                    Serializer(
+      -                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts",
+      -                        [self.get_access_token(resolved_config)],
+      -                        resolved_config,
+      -                    )
+      -                    .add_header(
+      -                        "Harbor-API-Version",
+      -                        self._global_headers.get("Harbor-API-Version"),
+      -                    )
+      -                    .add_query("task", task)
+      -                    .add_query("state", state)
+      -                    .add_query("name", name)
+      -                    .add_query("q", q)
+      -                    .add_query("agent_name", agent_name)
+      -                    .add_query("agent_version", agent_version)
+      -                    .add_query("model_name", model_name)
+      -                    .add_query("model_provider", model_provider)
+      -                    .add_query("reasoning_effort", reasoning_effort)
+      -                    .add_query("source", source)
+      -                    .add_query("created_after", created_after)
+      -                    .add_query("created_before", created_before)
+      -                    .add_query("job_id", job_id)
+      -                    .add_query("page_size", page_size)
+      -                    .add_query("page_token", page_token)
+      -                    .add_query("sort", sort)
+      -                    .add_error(401, UnauthorizedEncoded)
+      -                    .add_error(403, ForbiddenEncoded)
+      -                    .add_error(404, NotFoundEncoded)
+      -                    .add_error(500, InternalServerErrorEncoded)
+      -                    .serialize()
+      -                    .set_method("GET")
+      -                )
+      -                response, status, content = self.send_request(serialized_request)
+      -                parsed_response = (
+      -                    TrialPage.model_validate(response)
+      -                    if should_validate_response(resolved_config)
+      -                    else construct_lenient(TrialPage, response)
+      -                )
+      -                current_page = parsed_response.items
+      +        response, status, content = self.send_request(serialized_request)
+      +        return (
+      +            None
+      +            if response in (b"", "")
+      +            else (
+      +                TrialActionResponse.model_validate(response)
+      +                if should_validate_response(resolved_config)
+      +                else construct_lenient(TrialActionResponse, response)
+      +            )
+      +        )
+       
+      -                if not current_page:
+      -                    break
+      +    @cast_models
+      +    def resume(
+      +        self,
+      +        *,
+      +        rollout_ids: List[str],
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> TrialActionResponse:
+      +        """resume
+       
+      -                yield current_page
+      +        :param request_body: The request body.
+      +        :type request_body: RolloutActionRequest
+      +        ...
+      +        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      +        ...
+      +        :return: The parsed response data.
+      +        :rtype: TrialActionResponse
+      +        """
+       
+      -                next_cursor = parsed_response.next_page_token
+      -                if not next_cursor:
+      -                    break
+      +        resolved_config = self._get_resolved_config(
+      +            self._resume_config, request_options
+      +        )
+       
+      -                page_token = next_cursor
+      +        request_body = RolloutActionRequest(rollout_ids=rollout_ids)
+      +        Validator(RolloutActionRequest).validate(request_body, "request_body")
+      +        serialized_request = (
+      +            Serializer(
+      +                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/resume",
+      +                [self.get_access_token(resolved_config)],
+      +                resolved_config,
+      +            )
+      +            .add_header(
+      +                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      +            )
+      +            .add_error(401, UnauthorizedEncoded)
+      +            .add_error(403, ForbiddenEncoded)
+      +            .add_error(404, NotFoundEncoded)
+      +            .add_error(500, InternalServerErrorEncoded)
+      +            .serialize()
+      +            .set_method("POST")
+      +            .set_body(request_body)
+      +        )
+       
+      -        return SyncPager(_paginate(), lambda: self._last_response)
+      +        response, status, content = self.send_request(serialized_request)
+      +        return (
+      +            None
+      +            if response in (b"", "")
+      +            else (
+      +                TrialActionResponse.model_validate(response)
+      +                if should_validate_response(resolved_config)
+      +                else construct_lenient(TrialActionResponse, response)
+      +            )
+      +        )
+       
+           @cast_models
+      -    def get_filters(
+      +    def cancel(
+               self,
+               *,
+      -        field: RolloutsGetFiltersRequestField,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      +        rollout_ids: List[str],
+      +        force: bool = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> TrialActionResponse:
+      +        """Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
+      +
+      +        :param request_body: The request body.
+      +        :type request_body: CancelRolloutsRequest
+      +        ...
+      +        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      +        ...
+      +        :return: The parsed response data.
+      +        :rtype: TrialActionResponse
+      +        """
+      +
+      +        resolved_config = self._get_resolved_config(
+      +            self._cancel_config, request_options
+      +        )
+      +
+      +        request_body = CancelRolloutsRequest(
+      +            rollout_ids=rollout_ids,
+      +            **dict[str, Any](
+      +                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+      +            ),
+      +        )
+      +        Validator(CancelRolloutsRequest).validate(request_body, "request_body")
+      +        serialized_request = (
+      +            Serializer(
+      +                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/cancel",
+      +                [self.get_access_token(resolved_config)],
+      +                resolved_config,
+      +            )
+      +            .add_header(
+      +                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      +            )
+      +            .add_error(401, UnauthorizedEncoded)
+      +            .add_error(403, ForbiddenEncoded)
+      +            .add_error(404, NotFoundEncoded)
+      +            .add_error(500, InternalServerErrorEncoded)
+      +            .serialize()
+      +            .set_method("POST")
+      +            .set_body(request_body)
+      +        )
+      +
+      +        response, status, content = self.send_request(serialized_request)
+      +        return (
+      +            None
+      +            if response in (b"", "")
+      +            else (
+      +                TrialActionResponse.model_validate(response)
+      +                if should_validate_response(resolved_config)
+      +                else construct_lenient(TrialActionResponse, response)
+      +            )
+      +        )
+      +
+      +    @cast_models
+      +    def retry(
+      +        self,
+      +        *,
+      +        rollout_ids: List[str],
+      +        idempotency_key: str,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> RetryRolloutsResponse:
+      +        """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.
+      +
+      +        :param request_body: The request body.
+      +        :type request_body: RetryRolloutsRequest
+      +        :param idempotency_key: idempotency_key
+      +        :type idempotency_key: str
+      +        ...
+      +        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      +        ...
+      +        :return: The parsed response data.
+      +        :rtype: RetryRolloutsResponse
+      +        """
+      +
+      +        Validator(str).validate(idempotency_key, "idempotency_key")
+      +
+      +        resolved_config = self._get_resolved_config(self._retry_config, request_options)
+      +
+      +        request_body = RetryRolloutsRequest(rollout_ids=rollout_ids)
+      +        Validator(RetryRolloutsRequest).validate(request_body, "request_body")
+      +        serialized_request = (
+      +            Serializer(
+      +                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/retry",
+      +                [self.get_access_token(resolved_config)],
+      +                resolved_config,
+      +            )
+      +            .add_header(
+      +                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      +            )
+      +            .add_header("idempotency-key", idempotency_key)
+      +            .add_error(401, UnauthorizedEncoded)
+      +            .add_error(403, ForbiddenEncoded)
+      +            .add_error(404, NotFoundEncoded)
+      +            .add_error(500, InternalServerErrorEncoded)
+      +            .serialize()
+      +            .set_method("POST")
+      +            .set_body(request_body)
+      +        )
+      +
+      +        response, status, content = self.send_request(serialized_request)
+      +        return (
+      +            None
+      +            if response in (b"", "")
+      +            else (
+      +                RetryRolloutsResponse.model_validate(response)
+      +                if should_validate_response(resolved_config)
+      +                else construct_lenient(RetryRolloutsResponse, response)
+      +            )
+      +        )
+      +
+      +    @cast_models
+      +    def get_filters(
+      +        self,
+      +        *,
+      +        field: RolloutsGetFiltersRequestField,
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+               agent_version: List[str] = SENTINEL,
+               model_name: List[str] = SENTINEL,
+               model_provider: List[str] = SENTINEL,
+      @@ -459,224 +536,145 @@ class RolloutsClient(BaseService):
+               )
+       
+           @cast_models
+      -    def pause(
+      +    def list(
+               self,
+               *,
+      -        rollout_ids: List[str],
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+      +        agent_version: List[str] = SENTINEL,
+      +        model_name: List[str] = SENTINEL,
+      +        model_provider: List[str] = SENTINEL,
+      +        reasoning_effort: List[str] = SENTINEL,
+      +        source: List[str] = SENTINEL,
+      +        created_after: str = SENTINEL,
+      +        created_before: str = SENTINEL,
+      +        job_id: str = SENTINEL,
+      +        page_size: str = SENTINEL,
+      +        page_token: str = SENTINEL,
+      +        sort: RolloutsListRequestSort = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> TrialActionResponse:
+      -        """pause
+      +    ) -> SyncPager[TrialSummary]:
+      +        """list
+       
+      -        :param request_body: The request body.
+      -        :type request_body: RolloutActionRequest
+      +        :param task: task, defaults to None
+      +        :type task: List[str], optional
+      +        :param state: state, defaults to None
+      +        :type state: RunState, optional
+      +        :param name: name, defaults to None
+      +        :type name: str, optional
+      +        :param q: q, defaults to None
+      +        :type q: str, optional
+      +        :param agent_name: agent_name, defaults to None
+      +        :type agent_name: List[str], optional
+      +        :param agent_version: agent_version, defaults to None
+      +        :type agent_version: List[str], optional
+      +        :param model_name: model_name, defaults to None
+      +        :type model_name: List[str], optional
+      +        :param model_provider: model_provider, defaults to None
+      +        :type model_provider: List[str], optional
+      +        :param reasoning_effort: reasoning_effort, defaults to None
+      +        :type reasoning_effort: List[str], optional
+      +        :param source: source, defaults to None
+      +        :type source: List[str], optional
+      +        :param created_after: created_after, defaults to None
+      +        :type created_after: str, optional
+      +        :param created_before: created_before, defaults to None
+      +        :type created_before: str, optional
+      +        :param job_id: job_id, defaults to None
+      +        :type job_id: str, optional
+      +        :param page_size: page_size, defaults to None
+      +        :type page_size: str, optional
+      +        :param page_token: page_token, defaults to None
+      +        :type page_token: str, optional
+      +        :param sort: sort, defaults to None
+      +        :type sort: RolloutsListRequestSort, optional
+               ...
+               :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+               ...
+               :return: The parsed response data.
+      -        :rtype: TrialActionResponse
+      +        :rtype: SyncPager[TrialSummary]
+               """
+      +        self = self._for_one_call()
+       
+      -        resolved_config = self._get_resolved_config(self._pause_config, request_options)
+      -
+      -        request_body = RolloutActionRequest(rollout_ids=rollout_ids)
+      -        Validator(RolloutActionRequest).validate(request_body, "request_body")
+      -        serialized_request = (
+      -            Serializer(
+      -                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/pause",
+      -                [self.get_access_token(resolved_config)],
+      -                resolved_config,
+      -            )
+      -            .add_header(
+      -                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      -            )
+      -            .add_error(401, UnauthorizedEncoded)
+      -            .add_error(403, ForbiddenEncoded)
+      -            .add_error(404, NotFoundEncoded)
+      -            .add_error(500, InternalServerErrorEncoded)
+      -            .serialize()
+      -            .set_method("POST")
+      -            .set_body(request_body)
+      +        Validator(str).is_array().is_optional().validate(task, "task")
+      +        Validator(RunState).is_optional().validate(state, "state")
+      +        Validator(str).is_optional().validate(name, "name")
+      +        Validator(str).is_optional().validate(q, "q")
+      +        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+      +        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+      +        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+      +        Validator(str).is_array().is_optional().validate(
+      +            model_provider, "model_provider"
+               )
+      -
+      -        response, status, content = self.send_request(serialized_request)
+      -        return (
+      -            None
+      -            if response in (b"", "")
+      -            else (
+      -                TrialActionResponse.model_validate(response)
+      -                if should_validate_response(resolved_config)
+      -                else construct_lenient(TrialActionResponse, response)
+      -            )
+      +        Validator(str).is_array().is_optional().validate(
+      +            reasoning_effort, "reasoning_effort"
+               )
+      +        Validator(str).is_array().is_optional().validate(source, "source")
+      +        Validator(str).is_optional().validate(created_after, "created_after")
+      +        Validator(str).is_optional().validate(created_before, "created_before")
+      +        Validator(str).is_optional().validate(job_id, "job_id")
+      +        Validator(str).is_optional().validate(page_size, "page_size")
+      +        Validator(str).is_optional().validate(page_token, "page_token")
+      +        Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
+       
+      -    @cast_models
+      -    def resume(
+      -        self,
+      -        *,
+      -        rollout_ids: List[str],
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> TrialActionResponse:
+      -        """resume
+      -
+      -        :param request_body: The request body.
+      -        :type request_body: RolloutActionRequest
+      -        ...
+      -        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      -        ...
+      -        :return: The parsed response data.
+      -        :rtype: TrialActionResponse
+      -        """
+      -
+      -        resolved_config = self._get_resolved_config(
+      -            self._resume_config, request_options
+      -        )
+      +        resolved_config = self._get_resolved_config(self._list_config, request_options)
+       
+      -        request_body = RolloutActionRequest(rollout_ids=rollout_ids)
+      -        Validator(RolloutActionRequest).validate(request_body, "request_body")
+      -        serialized_request = (
+      -            Serializer(
+      -                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/resume",
+      -                [self.get_access_token(resolved_config)],
+      -                resolved_config,
+      -            )
+      -            .add_header(
+      -                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      -            )
+      -            .add_error(401, UnauthorizedEncoded)
+      -            .add_error(403, ForbiddenEncoded)
+      -            .add_error(404, NotFoundEncoded)
+      -            .add_error(500, InternalServerErrorEncoded)
+      -            .serialize()
+      -            .set_method("POST")
+      -            .set_body(request_body)
+      -        )
+      -
+      -        response, status, content = self.send_request(serialized_request)
+      -        return (
+      -            None
+      -            if response in (b"", "")
+      -            else (
+      -                TrialActionResponse.model_validate(response)
+      -                if should_validate_response(resolved_config)
+      -                else construct_lenient(TrialActionResponse, response)
+      -            )
+      -        )
+      -
+      -    @cast_models
+      -    def cancel(
+      -        self,
+      -        *,
+      -        rollout_ids: List[str],
+      -        force: bool = SENTINEL,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> TrialActionResponse:
+      -        """Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
+      -
+      -        :param request_body: The request body.
+      -        :type request_body: CancelRolloutsRequest
+      -        ...
+      -        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      -        ...
+      -        :return: The parsed response data.
+      -        :rtype: TrialActionResponse
+      -        """
+      -
+      -        resolved_config = self._get_resolved_config(
+      -            self._cancel_config, request_options
+      -        )
+      -
+      -        request_body = CancelRolloutsRequest(
+      -            rollout_ids=rollout_ids,
+      -            **dict[str, Any](
+      -                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+      -            ),
+      -        )
+      -        Validator(CancelRolloutsRequest).validate(request_body, "request_body")
+      -        serialized_request = (
+      -            Serializer(
+      -                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/cancel",
+      -                [self.get_access_token(resolved_config)],
+      -                resolved_config,
+      -            )
+      -            .add_header(
+      -                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      -            )
+      -            .add_error(401, UnauthorizedEncoded)
+      -            .add_error(403, ForbiddenEncoded)
+      -            .add_error(404, NotFoundEncoded)
+      -            .add_error(500, InternalServerErrorEncoded)
+      -            .serialize()
+      -            .set_method("POST")
+      -            .set_body(request_body)
+      -        )
+      -
+      -        response, status, content = self.send_request(serialized_request)
+      -        return (
+      -            None
+      -            if response in (b"", "")
+      -            else (
+      -                TrialActionResponse.model_validate(response)
+      -                if should_validate_response(resolved_config)
+      -                else construct_lenient(TrialActionResponse, response)
+      -            )
+      -        )
+      -
+      -    @cast_models
+      -    def retry(
+      -        self,
+      -        *,
+      -        rollout_ids: List[str],
+      -        idempotency_key: str,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> RetryRolloutsResponse:
+      -        """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.
+      -
+      -        :param request_body: The request body.
+      -        :type request_body: RetryRolloutsRequest
+      -        :param idempotency_key: idempotency_key
+      -        :type idempotency_key: str
+      -        ...
+      -        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+      -        ...
+      -        :return: The parsed response data.
+      -        :rtype: RetryRolloutsResponse
+      -        """
+      +        def _paginate() -> Generator[List[TrialSummary], None, None]:
+      +            nonlocal page_token
+      +            while True:
+      +                serialized_request = (
+      +                    Serializer(
+      +                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts",
+      +                        [self.get_access_token(resolved_config)],
+      +                        resolved_config,
+      +                    )
+      +                    .add_header(
+      +                        "Harbor-API-Version",
+      +                        self._global_headers.get("Harbor-API-Version"),
+      +                    )
+      +                    .add_query("task", task)
+      +                    .add_query("state", state)
+      +                    .add_query("name", name)
+      +                    .add_query("q", q)
+      +                    .add_query("agent_name", agent_name)
+      +                    .add_query("agent_version", agent_version)
+      +                    .add_query("model_name", model_name)
+      +                    .add_query("model_provider", model_provider)
+      +                    .add_query("reasoning_effort", reasoning_effort)
+      +                    .add_query("source", source)
+      +                    .add_query("created_after", created_after)
+      +                    .add_query("created_before", created_before)
+      +                    .add_query("job_id", job_id)
+      +                    .add_query("page_size", page_size)
+      +                    .add_query("page_token", page_token)
+      +                    .add_query("sort", sort)
+      +                    .add_error(401, UnauthorizedEncoded)
+      +                    .add_error(403, ForbiddenEncoded)
+      +                    .add_error(404, NotFoundEncoded)
+      +                    .add_error(500, InternalServerErrorEncoded)
+      +                    .serialize()
+      +                    .set_method("GET")
+      +                )
+      +                response, status, content = self.send_request(serialized_request)
+      +                parsed_response = (
+      +                    TrialPage.model_validate(response)
+      +                    if should_validate_response(resolved_config)
+      +                    else construct_lenient(TrialPage, response)
+      +                )
+      +                current_page = parsed_response.items
+       
+      -        Validator(str).validate(idempotency_key, "idempotency_key")
+      +                yield current_page
+       
+      -        resolved_config = self._get_resolved_config(self._retry_config, request_options)
+      +                next_cursor = parsed_response.next_page_token
+      +                if not next_cursor:
+      +                    break
+       
+      -        request_body = RetryRolloutsRequest(rollout_ids=rollout_ids)
+      -        Validator(RetryRolloutsRequest).validate(request_body, "request_body")
+      -        serialized_request = (
+      -            Serializer(
+      -                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/retry",
+      -                [self.get_access_token(resolved_config)],
+      -                resolved_config,
+      -            )
+      -            .add_header(
+      -                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+      -            )
+      -            .add_header("idempotency-key", idempotency_key)
+      -            .add_error(401, UnauthorizedEncoded)
+      -            .add_error(403, ForbiddenEncoded)
+      -            .add_error(404, NotFoundEncoded)
+      -            .add_error(500, InternalServerErrorEncoded)
+      -            .serialize()
+      -            .set_method("POST")
+      -            .set_body(request_body)
+      -        )
+      +                page_token = next_cursor
+       
+      -        response, status, content = self.send_request(serialized_request)
+      -        return (
+      -            None
+      -            if response in (b"", "")
+      -            else (
+      -                RetryRolloutsResponse.model_validate(response)
+      -                if should_validate_response(resolved_config)
+      -                else construct_lenient(RetryRolloutsResponse, response)
+      -            )
+      -        )
+      +        return SyncPager(_paginate(), lambda: self._last_response)
+       
+       
+       class RawRolloutsClient:
+      @@ -700,106 +698,6 @@ class RawRolloutsClient:
+               )
+               return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def list(
+      -        self,
+      -        *,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      -        agent_version: List[str] = SENTINEL,
+      -        model_name: List[str] = SENTINEL,
+      -        model_provider: List[str] = SENTINEL,
+      -        reasoning_effort: List[str] = SENTINEL,
+      -        source: List[str] = SENTINEL,
+      -        created_after: str = SENTINEL,
+      -        created_before: str = SENTINEL,
+      -        job_id: str = SENTINEL,
+      -        page_size: str = SENTINEL,
+      -        page_token: str = SENTINEL,
+      -        sort: RolloutsListRequestSort = SENTINEL,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[SyncPager[TrialSummary]]:
+      -        data = RolloutsClient.list(
+      -            self._client,
+      -            **dict[str, Any](
+      -                {
+      -                    k: v
+      -                    for k, v in {
+      -                        "task": task,
+      -                        "state": state,
+      -                        "name": name,
+      -                        "q": q,
+      -                        "agent_name": agent_name,
+      -                        "agent_version": agent_version,
+      -                        "model_name": model_name,
+      -                        "model_provider": model_provider,
+      -                        "reasoning_effort": reasoning_effort,
+      -                        "source": source,
+      -                        "created_after": created_after,
+      -                        "created_before": created_before,
+      -                        "job_id": job_id,
+      -                        "page_size": page_size,
+      -                        "page_token": page_token,
+      -                        "sort": sort,
+      -                    }.items()
+      -                    if v is not SENTINEL
+      -                }
+      -            ),
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response_source=lambda: data.last_response)
+      -
+      -    def get_filters(
+      -        self,
+      -        *,
+      -        field: RolloutsGetFiltersRequestField,
+      -        task: List[str] = SENTINEL,
+      -        state: RunState = SENTINEL,
+      -        name: str = SENTINEL,
+      -        q: str = SENTINEL,
+      -        agent_name: List[str] = SENTINEL,
+      -        agent_version: List[str] = SENTINEL,
+      -        model_name: List[str] = SENTINEL,
+      -        model_provider: List[str] = SENTINEL,
+      -        reasoning_effort: List[str] = SENTINEL,
+      -        source: List[str] = SENTINEL,
+      -        created_after: str = SENTINEL,
+      -        created_before: str = SENTINEL,
+      -        job_id: str = SENTINEL,
+      -        limit: str = SENTINEL,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[FilterValuesResponse]:
+      -        data = RolloutsClient.get_filters(
+      -            self._client,
+      -            field=field,
+      -            **dict[str, Any](
+      -                {
+      -                    k: v
+      -                    for k, v in {
+      -                        "task": task,
+      -                        "state": state,
+      -                        "name": name,
+      -                        "q": q,
+      -                        "agent_name": agent_name,
+      -                        "agent_version": agent_version,
+      -                        "model_name": model_name,
+      -                        "model_provider": model_provider,
+      -                        "reasoning_effort": reasoning_effort,
+      -                        "source": source,
+      -                        "created_after": created_after,
+      -                        "created_before": created_before,
+      -                        "job_id": job_id,
+      -                        "limit": limit,
+      -                    }.items()
+      -                    if v is not SENTINEL
+      -                }
+      -            ),
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+           def pause(
+               self,
+               *,
+      @@ -837,46 +735,27 @@ class RawRolloutsClient:
+                   ),
+                   request_options=request_options,
+               )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    def retry(
+      -        self,
+      -        *,
+      -        rollout_ids: List[str],
+      -        idempotency_key: str,
+      -        request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[RetryRolloutsResponse]:
+      -        data = RolloutsClient.retry(
+      -            self._client,
+      -            rollout_ids=rollout_ids,
+      -            idempotency_key=idempotency_key,
+      -            request_options=request_options,
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -
+      -class AsyncRolloutsClient(RolloutsClient):
+      -    """
+      -    Async wrapper for RolloutsClient. Mirrors the sync client's endpoints (awaitable) and, for a
+      -    resource with sub-resources, its lazy child accessors (returning the async child clients).
+      -    """
+      -
+      -    @property
+      -    def with_raw_response(self) -> "AsyncRawRolloutsClient":  # type: ignore[override]
+      -        """
+      -        Returns an async raw-response client whose methods mirror this resource but return
+      -        ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
+      -        """
+      -        return AsyncRawRolloutsClient(self)
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def get(
+      -        self, rollout_id: str, *, request_options: Optional[RequestOptions] = None
+      -    ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
+      -        return to_async(super().get)(rollout_id, request_options=request_options)
+      +    def retry(
+      +        self,
+      +        *,
+      +        rollout_ids: List[str],
+      +        idempotency_key: str,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[RetryRolloutsResponse]:
+      +        data = RolloutsClient.retry(
+      +            self._client,
+      +            rollout_ids=rollout_ids,
+      +            idempotency_key=idempotency_key,
+      +            request_options=request_options,
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -    def list(
+      +    def get_filters(
+               self,
+               *,
+      +        field: RolloutsGetFiltersRequestField,
+               task: List[str] = SENTINEL,
+               state: RunState = SENTINEL,
+               name: str = SENTINEL,
+      @@ -890,12 +769,12 @@ class AsyncRolloutsClient(RolloutsClient):
+               created_after: str = SENTINEL,
+               created_before: str = SENTINEL,
+               job_id: str = SENTINEL,
+      -        page_size: str = SENTINEL,
+      -        page_token: str = SENTINEL,
+      -        sort: RolloutsListRequestSort = SENTINEL,
+      +        limit: str = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> AsyncPager[TrialSummary]:  # type: ignore[override]
+      -        sync_pager = super().list(
+      +    ) -> HttpResponse[FilterValuesResponse]:
+      +        data = RolloutsClient.get_filters(
+      +            self._client,
+      +            field=field,
+                   **dict[str, Any](
+                       {
+                           k: v
+      @@ -913,26 +792,18 @@ class AsyncRolloutsClient(RolloutsClient):
+                               "created_after": created_after,
+                               "created_before": created_before,
+                               "job_id": job_id,
+      -                        "page_size": page_size,
+      -                        "page_token": page_token,
+      -                        "sort": sort,
+      +                        "limit": limit,
+                           }.items()
+                           if v is not SENTINEL
+                       }
+                   ),
+                   request_options=request_options,
+               )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+       
+      -        async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      -                yield page
+      -
+      -        return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      -
+      -    def get_filters(
+      +    def list(
+               self,
+               *,
+      -        field: RolloutsGetFiltersRequestField,
+               task: List[str] = SENTINEL,
+               state: RunState = SENTINEL,
+               name: str = SENTINEL,
+      @@ -946,11 +817,13 @@ class AsyncRolloutsClient(RolloutsClient):
+               created_after: str = SENTINEL,
+               created_before: str = SENTINEL,
+               job_id: str = SENTINEL,
+      -        limit: str = SENTINEL,
+      +        page_size: str = SENTINEL,
+      +        page_token: str = SENTINEL,
+      +        sort: RolloutsListRequestSort = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+      -        return to_async(super().get_filters)(
+      -            field=field,
+      +    ) -> HttpResponse[SyncPager[TrialSummary]]:
+      +        data = RolloutsClient.list(
+      +            self._client,
+                   **dict[str, Any](
+                       {
+                           k: v
+      @@ -968,13 +841,36 @@ class AsyncRolloutsClient(RolloutsClient):
+                               "created_after": created_after,
+                               "created_before": created_before,
+                               "job_id": job_id,
+      -                        "limit": limit,
+      +                        "page_size": page_size,
+      +                        "page_token": page_token,
+      +                        "sort": sort,
+                           }.items()
+                           if v is not SENTINEL
+                       }
+                   ),
+                   request_options=request_options,
+               )
+      +        return HttpResponse(data=data, response_source=lambda: data.last_response)
+      +
+      +
+      +class AsyncRolloutsClient(RolloutsClient):
+      +    """
+      +    Async wrapper for RolloutsClient. Mirrors the sync client's endpoints (awaitable) and, for a
+      +    resource with sub-resources, its lazy child accessors (returning the async child clients).
+      +    """
+      +
+      +    @property
+      +    def with_raw_response(self) -> "AsyncRawRolloutsClient":  # type: ignore[override]
+      +        """
+      +        Returns an async raw-response client whose methods mirror this resource but return
+      +        ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
+      +        """
+      +        return AsyncRawRolloutsClient(self)
+      +
+      +    def get(
+      +        self, rollout_id: str, *, request_options: Optional[RequestOptions] = None
+      +    ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
+      +        return to_async(super().get)(rollout_id, request_options=request_options)
+       
+           def pause(
+               self,
+      @@ -1024,27 +920,10 @@ class AsyncRolloutsClient(RolloutsClient):
+                   request_options=request_options,
+               )
+       
+      -
+      -class AsyncRawRolloutsClient:
+      -    """
+      -    Async raw-response client for AsyncRolloutsClient.
+      -    """
+      -
+      -    def __init__(self, client: AsyncRolloutsClient):
+      -        self._client = client
+      -        self._client_wrapper = client._client_wrapper
+      -
+      -    async def get(
+      -        self, rollout_id: str, *, request_options: Optional[RequestOptions] = None
+      -    ) -> HttpResponse[RolloutResponse]:
+      -        data = await AsyncRolloutsClient.get(
+      -            self._client, rollout_id, request_options=request_options
+      -        )
+      -        return HttpResponse(data=data, response=self._client._last_response)
+      -
+      -    def list(
+      +    def get_filters(
+               self,
+               *,
+      +        field: RolloutsGetFiltersRequestField,
+               task: List[str] = SENTINEL,
+               state: RunState = SENTINEL,
+               name: str = SENTINEL,
+      @@ -1058,13 +937,11 @@ class AsyncRawRolloutsClient:
+               created_after: str = SENTINEL,
+               created_before: str = SENTINEL,
+               job_id: str = SENTINEL,
+      -        page_size: str = SENTINEL,
+      -        page_token: str = SENTINEL,
+      -        sort: RolloutsListRequestSort = SENTINEL,
+      +        limit: str = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[AsyncPager[TrialSummary]]:
+      -        data = AsyncRolloutsClient.list(
+      -            self._client,
+      +    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+      +        return to_async(super().get_filters)(
+      +            field=field,
+                   **dict[str, Any](
+                       {
+                           k: v
+      @@ -1082,21 +959,17 @@ class AsyncRawRolloutsClient:
+                               "created_after": created_after,
+                               "created_before": created_before,
+                               "job_id": job_id,
+      -                        "page_size": page_size,
+      -                        "page_token": page_token,
+      -                        "sort": sort,
+      +                        "limit": limit,
+                           }.items()
+                           if v is not SENTINEL
+                       }
+                   ),
+                   request_options=request_options,
+               )
+      -        return HttpResponse(data=data, response_source=lambda: data.last_response)
+       
+      -    async def get_filters(
+      +    def list(
+               self,
+               *,
+      -        field: RolloutsGetFiltersRequestField,
+               task: List[str] = SENTINEL,
+               state: RunState = SENTINEL,
+               name: str = SENTINEL,
+      @@ -1110,12 +983,12 @@ class AsyncRawRolloutsClient:
+               created_after: str = SENTINEL,
+               created_before: str = SENTINEL,
+               job_id: str = SENTINEL,
+      -        limit: str = SENTINEL,
+      +        page_size: str = SENTINEL,
+      +        page_token: str = SENTINEL,
+      +        sort: RolloutsListRequestSort = SENTINEL,
+               request_options: Optional[RequestOptions] = None,
+      -    ) -> HttpResponse[FilterValuesResponse]:
+      -        data = await AsyncRolloutsClient.get_filters(
+      -            self._client,
+      -            field=field,
+      +    ) -> AsyncPager[TrialSummary]:  # type: ignore[override]
+      +        sync_pager = super().list(
+                   **dict[str, Any](
+                       {
+                           k: v
+      @@ -1133,13 +1006,42 @@ class AsyncRawRolloutsClient:
+                               "created_after": created_after,
+                               "created_before": created_before,
+                               "job_id": job_id,
+      -                        "limit": limit,
+      +                        "page_size": page_size,
+      +                        "page_token": page_token,
+      +                        "sort": sort,
+                           }.items()
+                           if v is not SENTINEL
+                       }
+                   ),
+                   request_options=request_options,
+               )
+      +
+      +        async def _paginate():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+      +                yield page
+      +
+      +        return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      +
+      +
+      +class AsyncRawRolloutsClient:
+      +    """
+      +    Async raw-response client for AsyncRolloutsClient.
+      +    """
+      +
+      +    def __init__(self, client: AsyncRolloutsClient):
+      +        self._client = client
+      +        self._client_wrapper = client._client_wrapper
+      +
+      +    async def get(
+      +        self, rollout_id: str, *, request_options: Optional[RequestOptions] = None
+      +    ) -> HttpResponse[RolloutResponse]:
+      +        data = await AsyncRolloutsClient.get(
+      +            self._client, rollout_id, request_options=request_options
+      +        )
+               return HttpResponse(data=data, response=self._client._last_response)
+       
+           async def pause(
+      @@ -1195,3 +1097,103 @@ class AsyncRawRolloutsClient:
+                   request_options=request_options,
+               )
+               return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    async def get_filters(
+      +        self,
+      +        *,
+      +        field: RolloutsGetFiltersRequestField,
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+      +        agent_version: List[str] = SENTINEL,
+      +        model_name: List[str] = SENTINEL,
+      +        model_provider: List[str] = SENTINEL,
+      +        reasoning_effort: List[str] = SENTINEL,
+      +        source: List[str] = SENTINEL,
+      +        created_after: str = SENTINEL,
+      +        created_before: str = SENTINEL,
+      +        job_id: str = SENTINEL,
+      +        limit: str = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[FilterValuesResponse]:
+      +        data = await AsyncRolloutsClient.get_filters(
+      +            self._client,
+      +            field=field,
+      +            **dict[str, Any](
+      +                {
+      +                    k: v
+      +                    for k, v in {
+      +                        "task": task,
+      +                        "state": state,
+      +                        "name": name,
+      +                        "q": q,
+      +                        "agent_name": agent_name,
+      +                        "agent_version": agent_version,
+      +                        "model_name": model_name,
+      +                        "model_provider": model_provider,
+      +                        "reasoning_effort": reasoning_effort,
+      +                        "source": source,
+      +                        "created_after": created_after,
+      +                        "created_before": created_before,
+      +                        "job_id": job_id,
+      +                        "limit": limit,
+      +                    }.items()
+      +                    if v is not SENTINEL
+      +                }
+      +            ),
+      +            request_options=request_options,
+      +        )
+      +        return HttpResponse(data=data, response=self._client._last_response)
+      +
+      +    def list(
+      +        self,
+      +        *,
+      +        task: List[str] = SENTINEL,
+      +        state: RunState = SENTINEL,
+      +        name: str = SENTINEL,
+      +        q: str = SENTINEL,
+      +        agent_name: List[str] = SENTINEL,
+      +        agent_version: List[str] = SENTINEL,
+      +        model_name: List[str] = SENTINEL,
+      +        model_provider: List[str] = SENTINEL,
+      +        reasoning_effort: List[str] = SENTINEL,
+      +        source: List[str] = SENTINEL,
+      +        created_after: str = SENTINEL,
+      +        created_before: str = SENTINEL,
+      +        job_id: str = SENTINEL,
+      +        page_size: str = SENTINEL,
+      +        page_token: str = SENTINEL,
+      +        sort: RolloutsListRequestSort = SENTINEL,
+      +        request_options: Optional[RequestOptions] = None,
+      +    ) -> HttpResponse[AsyncPager[TrialSummary]]:
+      +        data = AsyncRolloutsClient.list(
+      +            self._client,
+      +            **dict[str, Any](
+      +                {
+      +                    k: v
+      +                    for k, v in {
+      +                        "task": task,
+      +                        "state": state,
+      +                        "name": name,
+      +                        "q": q,
+      +                        "agent_name": agent_name,
+      +                        "agent_version": agent_version,
+      +                        "model_name": model_name,
+      +                        "model_provider": model_provider,
+      +                        "reasoning_effort": reasoning_effort,
+      +                        "source": source,
+      +                        "created_after": created_after,
+      +                        "created_before": created_before,
+      +                        "job_id": job_id,
+      +                        "page_size": page_size,
+      +                        "page_token": page_token,
+      +                        "sort": sort,
+      +                    }.items()
+      +                    if v is not SENTINEL
+      +                }
+      +            ),
+      +            request_options=request_options,
+      +        )
+      +        return HttpResponse(data=data, response_source=lambda: data.last_response)
     theirs_snapshot:
       examples/sample.py: |
         from harbor_client import HarborAPIClient
@@ -15223,7 +18346,6 @@ patches:
             result: Optional[Dict[str, Any]] = Field(
                 description="Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
             )
-    status: unresolved
   - id: patch-7c950c27
     content_hash: sha256:cfb3ead6aff7c3d31a7afef551e1c2c6afde34006f200dd416b91bdcb81fb180
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
