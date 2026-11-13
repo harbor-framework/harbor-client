@@ -1,10 +1,10 @@
-# HarborApiClient Python SDK 0.1.0<a id="harborapiclient-python-sdk-010"></a>
+# HarborApiClient Python SDK 1.0.0<a id="harborapiclient-python-sdk-100"></a>
 
 Welcome to the HarborApiClient SDK documentation. This guide will help you get started with integrating and using the HarborApiClient SDK in your project.
 
 ## Versions<a id="versions"></a>
 
-- SDK version: `0.1.0`
+- SDK version: `1.0.0`
 
 ## About the API<a id="about-the-api"></a>
 
@@ -116,30 +116,41 @@ Below is a comprehensive example demonstrating how to authenticate and call a si
 
 ```py
 from harbor_client import HarborAPIClient
-from harbor_client.types import JobsListRequestScope, JobsListRequestAccess, JobsListRequestArchive, JobsListRequestSort
+from harbor_client.types import RunState, JobsListRequestSort
 
 client = HarborAPIClient(
     harbor_api_version="YOUR_HARBOR_API_VERSION",
 )
 response = client.jobs.list(
+    task=[
+        "task"
+    ],
+    state="queued",
+    name="name",
+    q="q",
+    agent_name=[
+        "agent_name"
+    ],
+    agent_version=[
+        "agent_version"
+    ],
+    model_name=[
+        "model_name"
+    ],
+    model_provider=[
+        "model_provider"
+    ],
+    reasoning_effort=[
+        "reasoning_effort"
+    ],
+    source=[
+        "source"
+    ],
+    created_after="created_after",
+    created_before="created_before",
     page_size="page_size",
     page_token="page_token",
-    offset="offset",
-    search="search",
-    agents="agents",
-    providers="providers",
-    models="models",
-    date_="date",
-    scope="my",
-    shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
-    datasets="datasets",
-    access="owned",
-    owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
-    date_from="date_from",
-    date_to="date_to",
-    created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
-    archive="current",
-    sort="importance",
+    sort="id",
 )
 for item in response:
     print(item)
@@ -155,34 +166,52 @@ The SDK includes an Async Client for making asynchronous API requests. This is u
 ```py
 import asyncio
 from harbor_client import AsyncHarborAPIClient
-from harbor_client.types import JobsListRequestScope, JobsListRequestAccess, JobsListRequestArchive, JobsListRequestSort
+from harbor_client.types import RunState, JobsListRequestSort
 
 sdk = AsyncHarborAPIClient(
     harbor_api_version="YOUR_HARBOR_API_VERSION",
     timeout=10
 )
 
+task=[
+    "task"
+]
+agent_name=[
+    "agent_name"
+]
+agent_version=[
+    "agent_version"
+]
+model_name=[
+    "model_name"
+]
+model_provider=[
+    "model_provider"
+]
+reasoning_effort=[
+    "reasoning_effort"
+]
+source=[
+    "source"
+]
 
 async def main():
   response_iterator = await sdk.jobs.list(
+    task=task,
+    state="queued",
+    name="name",
+    q="q",
+    agent_name=agent_name,
+    agent_version=agent_version,
+    model_name=model_name,
+    model_provider=model_provider,
+    reasoning_effort=reasoning_effort,
+    source=source,
+    created_after="created_after",
+    created_before="created_before",
     page_size="page_size",
     page_token="page_token",
-    offset="offset",
-    search="search",
-    agents="agents",
-    providers="providers",
-    models="models",
-    date_="date",
-    scope="my",
-    shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
-    datasets="datasets",
-    access="owned",
-    owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
-    date_from="date_from",
-    date_to="date_to",
-    created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
-    archive="current",
-    sort="importance"
+    sort="id"
 )
   for page in response_iterator:
     print(page)
@@ -203,6 +232,7 @@ The SDK provides various services to interact with the API.
 | packages      |
 | jobs          |
 | trials        |
+| rollouts      |
 | account       |
 | api_keys      |
 | agents        |
@@ -247,8 +277,7 @@ The SDK includes several models that represent the data structures used in API r
 | JobTrialStatusItem                             |             |
 | JobArtifactType                                |             |
 | SubmitJobRequest                               |             |
-| SubmitJobResponse                              |             |
-| JobDetail                                      |             |
+| JobResponse                                    |             |
 | JobsRenameRequest                              |             |
 | RenameJobResponse                              |             |
 | DeleteJobsRequest                              |             |
@@ -257,12 +286,14 @@ The SDK includes several models that represent the data structures used in API r
 | TransferJobResponse                            |             |
 | JobsCopyRequest                                |             |
 | StorageCopyResult                              |             |
-| CancelJobWithIdRequest                         |             |
+| JobActionRequest                               |             |
+| JobActionResponse                              |             |
+| CancelJobsRequest                              |             |
 | JobPage                                        |             |
-| JobsListRequestScope                           |             |
-| JobsListRequestAccess                          |             |
-| JobsListRequestArchive                         |             |
+| RunState                                       |             |
 | JobsListRequestSort                            |             |
+| FilterValuesResponse                           |             |
+| JobsGetFiltersRequestField                     |             |
 | JobTaskPage                                    |             |
 | JobsListTasksRequestSortBy                     |             |
 | JobsListTasksRequestSortOrder                  |             |
@@ -271,24 +302,33 @@ The SDK includes several models that represent the data structures used in API r
 | JobOverview                                    |             |
 | JobsGetOverviewRequestForceCombined            |             |
 | EvaluationComparison                           |             |
-| TrialDetail                                    |             |
+| TrialResponse                                  |             |
 | TrialArtifactType                              |             |
-| CancelTrialsResponse                           |             |
+| TrialActionRequest                             |             |
+| TrialActionResponse                            |             |
+| CancelTrialsRequest                            |             |
+| RetryTrialsRequest                             |             |
 | RetryTrialsResponse                            |             |
 | TrialsCopyRequest                              |             |
-| JobTrialPage                                   |             |
-| TrialsListRequestFailedOnly                    |             |
-| TrialsListRequestAttempts                      |             |
-| TrialsListRequestSortBy                        |             |
-| TrialsListRequestSortOrder                     |             |
+| TrialsGetFiltersRequestField                   |             |
+| TrialPage                                      |             |
+| TrialsListRequestSort                          |             |
 | ResultTrialCreate                              |             |
 | CreatedResultTrial                             |             |
+| RolloutResponse                                |             |
+| RolloutActionRequest                           |             |
+| CancelRolloutsRequest                          |             |
+| RetryRolloutsRequest                           |             |
+| RetryRolloutsResponse                          |             |
+| RolloutsGetFiltersRequestField                 |             |
+| TrialPage1                                     |             |
+| RolloutsListRequestSort                        |             |
 | AccountIdentity                                |             |
 | MyOrganizationsItem                            |             |
 | ApiKeyMetadataPage                             |             |
 | ApiKeyCreate                                   |             |
 | ApiKeyCreated                                  |             |
-| HostedAgentCatalog                             |             |
+| AgentsResponse                                 |             |
 | LeaderboardDetail                              |             |
 | LeaderboardsUpdateRequest                      |             |
 | UpdateLeaderboardResponse                      |             |
@@ -321,6 +361,7 @@ The SDK includes several models that represent the data structures used in API r
 | PackageAccessGrantCreator                      |             |
 | TaskVersionDetail                              |             |
 | DatasetVersionDetail                           |             |
+| TaskEnvironmentRequirement                     |             |
 | ResolvedTaskStep                               |             |
 | DatasetVersionFile                             |             |
 | DatasetVersionRevisionSummary                  |             |
@@ -350,11 +391,21 @@ The SDK includes several models that represent the data structures used in API r
 | HostedSubmissionCredentialProxyPathMatch       |             |
 | ArtifactConfig                                 |             |
 | HostedJobTrialRegradeSource                    |             |
+| SubmitJobResponse                              |             |
+| DryRunResponse                                 |             |
 | OwnerOrganization                              |             |
 | SelectedSecret                                 |             |
 | AgentSource                                    |             |
 | AgentSourceManifest                            |             |
 | AgentSourceRuntime                             |             |
+| JobDetail                                      |             |
+| TrialCounts                                    |             |
+| MeanAggregate                                  |             |
+| UsageAggregates                                |             |
+| SumAggregate                                   |             |
+| JobSummary                                     |             |
+| JobTaskSummary                                 |             |
+| JobRewardMetricSet                             |             |
 | EvaluationJobReference                         |             |
 | EvaluationSummary                              |             |
 | JobManualPauseSummary                          |             |
@@ -366,27 +417,17 @@ The SDK includes several models that represent the data structures used in API r
 | JobPackageRunTarget                            |             |
 | JobPathRunTarget                               |             |
 | EvaluationMetricSet                            |             |
-| JobSummary                                     |             |
-| JobTaskSummary                                 |             |
-| JobRewardMetricSet                             |             |
 | EvaluationComparisonTask                       |             |
 | EvaluationComparisonAgentModel                 |             |
 | EvaluationComparisonCell                       |             |
-| EvaluationUserSummary                          |             |
-| JobShareOwnerOrganization                      |             |
-| TrialAgentInfo                                 |             |
-| TrialVerifierResult                            |             |
-| TrialExceptionInfo                             |             |
-| TrialPhaseTiming                               |             |
-| TrialModelInfo                                 |             |
-| CancelTrialsByIdRequest                        |             |
-| CancelTrialsByFilterRequest                    |             |
-| CancelAllJobTrialsRequest                      |             |
-| RetryTrialsByIdRequest                         |             |
-| RetryTrialsByFilterRequest                     |             |
-| RetryAllJobTrialsRequest                       |             |
-| JobTrialSummary                                |             |
+| TrialDetail                                    |             |
+| TaskIdentity                                   |             |
+| AgentIdentity                                  |             |
+| ModelIdentity                                  |             |
+| Usage                                          |             |
+| TrialSummary                                   |             |
 | ResultModelUsage                               |             |
+| TrialDetail1                                   |             |
 | ApiKeyMetadata                                 |             |
 | LeaderboardDefinition                          |             |
 | LeaderboardReadColumnDefinition                |             |

@@ -1,18 +1,19 @@
 from __future__ import annotations
-from typing import Union
+from typing import List
+from pydantic import Field
+from typing import Optional
 from typing import Any
-from typing import Annotated
-from pydantic import TypeAdapter
-from .cancel_trials_by_id_request import CancelTrialsByIdRequest
-from .cancel_trials_by_filter_request import CancelTrialsByFilterRequest
-from .cancel_all_job_trials_request import CancelAllJobTrialsRequest
+from .utils.base_model import BaseModel
 
-# Union type for CancelTrialsRequest
-# Pydantic will attempt to validate against each type in order
-CancelTrialsRequest = Union[
-    CancelTrialsByIdRequest, CancelTrialsByFilterRequest, CancelAllJobTrialsRequest
-]
-# TypeAdapter for runtime validation of CancelTrialsRequest
-# This allows validation of Union types which are not directly instantiable
 
-CancelTrialsRequest_adapter = TypeAdapter(CancelTrialsRequest)
+class CancelTrialsRequest(BaseModel):
+    """CancelTrialsRequest
+
+    :param trial_ids: trial_ids
+    :type trial_ids: List[str]
+    :param force: force, defaults to None
+    :type force: bool, optional
+    """
+
+    trial_ids: List[str]
+    force: Optional[bool] = Field(default=None)

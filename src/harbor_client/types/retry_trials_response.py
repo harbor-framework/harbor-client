@@ -1,19 +1,16 @@
 from __future__ import annotations
+from typing import List
 from pydantic import Field
 from typing import Optional
 from typing import Any
-from typing import Dict
 from .utils.base_model import BaseModel
 
 
 class RetryTrialsResponse(BaseModel):
     """RetryTrialsResponse
 
-    :param relaunched: relaunched
-    :type relaunched: int
-    :param jobs: jobs
-    :type jobs: Dict[str, int]
+    :param trial_ids: trial_ids
+    :type trial_ids: List[str]
     """
 
-    relaunched: int
-    jobs: Dict[str, int]
+    trial_ids: List[str]

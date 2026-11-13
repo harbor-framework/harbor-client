@@ -127,7 +127,7 @@
 - `page_size`
 - `page_token`
 - `offset`
-- `organization_name`
+- `organization_id`
 - `include_yanked`
 
 ### `client.packages.get`
@@ -250,6 +250,14 @@
 
 - `source_job_id` (required)
 
+### `client.jobs.pause`
+
+`POST /v1/jobs/pause`
+
+### `client.jobs.resume`
+
+`POST /v1/jobs/resume`
+
 ### `client.jobs.cancel`
 
 `POST /v1/jobs/cancel`
@@ -260,24 +268,42 @@
 
 **Parameters:**
 
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
 - `page_size`
 - `page_token`
-- `offset`
-- `search`
-- `agents`
-- `providers`
-- `models`
-- `date_`
-- `scope`
-- `shared_with_organization_id`
-- `datasets`
-- `access`
-- `owner_organization_id`
-- `date_from`
-- `date_to`
-- `created_by`
-- `archive`
 - `sort`
+
+### `client.jobs.get_filters`
+
+`GET /v1/jobs/filters`
+
+**Parameters:**
+
+- `field` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `limit`
 
 ### `client.jobs.list_tasks`
 
@@ -337,17 +363,29 @@
 - `trial_id` (required)
 - `artifact_type` (required)
 
+### `client.trials.pause`
+
+`POST /v1/trials/pause`
+
+### `client.trials.resume`
+
+`POST /v1/trials/resume`
+
 ### `client.trials.cancel`
 
 `POST /v1/trials/cancel`
 
-Cancel the latest active attempts. Send {job_id: null, trial_ids: [...], soft: false} for IDs across jobs, or select a job with explicit filters or all: true.
+Cancel the specified physical trial attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
 
 ### `client.trials.retry`
 
 `POST /v1/trials/retry`
 
-Retry the latest terminal attempts. Send {job_id: null, trial_ids: [...]} for IDs across jobs, or select a job with explicit filters or all: true.
+Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new trial IDs. Stale or active attempts return 409.
+
+**Parameters:**
+
+- `idempotency_key` (required)
 
 ### `client.trials.copy`
 
@@ -357,32 +395,133 @@ Retry the latest terminal attempts. Send {job_id: null, trial_ids: [...]} for ID
 
 - `source_trial_id` (required)
 
+### `client.trials.get_filters`
+
+`GET /v1/trials/filters`
+
+**Parameters:**
+
+- `field` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `limit`
+
 ### `client.trials.list`
 
 `GET /v1/trials`
 
 **Parameters:**
 
-- `job_ids` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
 - `page_size`
 - `page_token`
-- `offset`
-- `search`
-- `agents`
-- `providers`
-- `models`
-- `tasks`
-- `exceptions`
-- `failed_only`
-- `config_filters`
-- `agent_version`
-- `attempts`
-- `sort_by`
-- `sort_order`
+- `sort`
 
 ### `client.trials.create`
 
 `POST /v1/trials`
+
+## RolloutsClient
+
+### `client.rollouts.get`
+
+`GET /v1/rollouts/{rollout_id}`
+
+**Parameters:**
+
+- `rollout_id` (required)
+
+### `client.rollouts.pause`
+
+`POST /v1/rollouts/pause`
+
+### `client.rollouts.resume`
+
+`POST /v1/rollouts/resume`
+
+### `client.rollouts.cancel`
+
+`POST /v1/rollouts/cancel`
+
+Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
+
+### `client.rollouts.retry`
+
+`POST /v1/rollouts/retry`
+
+Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.
+
+**Parameters:**
+
+- `idempotency_key` (required)
+
+### `client.rollouts.get_filters`
+
+`GET /v1/rollouts/filters`
+
+**Parameters:**
+
+- `field` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `limit`
+
+### `client.rollouts.list`
+
+`GET /v1/rollouts`
+
+**Parameters:**
+
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `page_size`
+- `page_token`
+- `sort`
 
 ## AccountClient
 
@@ -421,9 +560,17 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 
 ## AgentsClient
 
-### `client.agents.get_catalog`
+### `client.agents.list`
 
 `GET /v1/agents`
+
+### `client.agents.get_options`
+
+`GET /v1/agents/{name}/options`
+
+**Parameters:**
+
+- `name` (required)
 
 ## LeaderboardsClient
 

@@ -1,7 +1,6 @@
 import warnings
 import requests
 import logging
-import asyncio
 from typing import Any, Callable, Dict, Optional, TYPE_CHECKING, Union
 from .net.environment import HarborAPIClientEnvironment
 from .services.utils.base_service import BaseService
@@ -9,11 +8,11 @@ from .net.sdk_config import SdkConfig, RetryConfig
 from typing import Awaitable
 
 if TYPE_CHECKING:
-    from .transfers import AsyncStorageTransfers, StorageTransfers
     from .organizations.client import OrganizationsClient, AsyncOrganizationsClient
     from .packages.client import PackagesClient, AsyncPackagesClient
     from .jobs.client import JobsClient, AsyncJobsClient
     from .trials.client import TrialsClient, AsyncTrialsClient
+    from .rollouts.client import RolloutsClient, AsyncRolloutsClient
     from .account.client import AccountClient, AsyncAccountClient
     from .api_keys.client import ApiKeysClient, AsyncApiKeysClient
     from .agents.client import AgentsClient, AsyncAgentsClient
@@ -66,6 +65,7 @@ class HarborAPIClient(BaseService):
         self._packages: Any = None
         self._jobs: Any = None
         self._trials: Any = None
+        self._rollouts: Any = None
         self._account: Any = None
         self._api_keys: Any = None
         self._agents: Any = None
@@ -117,32 +117,6 @@ class HarborAPIClient(BaseService):
                 }
             )
 
-        self._owned_http_client: Optional[requests.Session] = None
-        if http_client is None and httpx_client is None:
-            self._owned_http_client = requests.Session()
-            self.set_http_client(self._owned_http_client)
-
-    def close(self) -> None:
-        """Release this client's default pool; supplied transports remain caller-owned."""
-        owned, self._owned_http_client = self._owned_http_client, None
-        if owned is not None:
-            owned.close()
-
-    def __enter__(self) -> "HarborAPIClient":
-        return self
-
-    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        self.close()
-
-    @property
-    def transfers(self) -> "StorageTransfers":
-        """Run signed upload, download, and copy workflows."""
-        from .transfers import StorageTransfers
-
-        if not hasattr(self, "_storage_transfers"):
-            self._storage_transfers = StorageTransfers(self)
-        return self._storage_transfers
-
     def set_base_url(self, base_url: Union[HarborAPIClientEnvironment, str]):
         """
         Sets the base URL for the whole SDK, including every resource client already built.
@@ -165,6 +139,8 @@ class HarborAPIClient(BaseService):
             self._jobs.set_base_url(base_url)
         if self._trials is not None:
             self._trials.set_base_url(base_url)
+        if self._rollouts is not None:
+            self._rollouts.set_base_url(base_url)
         if self._account is not None:
             self._account.set_base_url(base_url)
         if self._api_keys is not None:
@@ -206,6 +182,8 @@ class HarborAPIClient(BaseService):
             self._jobs.set_config(config)
         if self._trials is not None:
             self._trials.set_config(config)
+        if self._rollouts is not None:
+            self._rollouts.set_config(config)
         if self._account is not None:
             self._account.set_config(config)
         if self._api_keys is not None:
@@ -241,6 +219,8 @@ class HarborAPIClient(BaseService):
             self._jobs.set_timeout(timeout)
         if self._trials is not None:
             self._trials.set_timeout(timeout)
+        if self._rollouts is not None:
+            self._rollouts.set_timeout(timeout)
         if self._account is not None:
             self._account.set_timeout(timeout)
         if self._api_keys is not None:
@@ -278,6 +258,8 @@ class HarborAPIClient(BaseService):
             self._jobs.set_http_client(http_client)
         if self._trials is not None:
             self._trials.set_http_client(http_client)
+        if self._rollouts is not None:
+            self._rollouts.set_http_client(http_client)
         if self._account is not None:
             self._account.set_http_client(http_client)
         if self._api_keys is not None:
@@ -310,6 +292,8 @@ class HarborAPIClient(BaseService):
             self._jobs.set_follow_redirects(follow_redirects)
         if self._trials is not None:
             self._trials.set_follow_redirects(follow_redirects)
+        if self._rollouts is not None:
+            self._rollouts.set_follow_redirects(follow_redirects)
         if self._account is not None:
             self._account.set_follow_redirects(follow_redirects)
         if self._api_keys is not None:
@@ -343,6 +327,8 @@ class HarborAPIClient(BaseService):
             self._jobs.set_logging(logger)
         if self._trials is not None:
             self._trials.set_logging(logger)
+        if self._rollouts is not None:
+            self._rollouts.set_logging(logger)
         if self._account is not None:
             self._account.set_logging(logger)
         if self._api_keys is not None:
@@ -379,6 +365,8 @@ class HarborAPIClient(BaseService):
             self._jobs.set_access_token(access_token)
         if self._trials is not None:
             self._trials.set_access_token(access_token)
+        if self._rollouts is not None:
+            self._rollouts.set_access_token(access_token)
         if self._account is not None:
             self._account.set_access_token(access_token)
         if self._api_keys is not None:
@@ -465,6 +453,24 @@ class HarborAPIClient(BaseService):
             _child._update_request_handler()
             self._trials = _child
         return self._trials
+
+    @property
+    def rollouts(self) -> "RolloutsClient":
+        """Lazily construct and return the rollouts resource client."""
+        if self._rollouts is None:
+            from .rollouts.client import RolloutsClient
+
+            _child = RolloutsClient(base_url=self.base_url)
+            _child._default_headers = self._default_headers.copy()
+            _child._global_headers = self._global_headers
+            _child._timeout = self._timeout
+            _child._http_client = self._http_client
+            _child._follow_redirects = self._follow_redirects
+            _child._logger = self._logger
+            _child._service_config = self._service_config
+            _child._update_request_handler()
+            self._rollouts = _child
+        return self._rollouts
 
     @property
     def account(self) -> "AccountClient":
@@ -643,25 +649,6 @@ class AsyncHarborAPIClient(HarborAPIClient):
             max_stream_reconnection_attempts=max_stream_reconnection_attempts,
         )
 
-    async def aclose(self) -> None:
-        """Release the default pool used by Fern's native asynchronous wrappers."""
-        await asyncio.to_thread(self.close)
-
-    async def __aenter__(self) -> "AsyncHarborAPIClient":
-        return self
-
-    async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        await self.aclose()
-
-    @property
-    def transfers(self) -> "AsyncStorageTransfers":
-        """Run signed upload, download, and copy workflows asynchronously."""
-        from .transfers import AsyncStorageTransfers
-
-        if not hasattr(self, "_async_storage_transfers"):
-            self._async_storage_transfers = AsyncStorageTransfers(self)
-        return self._async_storage_transfers
-
     @property
     def organizations(self) -> "AsyncOrganizationsClient":
         """Lazily construct and return the async organizations resource client."""
@@ -733,6 +720,24 @@ class AsyncHarborAPIClient(HarborAPIClient):
             _child._update_request_handler()
             self._trials = _child
         return self._trials
+
+    @property
+    def rollouts(self) -> "AsyncRolloutsClient":
+        """Lazily construct and return the async rollouts resource client."""
+        if self._rollouts is None:
+            from .rollouts.client import AsyncRolloutsClient
+
+            _child = AsyncRolloutsClient(base_url=self.base_url)
+            _child._default_headers = self._default_headers.copy()
+            _child._global_headers = self._global_headers
+            _child._timeout = self._timeout
+            _child._http_client = self._http_client
+            _child._follow_redirects = self._follow_redirects
+            _child._logger = self._logger
+            _child._service_config = self._service_config
+            _child._update_request_handler()
+            self._rollouts = _child
+        return self._rollouts
 
     @property
     def account(self) -> "AsyncAccountClient":

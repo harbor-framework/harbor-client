@@ -40,6 +40,7 @@ JobManualPauseSummaryPausedCountOne = typing.Union[
 JobManualPauseSummaryPausedCount = Union[float, str]
 # TypeAdapter for runtime validation of JobManualPauseSummaryPausedCount
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 JobManualPauseSummaryPausedCount_adapter = TypeAdapter(JobManualPauseSummaryPausedCount)
 

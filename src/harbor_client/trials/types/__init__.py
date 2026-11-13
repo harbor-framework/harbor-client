@@ -1,7 +1,5 @@
-from .trials_list_request_failed_only import TrialsListRequestFailedOnly
-from .trials_list_request_attempts import TrialsListRequestAttempts
-from .trials_list_request_sort_by import TrialsListRequestSortBy
-from .trials_list_request_sort_order import TrialsListRequestSortOrder
+from .trials_get_filters_request_field import TrialsGetFiltersRequestField
+from .trials_list_request_sort import TrialsListRequestSort
 from .trials_list_bad_request_response import (
     TrialsListBadRequestResponse,
     TrialsListBadRequestResponse_BadRequest,
@@ -10,10 +8,8 @@ from .trials_list_bad_request_response import (
 )
 
 __all__ = [
-    "TrialsListRequestFailedOnly",
-    "TrialsListRequestAttempts",
-    "TrialsListRequestSortBy",
-    "TrialsListRequestSortOrder",
+    "TrialsGetFiltersRequestField",
+    "TrialsListRequestSort",
     "TrialsListBadRequestResponse",
     "TrialsListBadRequestResponse_BadRequest",
     "TrialsListBadRequestResponse_InvalidPageSize",

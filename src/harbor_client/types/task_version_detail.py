@@ -5,7 +5,9 @@ from pydantic import Field
 from typing import Optional
 from typing import Any
 from typing import Union
+from typing import Dict
 from .utils.base_model import BaseModel
+from .task_environment_requirement import TaskEnvironmentRequirement
 from .resolved_task_step import ResolvedTaskStep
 
 TaskVersionDetailType = typing.Union[typing.Literal["task"], typing.Any]
@@ -39,7 +41,7 @@ class TaskVersionDetail(BaseModel):
     :param content_hash: content_hash
     :type content_hash: str
     :param config: config
-    :type config: Any
+    :type config: Dict[str, Any]
     :param description: description
     :type description: str
     :param authors: authors
@@ -59,7 +61,7 @@ class TaskVersionDetail(BaseModel):
     :param environment_config: environment_config
     :type environment_config: Any
     :param required_env: required_env, defaults to None
-    :type required_env: Any, optional
+    :type required_env: List[TaskEnvironmentRequirement], optional
     :param healthcheck_config: healthcheck_config
     :type healthcheck_config: Any
     :param multi_step_reward_strategy: multi_step_reward_strategy
@@ -90,7 +92,7 @@ class TaskVersionDetail(BaseModel):
     version: str
     archive_path: str
     content_hash: str
-    config: Any
+    config: Optional[Dict[str, Any]]
     description: Optional[str]
     authors: Any
     keywords: Optional[List[str]]
@@ -100,7 +102,7 @@ class TaskVersionDetail(BaseModel):
     verifier_config: Any
     agent_config: Any
     environment_config: Any
-    required_env: Optional[Any] = Field(default=None)
+    required_env: Optional[List[TaskEnvironmentRequirement]] = Field(default=None)
     healthcheck_config: Any
     multi_step_reward_strategy: Optional[TaskVersionDetailMultiStepRewardStrategy]
     steps: List[ResolvedTaskStep]
