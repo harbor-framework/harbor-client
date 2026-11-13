@@ -143,3 +143,21 @@ async def test_checked_execution_reads_reject_non_numeric_wire_values(
         with sync_client(transport=transport) as client:
             with pytest.raises(ContractError):
                 await call_read(client, namespace, method, wrapper, asynchronous)
+
+
+@pytest.mark.parametrize("value", [None, 0, -1, 0.5])
+def test_exported_reward_value_alias_preserves_nullability(value):
+    from typing import get_args
+
+    from pydantic import TypeAdapter
+
+    assert set(get_args(types.RewardValue)) == {float, type(None)}
+    assert TypeAdapter(types.RewardValue).validate_python(value) == value
+
+
+@pytest.mark.parametrize("value", ["invalid", {}, []])
+def test_exported_reward_value_alias_rejects_invalid_values(value):
+    from pydantic import TypeAdapter
+
+    with pytest.raises(ValidationError):
+        TypeAdapter(types.RewardValue).validate_python(value)
