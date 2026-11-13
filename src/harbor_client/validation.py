@@ -158,14 +158,21 @@ class ContractTransport(httpx.BaseTransport):
             location = parameter["in"]
             if location not in {"header", "query", "path"}:
                 continue
-            values = (
-                request.headers
-                if location == "header"
-                else path_values
-                if location == "path"
-                else request.url.params
-            )
-            value = values.get(parameter["name"])
+            name = parameter["name"]
+            if location == "query":
+                values = request.url.params.get_list(name)
+                # OpenAPI's default form/explode encoding repeats the key.
+                if parameter.get("schema", {}).get("type") == "array":
+                    value = values or None
+                elif len(values) > 1:
+                    raise ContractError(
+                        f"query parameter {name} must appear at most once"
+                    )
+                else:
+                    value = values[0] if values else None
+            else:
+                source = request.headers if location == "header" else path_values
+                value = source.get(name)
             if value is None:
                 if parameter.get("required"):
                     raise ValueError(f"The operation requires {parameter['name']}")
