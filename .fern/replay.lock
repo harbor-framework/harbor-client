@@ -30,14 +30,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: 0bae291e1fe5f02287aef3486628f039f4843624
+  - commit_sha: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
+    tree_hash: 242fe24b3ca9fe7f062b388c8c8b5cc4d9d483db
+    timestamp: 2026-11-13T00:15:24.544Z
+    cli_version: 5.199.0
+    generator_versions:
+      python: 6.17.0
+current_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:c6e614f9fa41dfb09c54a3a1269b06eb8d9a408a1c41ec837ef41f7cdb9b0975
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
+    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -16821,7 +16827,7 @@ patches:
     original_commit: 61a37708c2a4e72346405c1176c431715170524c
     original_message: Use native Fern generation PRs and persistent Replay history
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
+    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
     files:
       - build_support.py
     patch_content: |
@@ -16896,7 +16902,7 @@ patches:
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
+    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
     files:
       - examples/sample.py
       - src/harbor_client/rollouts/client.py
@@ -18555,7 +18561,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
+    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -18809,7 +18815,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
+    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
