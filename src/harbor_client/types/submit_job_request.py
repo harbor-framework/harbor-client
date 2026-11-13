@@ -36,10 +36,10 @@ class SubmitJobRequest(BaseModel):
     :type regrade: SubmitJobRequestRegrade, optional
     :param organization_id: organization_id, defaults to None
     :type organization_id: str, optional
-    :param relay_inference: relay_inference, defaults to None
-    :type relay_inference: bool, optional
-    :param session_id: session_id, defaults to None
-    :type session_id: str, optional
+    :param relay_inference: relay_inference
+    :type relay_inference: bool
+    :param session_id: session_id
+    :type session_id: str
     """
 
     config: SubmitJobRequestConfig
@@ -48,8 +48,8 @@ class SubmitJobRequest(BaseModel):
     registry_credentials: Optional[Dict[str, Any]] = Field(default=None)
     regrade: Optional[SubmitJobRequestRegrade] = Field(default=None)
     organization_id: Optional[str] = Field(default=None)
-    relay_inference: Optional[bool] = Field(default=None)
-    session_id: Optional[str] = Field(default=None)
+    relay_inference: bool
+    session_id: Optional[str]
 
 
 class SubmitJobRequestConfig(BaseModel):
