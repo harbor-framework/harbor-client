@@ -30,6 +30,5 @@ TrialsListBadRequestResponse = Union[
 ]
 # TypeAdapter for runtime validation of TrialsListBadRequestResponse
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 TrialsListBadRequestResponse_adapter = TypeAdapter(TrialsListBadRequestResponse)
