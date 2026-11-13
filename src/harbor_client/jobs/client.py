@@ -10,7 +10,7 @@ from ..types.jobs_list_tasks_bad_request_response import (
 from ..types.jobs_list_bad_request_response import JobsListBadRequestResponse_adapter
 from ..types import (
     BadRequestEncoded,
-    CancelJobWithIdRequest,
+    CancelHostedJobRequest,
     ConflictEncoded,
     CreatedResultJob,
     DeleteJobsRequest,
@@ -19,7 +19,6 @@ from ..types import (
     ForbiddenEncoded,
     InternalServerErrorEncoded,
     JobArtifactType,
-    JobDetail,
     JobOverview,
     JobPage,
     JobsCopyRequest,
@@ -35,12 +34,14 @@ from ..types import (
     JobsListTasksRequestSortOrder,
     JobsRenameRequest,
     JobsTransferRequest,
+    JobSubmission,
     JobSummary,
     JobTaskPage,
     JobTaskSummary,
     JobTrialStatusItem,
     NotFoundEncoded,
     RenameJobResponse,
+    ResultJob,
     ResultJobCreate,
     ResultJobCreateVisibility,
     ServiceUnavailableEncoded,
@@ -49,7 +50,6 @@ from ..types import (
     SubmitJobRequest,
     SubmitJobRequestConfig,
     SubmitJobRequestRegrade,
-    SubmitJobResponse,
     TooManyRequestsEncoded,
     TransferJobResponse,
     UnauthorizedEncoded,
@@ -512,16 +512,15 @@ class JobsClient(BaseService):
         self,
         *,
         config: SubmitJobRequestConfig,
-        relay_inference: bool,
         idempotency_key: str,
-        dry_run: bool = SENTINEL,
-        job_secrets: Union[dict, None] = SENTINEL,
-        registry_credentials: Union[dict, None] = SENTINEL,
         regrade: SubmitJobRequestRegrade = SENTINEL,
         organization_id: str = SENTINEL,
-        session_id: Union[str, None] = SENTINEL,
+        job_secrets: Union[dict, None] = SENTINEL,
+        job_credentials: Union[dict, None] = SENTINEL,
+        registry_credentials: Union[dict, None] = SENTINEL,
+        dry_run: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> SubmitJobResponse:
+    ) -> JobSubmission:
         """submit
 
         :param request_body: The request body.
@@ -532,7 +531,7 @@ class JobsClient(BaseService):
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: SubmitJobResponse
+        :rtype: JobSubmission
         """
 
         Validator(str).validate(idempotency_key, "idempotency_key")
@@ -543,17 +542,16 @@ class JobsClient(BaseService):
 
         request_body = SubmitJobRequest(
             config=config,
-            relay_inference=relay_inference,
             **dict[str, Any](
                 {
                     k: v
                     for k, v in {
-                        "dry_run": dry_run,
-                        "job_secrets": job_secrets,
-                        "registry_credentials": registry_credentials,
                         "regrade": regrade,
                         "organization_id": organization_id,
-                        "session_id": session_id,
+                        "job_secrets": job_secrets,
+                        "job_credentials": job_credentials,
+                        "registry_credentials": registry_credentials,
+                        "dry_run": dry_run,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -586,16 +584,16 @@ class JobsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                SubmitJobResponse.model_validate(response)
+                JobSubmission.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(SubmitJobResponse, response)
+                else construct_lenient(JobSubmission, response)
             )
         )
 
     @cast_models
     def get(
         self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> JobDetail:
+    ) -> ResultJob:
         """get
 
         :param job_id: job_id
@@ -604,7 +602,7 @@ class JobsClient(BaseService):
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: JobDetail
+        :rtype: ResultJob
         """
 
         Validator(str).validate(job_id, "job_id")
@@ -634,9 +632,9 @@ class JobsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                JobDetail.model_validate(response)
+                ResultJob.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(JobDetail, response)
+                else construct_lenient(ResultJob, response)
             )
         )
 
@@ -906,14 +904,14 @@ class JobsClient(BaseService):
         self,
         *,
         job_id: str,
-        soft: bool,
         reason: Union[str, None] = SENTINEL,
+        finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Optional[Any]:
+    ) -> Any:
         """cancel
 
         :param request_body: The request body.
-        :type request_body: CancelJobWithIdRequest
+        :type request_body: CancelHostedJobRequest
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
@@ -925,14 +923,20 @@ class JobsClient(BaseService):
             self._cancel_config, request_options
         )
 
-        request_body = CancelJobWithIdRequest(
+        request_body = CancelHostedJobRequest(
             job_id=job_id,
-            soft=soft,
             **dict[str, Any](
-                {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                {
+                    k: v
+                    for k, v in {
+                        "reason": reason,
+                        "finish_running": finish_running,
+                    }.items()
+                    if v is not SENTINEL
+                }
             ),
         )
-        Validator(CancelJobWithIdRequest).validate(request_body, "request_body")
+        Validator(CancelHostedJobRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
                 f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/cancel",
@@ -1022,7 +1026,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
@@ -1097,6 +1100,9 @@ class JobsClient(BaseService):
                 )
                 current_page = parsed_response.items
 
+                if not current_page:
+                    break
+
                 yield current_page
 
                 next_cursor = parsed_response.next_page_token
@@ -1154,7 +1160,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobTaskSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -1212,6 +1217,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobTaskPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1490,31 +1498,29 @@ class RawJobsClient:
         self,
         *,
         config: SubmitJobRequestConfig,
-        relay_inference: bool,
         idempotency_key: str,
-        dry_run: bool = SENTINEL,
-        job_secrets: Union[dict, None] = SENTINEL,
-        registry_credentials: Union[dict, None] = SENTINEL,
         regrade: SubmitJobRequestRegrade = SENTINEL,
         organization_id: str = SENTINEL,
-        session_id: Union[str, None] = SENTINEL,
+        job_secrets: Union[dict, None] = SENTINEL,
+        job_credentials: Union[dict, None] = SENTINEL,
+        registry_credentials: Union[dict, None] = SENTINEL,
+        dry_run: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[SubmitJobResponse]:
+    ) -> HttpResponse[JobSubmission]:
         data = JobsClient.submit(
             self._client,
             config=config,
-            relay_inference=relay_inference,
             idempotency_key=idempotency_key,
             **dict[str, Any](
                 {
                     k: v
                     for k, v in {
-                        "dry_run": dry_run,
-                        "job_secrets": job_secrets,
-                        "registry_credentials": registry_credentials,
                         "regrade": regrade,
                         "organization_id": organization_id,
-                        "session_id": session_id,
+                        "job_secrets": job_secrets,
+                        "job_credentials": job_credentials,
+                        "registry_credentials": registry_credentials,
+                        "dry_run": dry_run,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1525,7 +1531,7 @@ class RawJobsClient:
 
     def get(
         self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobDetail]:
+    ) -> HttpResponse[ResultJob]:
         data = JobsClient.get(self._client, job_id, request_options=request_options)
         return HttpResponse(data=data, response=self._client._last_response)
 
@@ -1614,16 +1620,22 @@ class RawJobsClient:
         self,
         *,
         job_id: str,
-        soft: bool,
         reason: Union[str, None] = SENTINEL,
+        finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[Optional[Any]]:
+    ) -> HttpResponse[Any]:
         data = JobsClient.cancel(
             self._client,
             job_id=job_id,
-            soft=soft,
             **dict[str, Any](
-                {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                {
+                    k: v
+                    for k, v in {
+                        "reason": reason,
+                        "finish_running": finish_running,
+                    }.items()
+                    if v is not SENTINEL
+                }
             ),
             request_options=request_options,
         )
@@ -1860,30 +1872,28 @@ class AsyncJobsClient(JobsClient):
         self,
         *,
         config: SubmitJobRequestConfig,
-        relay_inference: bool,
         idempotency_key: str,
-        dry_run: bool = SENTINEL,
-        job_secrets: Union[dict, None] = SENTINEL,
-        registry_credentials: Union[dict, None] = SENTINEL,
         regrade: SubmitJobRequestRegrade = SENTINEL,
         organization_id: str = SENTINEL,
-        session_id: Union[str, None] = SENTINEL,
+        job_secrets: Union[dict, None] = SENTINEL,
+        job_credentials: Union[dict, None] = SENTINEL,
+        registry_credentials: Union[dict, None] = SENTINEL,
+        dry_run: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[SubmitJobResponse]:  # type: ignore[override]
+    ) -> Awaitable[JobSubmission]:  # type: ignore[override]
         return to_async(super().submit)(
             config=config,
-            relay_inference=relay_inference,
             idempotency_key=idempotency_key,
             **dict[str, Any](
                 {
                     k: v
                     for k, v in {
-                        "dry_run": dry_run,
-                        "job_secrets": job_secrets,
-                        "registry_credentials": registry_credentials,
                         "regrade": regrade,
                         "organization_id": organization_id,
-                        "session_id": session_id,
+                        "job_secrets": job_secrets,
+                        "job_credentials": job_credentials,
+                        "registry_credentials": registry_credentials,
+                        "dry_run": dry_run,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1893,7 +1903,7 @@ class AsyncJobsClient(JobsClient):
 
     def get(
         self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[JobDetail]:  # type: ignore[override]
+    ) -> Awaitable[ResultJob]:  # type: ignore[override]
         return to_async(super().get)(job_id, request_options=request_options)
 
     def rename(
@@ -1974,15 +1984,21 @@ class AsyncJobsClient(JobsClient):
         self,
         *,
         job_id: str,
-        soft: bool,
         reason: Union[str, None] = SENTINEL,
+        finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[Optional[Any]]:  # type: ignore[override]
+    ) -> Awaitable[Any]:  # type: ignore[override]
         return to_async(super().cancel)(
             job_id=job_id,
-            soft=soft,
             **dict[str, Any](
-                {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                {
+                    k: v
+                    for k, v in {
+                        "reason": reason,
+                        "finish_running": finish_running,
+                    }.items()
+                    if v is not SENTINEL
+                }
             ),
             request_options=request_options,
         )
@@ -2041,11 +2057,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2090,11 +2102,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2234,31 +2242,29 @@ class AsyncRawJobsClient:
         self,
         *,
         config: SubmitJobRequestConfig,
-        relay_inference: bool,
         idempotency_key: str,
-        dry_run: bool = SENTINEL,
-        job_secrets: Union[dict, None] = SENTINEL,
-        registry_credentials: Union[dict, None] = SENTINEL,
         regrade: SubmitJobRequestRegrade = SENTINEL,
         organization_id: str = SENTINEL,
-        session_id: Union[str, None] = SENTINEL,
+        job_secrets: Union[dict, None] = SENTINEL,
+        job_credentials: Union[dict, None] = SENTINEL,
+        registry_credentials: Union[dict, None] = SENTINEL,
+        dry_run: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[SubmitJobResponse]:
+    ) -> HttpResponse[JobSubmission]:
         data = await AsyncJobsClient.submit(
             self._client,
             config=config,
-            relay_inference=relay_inference,
             idempotency_key=idempotency_key,
             **dict[str, Any](
                 {
                     k: v
                     for k, v in {
-                        "dry_run": dry_run,
-                        "job_secrets": job_secrets,
-                        "registry_credentials": registry_credentials,
                         "regrade": regrade,
                         "organization_id": organization_id,
-                        "session_id": session_id,
+                        "job_secrets": job_secrets,
+                        "job_credentials": job_credentials,
+                        "registry_credentials": registry_credentials,
+                        "dry_run": dry_run,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -2269,7 +2275,7 @@ class AsyncRawJobsClient:
 
     async def get(
         self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobDetail]:
+    ) -> HttpResponse[ResultJob]:
         data = await AsyncJobsClient.get(
             self._client, job_id, request_options=request_options
         )
@@ -2360,16 +2366,22 @@ class AsyncRawJobsClient:
         self,
         *,
         job_id: str,
-        soft: bool,
         reason: Union[str, None] = SENTINEL,
+        finish_running: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[Optional[Any]]:
+    ) -> HttpResponse[Any]:
         data = await AsyncJobsClient.cancel(
             self._client,
             job_id=job_id,
-            soft=soft,
             **dict[str, Any](
-                {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                {
+                    k: v
+                    for k, v in {
+                        "reason": reason,
+                        "finish_running": finish_running,
+                    }.items()
+                    if v is not SENTINEL
+                }
             ),
             request_options=request_options,
         )

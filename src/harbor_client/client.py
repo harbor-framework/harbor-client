@@ -1,7 +1,6 @@
 import warnings
 import requests
 import logging
-import asyncio
 from typing import Any, Callable, Dict, Optional, TYPE_CHECKING, Union
 from .net.environment import HarborAPIClientEnvironment
 from .services.utils.base_service import BaseService
@@ -9,7 +8,6 @@ from .net.sdk_config import SdkConfig, RetryConfig
 from typing import Awaitable
 
 if TYPE_CHECKING:
-    from .transfers import AsyncStorageTransfers, StorageTransfers
     from .organizations.client import OrganizationsClient, AsyncOrganizationsClient
     from .packages.client import PackagesClient, AsyncPackagesClient
     from .jobs.client import JobsClient, AsyncJobsClient
@@ -116,32 +114,6 @@ class HarborAPIClient(BaseService):
                     "max_stream_reconnection_attempts": max_stream_reconnection_attempts,
                 }
             )
-
-        self._owned_http_client: Optional[requests.Session] = None
-        if http_client is None and httpx_client is None:
-            self._owned_http_client = requests.Session()
-            self.set_http_client(self._owned_http_client)
-
-    def close(self) -> None:
-        """Release this client's default pool; supplied transports remain caller-owned."""
-        owned, self._owned_http_client = self._owned_http_client, None
-        if owned is not None:
-            owned.close()
-
-    def __enter__(self) -> "HarborAPIClient":
-        return self
-
-    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        self.close()
-
-    @property
-    def transfers(self) -> "StorageTransfers":
-        """Run signed upload, download, and copy workflows."""
-        from .transfers import StorageTransfers
-
-        if not hasattr(self, "_storage_transfers"):
-            self._storage_transfers = StorageTransfers(self)
-        return self._storage_transfers
 
     def set_base_url(self, base_url: Union[HarborAPIClientEnvironment, str]):
         """
@@ -642,25 +614,6 @@ class AsyncHarborAPIClient(HarborAPIClient):
             stream_reconnection_enabled=stream_reconnection_enabled,
             max_stream_reconnection_attempts=max_stream_reconnection_attempts,
         )
-
-    async def aclose(self) -> None:
-        """Release the default pool used by Fern's native asynchronous wrappers."""
-        await asyncio.to_thread(self.close)
-
-    async def __aenter__(self) -> "AsyncHarborAPIClient":
-        return self
-
-    async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        await self.aclose()
-
-    @property
-    def transfers(self) -> "AsyncStorageTransfers":
-        """Run signed upload, download, and copy workflows asynchronously."""
-        from .transfers import AsyncStorageTransfers
-
-        if not hasattr(self, "_async_storage_transfers"):
-            self._async_storage_transfers = AsyncStorageTransfers(self)
-        return self._async_storage_transfers
 
     @property
     def organizations(self) -> "AsyncOrganizationsClient":

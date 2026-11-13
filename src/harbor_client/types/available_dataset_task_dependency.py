@@ -5,6 +5,7 @@ from pydantic import Field
 from typing import Optional
 from typing import Any
 from typing import Union
+from typing import Dict
 from .utils.base_model import BaseModel
 
 
@@ -54,7 +55,7 @@ class AvailableDatasetTaskDependency(BaseModel):
     :param content_hash: content_hash
     :type content_hash: str
     :param config: config
-    :type config: Any
+    :type config: Dict[str, Any]
     :param description: description
     :type description: str
     :param keywords: keywords
@@ -84,7 +85,7 @@ class AvailableDatasetTaskDependency(BaseModel):
     version: str
     archive_path: str
     content_hash: str
-    config: Any
+    config: Optional[Dict[str, Any]]
     description: Optional[str]
     keywords: Optional[List[str]]
     instruction: Optional[str]
