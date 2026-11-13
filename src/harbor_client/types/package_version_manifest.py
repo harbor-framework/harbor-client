@@ -22,5 +22,6 @@ class PackageVersionManifest_Dataset(DatasetVersionManifest):
 PackageVersionManifest = Union[TaskVersionManifest, DatasetVersionManifest]
 # TypeAdapter for runtime validation of PackageVersionManifest
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 PackageVersionManifest_adapter = TypeAdapter(PackageVersionManifest)
