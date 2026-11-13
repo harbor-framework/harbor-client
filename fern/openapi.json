@@ -2565,7 +2565,7 @@
         ],
         "responses": {
           "200": {
-            "description": "TrialResponse",
+            "description": "RolloutResponse",
             "content": {
               "application/json": {
                 "schema": {
@@ -7734,7 +7734,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TrialPage_1"
+                  "$ref": "#/components/schemas/TrialPage"
                 }
               }
             }
@@ -16599,7 +16599,7 @@
           "cancelled"
         ]
       },
-      "TrialPage_1": {
+      "TrialPage": {
         "type": "object",
         "properties": {
           "items": {
@@ -16910,31 +16910,6 @@
           "name",
           "digest",
           "source"
-        ],
-        "additionalProperties": false
-      },
-      "TrialPage": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TrialSummary"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "next_page_token": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "items",
-          "total",
-          "next_page_token"
         ],
         "additionalProperties": false
       },
@@ -19519,170 +19494,11 @@
         "type": "object",
         "properties": {
           "rollout": {
-            "$ref": "#/components/schemas/TrialDetail_1"
+            "$ref": "#/components/schemas/TrialDetail"
           }
         },
         "required": [
           "rollout"
-        ],
-        "additionalProperties": false
-      },
-      "TrialDetail_1": {
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "job_id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "name": {
-            "type": "string"
-          },
-          "state": {
-            "$ref": "#/components/schemas/RunState"
-          },
-          "retry_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            },
-            "description": "All readable attempts of this logical trial, newest first, including this attempt."
-          },
-          "phase": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "environment_setup",
-                  "agent_setup",
-                  "agent_execution",
-                  "verifier",
-                  "collection",
-                  "cleanup"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "task": {
-            "$ref": "#/components/schemas/TaskIdentity"
-          },
-          "agent": {
-            "$ref": "#/components/schemas/AgentIdentity"
-          },
-          "model": {
-            "$ref": "#/components/schemas/ModelIdentity"
-          },
-          "rewards": {
-            "anyOf": [
-              {
-                "type": "object",
-                "additionalProperties": {
-                  "$ref": "#/components/schemas/RewardValue"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "usage": {
-            "$ref": "#/components/schemas/Usage"
-          },
-          "error_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "lock": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "The persisted trial lock, or null for historical uploads without a lock."
-          },
-          "artifacts": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "Stored artifact paths by role; use the storage API to obtain authorized download URLs."
-          },
-          "storage_error": {
-            "type": "null",
-            "description": "Storage failures are not persisted in the trial resource."
-          },
-          "result": {
-            "type": "null",
-            "description": "Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
-          }
-        },
-        "required": [
-          "created_at",
-          "updated_at",
-          "started_at",
-          "finished_at",
-          "id",
-          "job_id",
-          "name",
-          "state",
-          "retry_ids",
-          "phase",
-          "task",
-          "agent",
-          "model",
-          "rewards",
-          "usage",
-          "error_type",
-          "lock",
-          "artifacts",
-          "storage_error",
-          "result"
         ],
         "additionalProperties": false
       },

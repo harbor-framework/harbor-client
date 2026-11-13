@@ -321,7 +321,6 @@ The SDK includes several models that represent the data structures used in API r
 | RetryRolloutsRequest                           |             |
 | RetryRolloutsResponse                          |             |
 | RolloutsGetFiltersRequestField                 |             |
-| TrialPage1                                     |             |
 | RolloutsListRequestSort                        |             |
 | AccountIdentity                                |             |
 | MyOrganizationsItem                            |             |
@@ -427,7 +426,6 @@ The SDK includes several models that represent the data structures used in API r
 | Usage                                          |             |
 | TrialSummary                                   |             |
 | ResultModelUsage                               |             |
-| TrialDetail1                                   |             |
 | ApiKeyMetadata                                 |             |
 | LeaderboardDefinition                          |             |
 | LeaderboardReadColumnDefinition                |             |
