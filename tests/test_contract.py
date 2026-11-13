@@ -380,3 +380,48 @@ def test_encoded_slash_remains_one_logical_path_parameter():
     with sync_client(transport=httpx.MockTransport(handler)) as client:
         client.packages.download_file(version_id=UUID, file="folder/file.txt")
     assert b"folder%2Ffile.txt" in requests[0].url.raw_path
+
+
+def test_checked_client_follows_a_new_contract_version(tmp_path, monkeypatch):
+    import gzip
+    import importlib.resources
+    import importlib.util
+    import harbor_client.validation as validation
+
+    old_version = SPEC["info"]["version"]
+    new_version = "2099-01-01.preview"
+
+    def replace_version(value):
+        if isinstance(value, dict):
+            return {key: replace_version(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [replace_version(item) for item in value]
+        return new_version if value == old_version else value
+
+    (tmp_path / "_openapi.json.gz").write_bytes(
+        gzip.compress(json.dumps(replace_version(SPEC)).encode())
+    )
+    original_files = importlib.resources.files
+    monkeypatch.setattr(
+        importlib.resources,
+        "files",
+        lambda package: (
+            tmp_path if package == "harbor_client" else original_files(package)
+        ),
+    )
+    module_spec = importlib.util.spec_from_file_location(
+        "harbor_client._future_contract_validation", validation.__file__
+    )
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    sent = []
+
+    def handler(request):
+        sent.append(request)
+        return httpx.Response(200, json=response_fixture("/v1/api-keys"))
+
+    with module.sync_client(
+        token="key", transport=httpx.MockTransport(handler)
+    ) as client:
+        next(client.api_keys.list().iter_pages())
+    assert sent[0].headers["Harbor-API-Version"] == new_version
