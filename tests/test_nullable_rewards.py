@@ -23,7 +23,6 @@ INVALID_REWARDS = ["bad", [], {"accuracy": "bad"}, {"accuracy": {"nested": 1}}]
 MODEL_SCHEMAS = [
     ("TrialSummary", "TrialSummary"),
     ("TrialDetail", "TrialDetail"),
-    ("TrialDetail1", "TrialDetail_1"),
 ]
 
 

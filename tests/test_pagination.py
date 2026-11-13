@@ -339,7 +339,7 @@ async def test_concurrent_native_pagers_keep_their_own_response_metadata(monkeyp
 
 
 @pytest.mark.parametrize(
-    "resource,page_model", [("trials", "TrialPage"), ("rollouts", "TrialPage1")]
+    "resource,page_model", [("trials", "TrialPage"), ("rollouts", "TrialPage")]
 )
 async def test_execution_pagers_keep_concurrent_response_metadata(
     monkeypatch, resource, page_model
