@@ -39,5 +39,6 @@ StorageUploadCreate = Union[
 ]
 # TypeAdapter for runtime validation of StorageUploadCreate
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 StorageUploadCreate_adapter = TypeAdapter(StorageUploadCreate)

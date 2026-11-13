@@ -289,3 +289,10 @@ def test_token_should_reach_identity_dependent_public_reads():
         )
         list(client.jobs.list())
     assert requests[0].headers.get("authorization") == "Bearer test"
+
+
+def test_runtime_version_matches_distribution_metadata():
+    from importlib.metadata import version
+    import harbor_client
+
+    assert harbor_client.__version__ == version("harbor-framework-client")

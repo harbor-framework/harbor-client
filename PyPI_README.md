@@ -34,13 +34,13 @@ This SDK is compatible with the following versions: `Python >= 3.9`
 To get started with the SDK, we recommend installing using `pip`:
 
 ```bash
-pip install harbor-client
+pip install harbor-framework-client
 ```
 
 If you are using Python 3, you can use `pip3` instead:
 
 ```bash
-pip3 install harbor-client
+pip3 install harbor-framework-client
 ```
 
 ## Disabling Redirects<a id="disabling-redirects"></a>
