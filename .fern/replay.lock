@@ -24,14 +24,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: 484251d51a29dd8a674c211164c9a6b47cb4db4f
+  - commit_sha: 0bae291e1fe5f02287aef3486628f039f4843624
+    tree_hash: b58de30db31f5debda998b3605700f6466a9efbf
+    timestamp: 2026-11-13T00:14:03.180Z
+    cli_version: 5.199.0
+    generator_versions:
+      python: 6.17.0
+current_generation: 0bae291e1fe5f02287aef3486628f039f4843624
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:c6e614f9fa41dfb09c54a3a1269b06eb8d9a408a1c41ec837ef41f7cdb9b0975
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 484251d51a29dd8a674c211164c9a6b47cb4db4f
+    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -16815,7 +16821,7 @@ patches:
     original_commit: 61a37708c2a4e72346405c1176c431715170524c
     original_message: Use native Fern generation PRs and persistent Replay history
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 484251d51a29dd8a674c211164c9a6b47cb4db4f
+    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
     files:
       - build_support.py
     patch_content: |
@@ -16886,11 +16892,11 @@ patches:
       -        generate_export_stubs(Path(self.build_lib) / "harbor_client")
     user_owned: true
   - id: patch-54e30fcc
-    content_hash: sha256:7c7db93cf4ec3d9a427202bf62b4854ba2d96efd6bcc69ef1d117dd134d9a4e2
+    content_hash: sha256:0aecaf61803de2acecbb14bef66c1ac9353d8643d1fad454deeb56d73881ecb2
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 484251d51a29dd8a674c211164c9a6b47cb4db4f
+    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
     files:
       - examples/sample.py
       - src/harbor_client/rollouts/client.py
@@ -16912,7 +16918,7 @@ patches:
        client = HarborAPIClient(
            harbor_api_version="YOUR_HARBOR_API_VERSION",
       diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
-      index cc98a69..6363c11 100644
+      index bef9cbd..4a9cc38 100644
       --- a/src/harbor_client/rollouts/client.py
       +++ b/src/harbor_client/rollouts/client.py
       @@ -597,6 +597,7 @@ class RolloutsClient(BaseService):
@@ -17002,40 +17008,6 @@ patches:
       +    result: None = Field(
                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
            )
-      diff --git a/src/harbor_client/types/trial_detail1.py b/src/harbor_client/types/trial_detail1.py
-      index 12a8de5..8050a7b 100644
-      --- a/src/harbor_client/types/trial_detail1.py
-      +++ b/src/harbor_client/types/trial_detail1.py
-      @@ -56,7 +56,7 @@ class TrialDetail1(BaseModel):
-           :param model: model
-           :type model: ModelIdentity
-           :param rewards: rewards
-      -    :type rewards: Dict[str, float]
-      +    :type rewards: Dict[str, Optional[float]]
-           :param usage: usage
-           :type usage: Usage
-           :param error_type: error_type
-      @@ -86,7 +86,7 @@ class TrialDetail1(BaseModel):
-           task: TaskIdentity
-           agent: AgentIdentity
-           model: ModelIdentity
-      -    rewards: Optional[Dict[str, float]]
-      +    rewards: Optional[Dict[str, Optional[float]]]
-           usage: Usage
-           error_type: Optional[str]
-           lock: Optional[Dict[str, Any]] = Field(
-      @@ -95,9 +95,9 @@ class TrialDetail1(BaseModel):
-           artifacts: Dict[str, str] = Field(
-               description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
-           )
-      -    storage_error: Optional[Any] = Field(
-      +    storage_error: None = Field(
-               description="Storage failures are not persisted in the trial resource."
-           )
-      -    result: Optional[Any] = Field(
-      +    result: None = Field(
-               description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
-           )
     theirs_snapshot:
       examples/sample.py: |
         from harbor_client import HarborAPIClient
@@ -17092,7 +17064,7 @@ patches:
             RolloutsListRequestSort,
             RunState,
             TrialActionResponse,
-            TrialPage1,
+            TrialPage,
             TrialSummary,
             UnauthorizedEncoded,
         )
@@ -17728,9 +17700,9 @@ patches:
                         )
                         response, status, content = self.send_request(serialized_request)
                         parsed_response = (
-                            TrialPage1.model_validate(response)
+                            TrialPage.model_validate(response)
                             if should_validate_response(resolved_config)
-                            else construct_lenient(TrialPage1, response)
+                            else construct_lenient(TrialPage, response)
                         )
                         current_page = parsed_response.items
 
@@ -18579,116 +18551,12 @@ patches:
             result: None = Field(
                 description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
             )
-      src/harbor_client/types/trial_detail1.py: |
-        from __future__ import annotations
-        import typing
-        from typing import List
-        from pydantic import Field
-        from typing import Optional
-        from typing import Any
-        from typing import Union
-        from typing import Dict
-        from .utils.base_model import BaseModel
-        from .run_state import RunState
-        from .task_identity import TaskIdentity
-        from .agent_identity import AgentIdentity
-        from .model_identity import ModelIdentity
-        from .usage import Usage
-
-        TrialDetail1Phase = typing.Union[
-            typing.Literal[
-                "environment_setup",
-                "agent_setup",
-                "agent_execution",
-                "verifier",
-                "collection",
-                "cleanup",
-            ],
-            typing.Any,
-        ]
-
-
-        class TrialDetail1(BaseModel):
-            """TrialDetail1
-
-            :param created_at: created_at
-            :type created_at: str
-            :param updated_at: updated_at
-            :type updated_at: str
-            :param started_at: started_at
-            :type started_at: str
-            :param finished_at: finished_at
-            :type finished_at: str
-            :param id: id
-            :type id: str
-            :param job_id: job_id
-            :type job_id: str
-            :param name: name
-            :type name: str
-            :param state: state
-            :type state: RunState
-            :param retry_ids: All readable attempts of this logical trial, newest first, including this attempt.
-            :type retry_ids: List[str]
-            :param phase: phase
-            :type phase: TrialDetail1Phase
-            :param task: task
-            :type task: TaskIdentity
-            :param agent: agent
-            :type agent: AgentIdentity
-            :param model: model
-            :type model: ModelIdentity
-            :param rewards: rewards
-            :type rewards: Dict[str, Optional[float]]
-            :param usage: usage
-            :type usage: Usage
-            :param error_type: error_type
-            :type error_type: str
-            :param lock: The persisted trial lock, or null for historical uploads without a lock.
-            :type lock: Dict[str, Any]
-            :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
-            :type artifacts: Dict[str, str]
-            :param storage_error: Storage failures are not persisted in the trial resource.
-            :type storage_error: Any
-            :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
-            :type result: Any
-            """
-
-            created_at: str
-            updated_at: str
-            started_at: Optional[str]
-            finished_at: Optional[str]
-            id: str
-            job_id: str
-            name: str
-            state: RunState
-            retry_ids: List[str] = Field(
-                description="All readable attempts of this logical trial, newest first, including this attempt."
-            )
-            phase: Optional[TrialDetail1Phase]
-            task: TaskIdentity
-            agent: AgentIdentity
-            model: ModelIdentity
-            rewards: Optional[Dict[str, Optional[float]]]
-            usage: Usage
-            error_type: Optional[str]
-            lock: Optional[Dict[str, Any]] = Field(
-                description="The persisted trial lock, or null for historical uploads without a lock."
-            )
-            artifacts: Dict[str, str] = Field(
-                description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
-            )
-            storage_error: None = Field(
-                description="Storage failures are not persisted in the trial resource."
-            )
-            result: None = Field(
-                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
-            )
   - id: patch-7c950c27
-    content_hash: sha256:82e5a5d521853807a4b174e031c634b9c452e75207af3401ea68736b70719f4c
+    content_hash: sha256:ed546c9a6047cd81b922d80f5b2332001da81878afd51bbf7113c0660ff108ef
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 484251d51a29dd8a674c211164c9a6b47cb4db4f
+    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_detail1.py
@@ -18717,40 +18585,6 @@ patches:
            error_type: Optional[str]
            lock: Optional[Dict[str, Any]] = Field(
       @@ -95,9 +95,9 @@ class TrialDetail(BaseModel):
-           artifacts: Dict[str, str] = Field(
-               description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
-           )
-      -    storage_error: Optional[Any] = Field(
-      +    storage_error: None = Field(
-               description="Storage failures are not persisted in the trial resource."
-           )
-      -    result: Optional[Any] = Field(
-      +    result: None = Field(
-               description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
-           )
-      diff --git a/src/harbor_client/types/trial_detail1.py b/src/harbor_client/types/trial_detail1.py
-      index 12a8de5..8050a7b 100644
-      --- a/src/harbor_client/types/trial_detail1.py
-      +++ b/src/harbor_client/types/trial_detail1.py
-      @@ -56,7 +56,7 @@ class TrialDetail1(BaseModel):
-           :param model: model
-           :type model: ModelIdentity
-           :param rewards: rewards
-      -    :type rewards: Dict[str, float]
-      +    :type rewards: Dict[str, Optional[float]]
-           :param usage: usage
-           :type usage: Usage
-           :param error_type: error_type
-      @@ -86,7 +86,7 @@ class TrialDetail1(BaseModel):
-           task: TaskIdentity
-           agent: AgentIdentity
-           model: ModelIdentity
-      -    rewards: Optional[Dict[str, float]]
-      +    rewards: Optional[Dict[str, Optional[float]]]
-           usage: Usage
-           error_type: Optional[str]
-           lock: Optional[Dict[str, Any]] = Field(
-      @@ -95,9 +95,9 @@ class TrialDetail1(BaseModel):
            artifacts: Dict[str, str] = Field(
                description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
            )
@@ -18888,110 +18722,6 @@ patches:
             result: None = Field(
                 description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
             )
-      src/harbor_client/types/trial_detail1.py: |
-        from __future__ import annotations
-        import typing
-        from typing import List
-        from pydantic import Field
-        from typing import Optional
-        from typing import Any
-        from typing import Union
-        from typing import Dict
-        from .utils.base_model import BaseModel
-        from .run_state import RunState
-        from .task_identity import TaskIdentity
-        from .agent_identity import AgentIdentity
-        from .model_identity import ModelIdentity
-        from .usage import Usage
-
-        TrialDetail1Phase = typing.Union[
-            typing.Literal[
-                "environment_setup",
-                "agent_setup",
-                "agent_execution",
-                "verifier",
-                "collection",
-                "cleanup",
-            ],
-            typing.Any,
-        ]
-
-
-        class TrialDetail1(BaseModel):
-            """TrialDetail1
-
-            :param created_at: created_at
-            :type created_at: str
-            :param updated_at: updated_at
-            :type updated_at: str
-            :param started_at: started_at
-            :type started_at: str
-            :param finished_at: finished_at
-            :type finished_at: str
-            :param id: id
-            :type id: str
-            :param job_id: job_id
-            :type job_id: str
-            :param name: name
-            :type name: str
-            :param state: state
-            :type state: RunState
-            :param retry_ids: All readable attempts of this logical trial, newest first, including this attempt.
-            :type retry_ids: List[str]
-            :param phase: phase
-            :type phase: TrialDetail1Phase
-            :param task: task
-            :type task: TaskIdentity
-            :param agent: agent
-            :type agent: AgentIdentity
-            :param model: model
-            :type model: ModelIdentity
-            :param rewards: rewards
-            :type rewards: Dict[str, Optional[float]]
-            :param usage: usage
-            :type usage: Usage
-            :param error_type: error_type
-            :type error_type: str
-            :param lock: The persisted trial lock, or null for historical uploads without a lock.
-            :type lock: Dict[str, Any]
-            :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
-            :type artifacts: Dict[str, str]
-            :param storage_error: Storage failures are not persisted in the trial resource.
-            :type storage_error: Any
-            :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
-            :type result: Any
-            """
-
-            created_at: str
-            updated_at: str
-            started_at: Optional[str]
-            finished_at: Optional[str]
-            id: str
-            job_id: str
-            name: str
-            state: RunState
-            retry_ids: List[str] = Field(
-                description="All readable attempts of this logical trial, newest first, including this attempt."
-            )
-            phase: Optional[TrialDetail1Phase]
-            task: TaskIdentity
-            agent: AgentIdentity
-            model: ModelIdentity
-            rewards: Optional[Dict[str, Optional[float]]]
-            usage: Usage
-            error_type: Optional[str]
-            lock: Optional[Dict[str, Any]] = Field(
-                description="The persisted trial lock, or null for historical uploads without a lock."
-            )
-            artifacts: Dict[str, str] = Field(
-                description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
-            )
-            storage_error: None = Field(
-                description="Storage failures are not persisted in the trial resource."
-            )
-            result: None = Field(
-                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
-            )
       src/harbor_client/types/trial_summary.py: |
         from __future__ import annotations
         import typing
@@ -19081,7 +18811,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 484251d51a29dd8a674c211164c9a6b47cb4db4f
+    base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
