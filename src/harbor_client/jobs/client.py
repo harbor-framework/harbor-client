@@ -1176,6 +1176,7 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobSummary]
         """
+        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -1241,9 +1242,6 @@ class JobsClient(BaseService):
                     else construct_lenient(JobPage, response)
                 )
                 current_page = parsed_response.items
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -1424,6 +1422,7 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobTaskSummary]
         """
+        self = self._for_one_call()
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -1481,9 +1480,6 @@ class JobsClient(BaseService):
                     else construct_lenient(JobTaskPage, response)
                 )
                 current_page = parsed_response.items
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -2400,7 +2396,11 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = iter(sync_pager.iter_pages())
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    break
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2490,7 +2490,11 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = iter(sync_pager.iter_pages())
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    break
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)

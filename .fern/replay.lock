@@ -66,14 +66,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: a01baf6e1a8932a531b5a88b21554707b8f3b646
+  - commit_sha: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
+    tree_hash: dcfc1390655777ee535c03bf6455d9ac27d3ce68
+    timestamp: 2026-11-13T19:51:42.750Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:325045a401eaba83b2715f45f66099a06ecf2de41063392fc2e0adbd94ef0545
+    content_hash: sha256:d277ceba2d282138bc32aa63fac585e8c7346c4983857e6cb0f710243d884031
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: a01baf6e1a8932a531b5a88b21554707b8f3b646
+    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -264,10 +270,10 @@ patches:
            additional_headers: typing.Dict[str, typing.Any]
            additional_query_parameters: typing.Dict[str, typing.Any]
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 7d91a06..caa25ee 100644
+      index 9064f4c..1b8a524 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
-      @@ -1153,6 +1153,7 @@ class JobsClient(BaseService):
+      @@ -1176,6 +1176,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobSummary]
                """
@@ -275,7 +281,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -1219,9 +1220,6 @@ class JobsClient(BaseService):
+      @@ -1242,9 +1243,6 @@ class JobsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -285,7 +291,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1401,6 +1399,7 @@ class JobsClient(BaseService):
+      @@ -1424,6 +1422,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobTaskSummary]
                """
@@ -293,7 +299,7 @@ patches:
        
                Validator(str).validate(job_id, "job_id")
                Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -1459,9 +1458,6 @@ class JobsClient(BaseService):
+      @@ -1482,9 +1481,6 @@ class JobsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -303,7 +309,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -2349,7 +2345,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2400,7 +2396,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -316,7 +322,7 @@ patches:
                        yield page
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2439,7 +2439,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2490,7 +2490,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -572,10 +578,10 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index 93c1e26..36dd919 100644
+      index 41039a0..071e664 100644
       --- a/src/harbor_client/trials/client.py
       +++ b/src/harbor_client/trials/client.py
-      @@ -292,6 +292,7 @@ class TrialsClient(BaseService):
+      @@ -289,6 +289,7 @@ class TrialsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[TrialSummary]
                """
@@ -583,7 +589,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -360,9 +361,6 @@ class TrialsClient(BaseService):
+      @@ -357,9 +358,6 @@ class TrialsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -593,7 +599,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1289,7 +1287,11 @@ class AsyncTrialsClient(TrialsClient):
+      @@ -1326,7 +1324,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
                async def _paginate():
@@ -2207,7 +2213,7 @@ patches:
         from ..types.jobs_list_bad_request_response import JobsListBadRequestResponse_adapter
         from ..types import (
             BadRequestEncoded,
-            CancelJobsRequest,
+            CancelJobRequest,
             ConflictEncoded,
             CreatedResultJob,
             DeleteJobsRequest,
@@ -2216,8 +2222,6 @@ patches:
             FilterValuesResponse,
             ForbiddenEncoded,
             InternalServerErrorEncoded,
-            JobActionRequest,
-            JobActionResponse,
             JobArtifactType,
             JobOverview,
             JobPage,
@@ -3135,39 +3139,47 @@ patches:
 
             @cast_models
             def pause(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> JobActionResponse:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> JobResponse:
                 """pause
 
-                :param request_body: The request body.
-                :type request_body: JobActionRequest
+                :param job_id: job_id
+                :type job_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: JobActionResponse
+                :rtype: JobResponse
                 """
+
+                Validator(str).validate(job_id, "job_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
 
                 resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-                request_body = JobActionRequest(job_ids=job_ids)
-                Validator(JobActionRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/pause",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
                     .add_header(
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("job_id", job_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
                     .add_error(500, InternalServerErrorEncoded)
                     .serialize()
                     .set_method("POST")
-                    .set_body(request_body)
                 )
 
                 response, status, content = self.send_request(serialized_request)
@@ -3175,49 +3187,57 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        JobActionResponse.model_validate(response)
+                        JobResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(JobActionResponse, response)
+                        else construct_lenient(JobResponse, response)
                     )
                 )
 
             @cast_models
             def resume(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> JobActionResponse:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> JobResponse:
                 """resume
 
-                :param request_body: The request body.
-                :type request_body: JobActionRequest
+                :param job_id: job_id
+                :type job_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: JobActionResponse
+                :rtype: JobResponse
                 """
+
+                Validator(str).validate(job_id, "job_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
 
                 resolved_config = self._get_resolved_config(
                     self._resume_config, request_options
                 )
 
-                request_body = JobActionRequest(job_ids=job_ids)
-                Validator(JobActionRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/resume",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
                     .add_header(
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("job_id", job_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
                     .add_error(500, InternalServerErrorEncoded)
                     .serialize()
                     .set_method("POST")
-                    .set_body(request_body)
                 )
 
                 response, status, content = self.send_request(serialized_request)
@@ -3225,51 +3245,60 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        JobActionResponse.model_validate(response)
+                        JobResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(JobActionResponse, response)
+                        else construct_lenient(JobResponse, response)
                     )
                 )
 
             @cast_models
             def cancel(
                 self,
+                job_id: str,
                 *,
-                job_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> JobActionResponse:
+            ) -> JobResponse:
                 """cancel
 
                 :param request_body: The request body.
-                :type request_body: CancelJobsRequest
+                :type request_body: CancelJobRequest
+                :param job_id: job_id
+                :type job_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: JobActionResponse
+                :rtype: JobResponse
                 """
+
+                Validator(str).validate(job_id, "job_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
 
                 resolved_config = self._get_resolved_config(
                     self._cancel_config, request_options
                 )
 
-                request_body = CancelJobsRequest(
-                    job_ids=job_ids,
+                request_body = CancelJobRequest(
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-                    ),
+                    )
                 )
-                Validator(CancelJobsRequest).validate(request_body, "request_body")
+                Validator(CancelJobRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/cancel",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
                     .add_header(
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("job_id", job_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -3284,9 +3313,9 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        JobActionResponse.model_validate(response)
+                        JobResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(JobActionResponse, response)
+                        else construct_lenient(JobResponse, response)
                     )
                 )
 
@@ -4052,31 +4081,47 @@ patches:
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def pause(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobActionResponse]:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[JobResponse]:
                 data = JobsClient.pause(
-                    self._client, job_ids=job_ids, request_options=request_options
+                    self._client,
+                    job_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def resume(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobActionResponse]:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[JobResponse]:
                 data = JobsClient.resume(
-                    self._client, job_ids=job_ids, request_options=request_options
+                    self._client,
+                    job_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def cancel(
                 self,
+                job_id: str,
                 *,
-                job_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[JobActionResponse]:
+            ) -> HttpResponse[JobResponse]:
                 data = JobsClient.cancel(
                     self._client,
-                    job_ids=job_ids,
+                    job_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -4467,26 +4512,38 @@ patches:
                 )
 
             def pause(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
-                return to_async(super().pause)(job_ids=job_ids, request_options=request_options)
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[JobResponse]:  # type: ignore[override]
+                return to_async(super().pause)(
+                    job_id, idempotency_key=idempotency_key, request_options=request_options
+                )
 
             def resume(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[JobResponse]:  # type: ignore[override]
                 return to_async(super().resume)(
-                    job_ids=job_ids, request_options=request_options
+                    job_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def cancel(
                 self,
+                job_id: str,
                 *,
-                job_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[JobResponse]:  # type: ignore[override]
                 return to_async(super().cancel)(
-                    job_ids=job_ids,
+                    job_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -4902,31 +4959,47 @@ patches:
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def pause(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobActionResponse]:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[JobResponse]:
                 data = await AsyncJobsClient.pause(
-                    self._client, job_ids=job_ids, request_options=request_options
+                    self._client,
+                    job_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def resume(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobActionResponse]:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[JobResponse]:
                 data = await AsyncJobsClient.resume(
-                    self._client, job_ids=job_ids, request_options=request_options
+                    self._client,
+                    job_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def cancel(
                 self,
+                job_id: str,
                 *,
-                job_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[JobActionResponse]:
+            ) -> HttpResponse[JobResponse]:
                 data = await AsyncJobsClient.cancel(
                     self._client,
-                    job_ids=job_ids,
+                    job_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -10611,7 +10684,7 @@ patches:
         )
         from ..types import (
             BadRequestEncoded,
-            CancelTrialsRequest,
+            CancelTrialRequest,
             ConflictEncoded,
             CreatedResultTrial,
             FilterValuesResponse,
@@ -10621,14 +10694,11 @@ patches:
             ResultModelUsage,
             ResultTrialCreate,
             ResultTrialCreateAgent,
-            RetryTrialsRequest,
-            RetryTrialsResponse,
+            RetryTrialResponse,
             RunState,
             StorageCopyResult,
             StorageDownload,
             TooManyRequestsEncoded,
-            TrialActionRequest,
-            TrialActionResponse,
             TrialArtifactType,
             TrialPage,
             TrialResponse,
@@ -11205,191 +11275,33 @@ patches:
 
             @cast_models
             def pause(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> TrialActionResponse:
-                """pause
-
-                :param request_body: The request body.
-                :type request_body: TrialActionRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(self._pause_config, request_options)
-
-                request_body = TrialActionRequest(trial_ids=trial_ids)
-                Validator(TrialActionRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/pause",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def resume(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> TrialActionResponse:
-                """resume
-
-                :param request_body: The request body.
-                :type request_body: TrialActionRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(
-                    self._resume_config, request_options
-                )
-
-                request_body = TrialActionRequest(trial_ids=trial_ids)
-                Validator(TrialActionRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/resume",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def cancel(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
-                force: bool = SENTINEL,
-                request_options: Optional[RequestOptions] = None,
-            ) -> TrialActionResponse:
-                """Cancel the specified physical trial attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-                :param request_body: The request body.
-                :type request_body: CancelTrialsRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(
-                    self._cancel_config, request_options
-                )
-
-                request_body = CancelTrialsRequest(
-                    trial_ids=trial_ids,
-                    **dict[str, Any](
-                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-                    ),
-                )
-                Validator(CancelTrialsRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/cancel",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def retry(
-                self,
-                *,
-                trial_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> RetryTrialsResponse:
-                """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new trial IDs. Stale or active attempts return 409.
+            ) -> TrialResponse:
+                """Pause this physical trial. Reusing the same Idempotency-Key does not reapply the command.
 
-                :param request_body: The request body.
-                :type request_body: RetryTrialsRequest
+                :param trial_id: trial_id
+                :type trial_id: str
                 :param idempotency_key: idempotency_key
                 :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: RetryTrialsResponse
+                :rtype: TrialResponse
                 """
 
+                Validator(str).validate(trial_id, "trial_id")
                 Validator(str).validate(idempotency_key, "idempotency_key")
 
-                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+                resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-                request_body = RetryTrialsRequest(trial_ids=trial_ids)
-                Validator(RetryTrialsRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/retry",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/pause",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -11397,6 +11309,132 @@ patches:
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
                     .add_header("idempotency-key", idempotency_key)
+                    .add_path("trial_id", trial_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        TrialResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(TrialResponse, response)
+                    )
+                )
+
+            @cast_models
+            def resume(
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> TrialResponse:
+                """Resume this physical trial. Reusing the same Idempotency-Key does not reapply the command.
+
+                :param trial_id: trial_id
+                :type trial_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: TrialResponse
+                """
+
+                Validator(str).validate(trial_id, "trial_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(
+                    self._resume_config, request_options
+                )
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/resume",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("trial_id", trial_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        TrialResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(TrialResponse, response)
+                    )
+                )
+
+            @cast_models
+            def cancel(
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                force: bool = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> TrialResponse:
+                """Cancel this physical trial. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+                :param request_body: The request body.
+                :type request_body: CancelTrialRequest
+                :param trial_id: trial_id
+                :type trial_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: TrialResponse
+                """
+
+                Validator(str).validate(trial_id, "trial_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(
+                    self._cancel_config, request_options
+                )
+
+                request_body = CancelTrialRequest(
+                    **dict[str, Any](
+                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                    )
+                )
+                Validator(CancelTrialRequest).validate(request_body, "request_body")
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/cancel",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("trial_id", trial_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -11411,9 +11449,65 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        RetryTrialsResponse.model_validate(response)
+                        TrialResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(RetryTrialsResponse, response)
+                        else construct_lenient(TrialResponse, response)
+                    )
+                )
+
+            @cast_models
+            def retry(
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RetryTrialResponse:
+                """Retry this physical trial. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+                :param trial_id: trial_id
+                :type trial_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RetryTrialResponse
+                """
+
+                Validator(str).validate(trial_id, "trial_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/retry",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("trial_id", trial_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RetryTrialResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RetryTrialResponse, response)
                     )
                 )
 
@@ -11730,31 +11824,47 @@ patches:
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def pause(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[TrialActionResponse]:
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialResponse]:
                 data = TrialsClient.pause(
-                    self._client, trial_ids=trial_ids, request_options=request_options
+                    self._client,
+                    trial_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def resume(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[TrialActionResponse]:
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialResponse]:
                 data = TrialsClient.resume(
-                    self._client, trial_ids=trial_ids, request_options=request_options
+                    self._client,
+                    trial_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def cancel(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[TrialResponse]:
                 data = TrialsClient.cancel(
                     self._client,
-                    trial_ids=trial_ids,
+                    trial_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -11764,14 +11874,14 @@ patches:
 
             def retry(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[RetryTrialsResponse]:
+            ) -> HttpResponse[RetryTrialResponse]:
                 data = TrialsClient.retry(
                     self._client,
-                    trial_ids=trial_ids,
+                    trial_id,
                     idempotency_key=idempotency_key,
                     request_options=request_options,
                 )
@@ -12005,28 +12115,38 @@ patches:
                 )
 
             def pause(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[TrialResponse]:  # type: ignore[override]
                 return to_async(super().pause)(
-                    trial_ids=trial_ids, request_options=request_options
+                    trial_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def resume(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[TrialResponse]:  # type: ignore[override]
                 return to_async(super().resume)(
-                    trial_ids=trial_ids, request_options=request_options
+                    trial_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def cancel(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[TrialResponse]:  # type: ignore[override]
                 return to_async(super().cancel)(
-                    trial_ids=trial_ids,
+                    trial_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -12035,15 +12155,13 @@ patches:
 
             def retry(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
+            ) -> Awaitable[RetryTrialResponse]:  # type: ignore[override]
                 return to_async(super().retry)(
-                    trial_ids=trial_ids,
-                    idempotency_key=idempotency_key,
-                    request_options=request_options,
+                    trial_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def get_artifact_download(
@@ -12262,31 +12380,47 @@ patches:
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def pause(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[TrialActionResponse]:
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialResponse]:
                 data = await AsyncTrialsClient.pause(
-                    self._client, trial_ids=trial_ids, request_options=request_options
+                    self._client,
+                    trial_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def resume(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[TrialActionResponse]:
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialResponse]:
                 data = await AsyncTrialsClient.resume(
-                    self._client, trial_ids=trial_ids, request_options=request_options
+                    self._client,
+                    trial_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def cancel(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[TrialResponse]:
                 data = await AsyncTrialsClient.cancel(
                     self._client,
-                    trial_ids=trial_ids,
+                    trial_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -12296,14 +12430,14 @@ patches:
 
             async def retry(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[RetryTrialsResponse]:
+            ) -> HttpResponse[RetryTrialResponse]:
                 data = await AsyncTrialsClient.retry(
                     self._client,
-                    trial_ids=trial_ids,
+                    trial_id,
                     idempotency_key=idempotency_key,
                     request_options=request_options,
                 )
@@ -13694,11 +13828,11 @@ patches:
 
             return cast(F, wrapper)
   - id: patch-54e30fcc
-    content_hash: sha256:f8bdbfe7f5b1208737e0203e9030cb265ac66ec261410c0cfc9e8d8c41c09aee
+    content_hash: sha256:05a8ec264f8433398495b28716d36c8566752b4bb72dc8ce7eac6fa0754e27da
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: a01baf6e1a8932a531b5a88b21554707b8f3b646
+    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -13706,10 +13840,10 @@ patches:
       - src/harbor_client/types/trial_detail.py
     patch_content: |
       diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
-      index 55af216..58a0e2b 100644
+      index 0049ec5..c413f51 100644
       --- a/src/harbor_client/rollouts/client.py
       +++ b/src/harbor_client/rollouts/client.py
-      @@ -250,6 +250,7 @@ class RolloutsClient(BaseService):
+      @@ -247,6 +247,7 @@ class RolloutsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[TrialSummary]
                """
@@ -13717,7 +13851,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -318,9 +319,6 @@ class RolloutsClient(BaseService):
+      @@ -315,9 +316,6 @@ class RolloutsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -13727,7 +13861,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -924,7 +922,11 @@ class AsyncRolloutsClient(RolloutsClient):
+      @@ -949,7 +947,11 @@ class AsyncRolloutsClient(RolloutsClient):
                )
        
                async def _paginate():
@@ -13797,21 +13931,18 @@ patches:
         )
         from ..types import (
             BadRequestEncoded,
-            CancelRolloutsRequest,
+            CancelTrialRequest,
             ConflictEncoded,
             FilterValuesResponse,
             ForbiddenEncoded,
             InternalServerErrorEncoded,
             NotFoundEncoded,
-            RetryRolloutsRequest,
-            RetryRolloutsResponse,
-            RolloutActionRequest,
+            RetryRolloutResponse,
             RolloutResponse,
             RolloutsGetFiltersRequestField,
             RolloutsListBadRequestResponse,
             RolloutsListRequestSort,
             RunState,
-            TrialActionResponse,
             TrialPage,
             TrialSummary,
             UnauthorizedEncoded,
@@ -14247,196 +14378,32 @@ patches:
             @cast_models
             def pause(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
-                request_options: Optional[RequestOptions] = None,
-            ) -> TrialActionResponse:
-                """pause
-
-                :param request_body: The request body.
-                :type request_body: RolloutActionRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(self._pause_config, request_options)
-
-                request_body = RolloutActionRequest(rollout_ids=rollout_ids)
-                Validator(RolloutActionRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/pause",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def resume(
-                self,
-                *,
-                rollout_ids: List[str],
-                request_options: Optional[RequestOptions] = None,
-            ) -> TrialActionResponse:
-                """resume
-
-                :param request_body: The request body.
-                :type request_body: RolloutActionRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(
-                    self._resume_config, request_options
-                )
-
-                request_body = RolloutActionRequest(rollout_ids=rollout_ids)
-                Validator(RolloutActionRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/resume",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def cancel(
-                self,
-                *,
-                rollout_ids: List[str],
-                force: bool = SENTINEL,
-                request_options: Optional[RequestOptions] = None,
-            ) -> TrialActionResponse:
-                """Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-                :param request_body: The request body.
-                :type request_body: CancelRolloutsRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(
-                    self._cancel_config, request_options
-                )
-
-                request_body = CancelRolloutsRequest(
-                    rollout_ids=rollout_ids,
-                    **dict[str, Any](
-                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-                    ),
-                )
-                Validator(CancelRolloutsRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/cancel",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def retry(
-                self,
-                *,
-                rollout_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> RetryRolloutsResponse:
-                """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.
+            ) -> RolloutResponse:
+                """Pause this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
 
-                :param request_body: The request body.
-                :type request_body: RetryRolloutsRequest
+                :param rollout_id: rollout_id
+                :type rollout_id: str
                 :param idempotency_key: idempotency_key
                 :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: RetryRolloutsResponse
+                :rtype: RolloutResponse
                 """
 
+                Validator(str).validate(rollout_id, "rollout_id")
                 Validator(str).validate(idempotency_key, "idempotency_key")
 
-                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+                resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-                request_body = RetryRolloutsRequest(rollout_ids=rollout_ids)
-                Validator(RetryRolloutsRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/retry",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/pause",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -14444,6 +14411,132 @@ patches:
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
                     .add_header("idempotency-key", idempotency_key)
+                    .add_path("rollout_id", rollout_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RolloutResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RolloutResponse, response)
+                    )
+                )
+
+            @cast_models
+            def resume(
+                self,
+                rollout_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RolloutResponse:
+                """Resume this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
+
+                :param rollout_id: rollout_id
+                :type rollout_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RolloutResponse
+                """
+
+                Validator(str).validate(rollout_id, "rollout_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(
+                    self._resume_config, request_options
+                )
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/resume",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("rollout_id", rollout_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RolloutResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RolloutResponse, response)
+                    )
+                )
+
+            @cast_models
+            def cancel(
+                self,
+                rollout_id: str,
+                *,
+                idempotency_key: str,
+                force: bool = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RolloutResponse:
+                """Cancel this physical rollout. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+                :param request_body: The request body.
+                :type request_body: CancelTrialRequest
+                :param rollout_id: rollout_id
+                :type rollout_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RolloutResponse
+                """
+
+                Validator(str).validate(rollout_id, "rollout_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(
+                    self._cancel_config, request_options
+                )
+
+                request_body = CancelTrialRequest(
+                    **dict[str, Any](
+                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                    )
+                )
+                Validator(CancelTrialRequest).validate(request_body, "request_body")
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/cancel",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("rollout_id", rollout_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -14458,9 +14551,65 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        RetryRolloutsResponse.model_validate(response)
+                        RolloutResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(RetryRolloutsResponse, response)
+                        else construct_lenient(RolloutResponse, response)
+                    )
+                )
+
+            @cast_models
+            def retry(
+                self,
+                rollout_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RetryRolloutResponse:
+                """Retry this physical rollout. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+                :param rollout_id: rollout_id
+                :type rollout_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RetryRolloutResponse
+                """
+
+                Validator(str).validate(rollout_id, "rollout_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/retry",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("rollout_id", rollout_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RetryRolloutResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RetryRolloutResponse, response)
                     )
                 )
 
@@ -14588,36 +14737,46 @@ patches:
 
             def pause(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = RolloutsClient.pause(
-                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                    self._client,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def resume(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = RolloutsClient.resume(
-                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                    self._client,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def cancel(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = RolloutsClient.cancel(
                     self._client,
-                    rollout_ids=rollout_ids,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -14627,14 +14786,14 @@ patches:
 
             def retry(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[RetryRolloutsResponse]:
+            ) -> HttpResponse[RetryRolloutResponse]:
                 data = RolloutsClient.retry(
                     self._client,
-                    rollout_ids=rollout_ids,
+                    rollout_id,
                     idempotency_key=idempotency_key,
                     request_options=request_options,
                 )
@@ -14768,33 +14927,37 @@ patches:
 
             def pause(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
                 return to_async(super().pause)(
-                    rollout_ids=rollout_ids, request_options=request_options
+                    rollout_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def resume(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
                 return to_async(super().resume)(
-                    rollout_ids=rollout_ids, request_options=request_options
+                    rollout_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def cancel(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
                 return to_async(super().cancel)(
-                    rollout_ids=rollout_ids,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -14803,15 +14966,13 @@ patches:
 
             def retry(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[RetryRolloutsResponse]:  # type: ignore[override]
+            ) -> Awaitable[RetryRolloutResponse]:  # type: ignore[override]
                 return to_async(super().retry)(
-                    rollout_ids=rollout_ids,
-                    idempotency_key=idempotency_key,
-                    request_options=request_options,
+                    rollout_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
 
@@ -14934,36 +15095,46 @@ patches:
 
             async def pause(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = await AsyncRolloutsClient.pause(
-                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                    self._client,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def resume(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = await AsyncRolloutsClient.resume(
-                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                    self._client,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def cancel(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = await AsyncRolloutsClient.cancel(
                     self._client,
-                    rollout_ids=rollout_ids,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -14973,14 +15144,14 @@ patches:
 
             async def retry(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[RetryRolloutsResponse]:
+            ) -> HttpResponse[RetryRolloutResponse]:
                 data = await AsyncRolloutsClient.retry(
                     self._client,
-                    rollout_ids=rollout_ids,
+                    rollout_id,
                     idempotency_key=idempotency_key,
                     request_options=request_options,
                 )
@@ -15145,7 +15316,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: a01baf6e1a8932a531b5a88b21554707b8f3b646
+    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -15387,7 +15558,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: a01baf6e1a8932a531b5a88b21554707b8f3b646
+    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -15406,21 +15577,21 @@ patches:
 
         RewardValue = Optional[float]
   - id: patch-bcfdf292
-    content_hash: sha256:e443d214819c85e96d1c79731d9fb77e23309ce180de314eaa7ea41171f56adb
+    content_hash: sha256:0ad63d4ea45d4391a31635e0308f85eafe9aadd455fe628736c2ac234f7de4a2
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: a01baf6e1a8932a531b5a88b21554707b8f3b646
+    base_generation: 26c8a9daddfc629b898c537fe784d9c5d991b8ad
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/trials/client.py
     patch_content: |
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 7d91a06..caa25ee 100644
+      index 9064f4c..1b8a524 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
-      @@ -1153,6 +1153,7 @@ class JobsClient(BaseService):
+      @@ -1176,6 +1176,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobSummary]
                """
@@ -15428,7 +15599,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -1219,9 +1220,6 @@ class JobsClient(BaseService):
+      @@ -1242,9 +1243,6 @@ class JobsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -15438,7 +15609,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1401,6 +1399,7 @@ class JobsClient(BaseService):
+      @@ -1424,6 +1422,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobTaskSummary]
                """
@@ -15446,7 +15617,7 @@ patches:
        
                Validator(str).validate(job_id, "job_id")
                Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -1459,9 +1458,6 @@ class JobsClient(BaseService):
+      @@ -1482,9 +1481,6 @@ class JobsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -15456,7 +15627,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -2349,7 +2345,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2400,7 +2396,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -15469,7 +15640,7 @@ patches:
                        yield page
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2439,7 +2439,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2490,7 +2490,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -15483,10 +15654,10 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
-      index 55af216..58a0e2b 100644
+      index 0049ec5..c413f51 100644
       --- a/src/harbor_client/rollouts/client.py
       +++ b/src/harbor_client/rollouts/client.py
-      @@ -250,6 +250,7 @@ class RolloutsClient(BaseService):
+      @@ -247,6 +247,7 @@ class RolloutsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[TrialSummary]
                """
@@ -15494,7 +15665,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -318,9 +319,6 @@ class RolloutsClient(BaseService):
+      @@ -315,9 +316,6 @@ class RolloutsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -15504,7 +15675,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -924,7 +922,11 @@ class AsyncRolloutsClient(RolloutsClient):
+      @@ -949,7 +947,11 @@ class AsyncRolloutsClient(RolloutsClient):
                )
        
                async def _paginate():
@@ -15518,10 +15689,10 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index 93c1e26..36dd919 100644
+      index 41039a0..071e664 100644
       --- a/src/harbor_client/trials/client.py
       +++ b/src/harbor_client/trials/client.py
-      @@ -292,6 +292,7 @@ class TrialsClient(BaseService):
+      @@ -289,6 +289,7 @@ class TrialsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[TrialSummary]
                """
@@ -15529,7 +15700,7 @@ patches:
        
                Validator(str).is_array().is_optional().validate(task, "task")
                Validator(RunState).is_optional().validate(state, "state")
-      @@ -360,9 +361,6 @@ class TrialsClient(BaseService):
+      @@ -357,9 +358,6 @@ class TrialsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -15539,7 +15710,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1289,7 +1287,11 @@ class AsyncTrialsClient(TrialsClient):
+      @@ -1326,7 +1324,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
                async def _paginate():
@@ -15567,7 +15738,7 @@ patches:
         from ..types.jobs_list_bad_request_response import JobsListBadRequestResponse_adapter
         from ..types import (
             BadRequestEncoded,
-            CancelJobsRequest,
+            CancelJobRequest,
             ConflictEncoded,
             CreatedResultJob,
             DeleteJobsRequest,
@@ -15576,8 +15747,6 @@ patches:
             FilterValuesResponse,
             ForbiddenEncoded,
             InternalServerErrorEncoded,
-            JobActionRequest,
-            JobActionResponse,
             JobArtifactType,
             JobOverview,
             JobPage,
@@ -16495,39 +16664,47 @@ patches:
 
             @cast_models
             def pause(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> JobActionResponse:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> JobResponse:
                 """pause
 
-                :param request_body: The request body.
-                :type request_body: JobActionRequest
+                :param job_id: job_id
+                :type job_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: JobActionResponse
+                :rtype: JobResponse
                 """
+
+                Validator(str).validate(job_id, "job_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
 
                 resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-                request_body = JobActionRequest(job_ids=job_ids)
-                Validator(JobActionRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/pause",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
                     .add_header(
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("job_id", job_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
                     .add_error(500, InternalServerErrorEncoded)
                     .serialize()
                     .set_method("POST")
-                    .set_body(request_body)
                 )
 
                 response, status, content = self.send_request(serialized_request)
@@ -16535,49 +16712,57 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        JobActionResponse.model_validate(response)
+                        JobResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(JobActionResponse, response)
+                        else construct_lenient(JobResponse, response)
                     )
                 )
 
             @cast_models
             def resume(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> JobActionResponse:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> JobResponse:
                 """resume
 
-                :param request_body: The request body.
-                :type request_body: JobActionRequest
+                :param job_id: job_id
+                :type job_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: JobActionResponse
+                :rtype: JobResponse
                 """
+
+                Validator(str).validate(job_id, "job_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
 
                 resolved_config = self._get_resolved_config(
                     self._resume_config, request_options
                 )
 
-                request_body = JobActionRequest(job_ids=job_ids)
-                Validator(JobActionRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/resume",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
                     .add_header(
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("job_id", job_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
                     .add_error(500, InternalServerErrorEncoded)
                     .serialize()
                     .set_method("POST")
-                    .set_body(request_body)
                 )
 
                 response, status, content = self.send_request(serialized_request)
@@ -16585,51 +16770,60 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        JobActionResponse.model_validate(response)
+                        JobResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(JobActionResponse, response)
+                        else construct_lenient(JobResponse, response)
                     )
                 )
 
             @cast_models
             def cancel(
                 self,
+                job_id: str,
                 *,
-                job_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> JobActionResponse:
+            ) -> JobResponse:
                 """cancel
 
                 :param request_body: The request body.
-                :type request_body: CancelJobsRequest
+                :type request_body: CancelJobRequest
+                :param job_id: job_id
+                :type job_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: JobActionResponse
+                :rtype: JobResponse
                 """
+
+                Validator(str).validate(job_id, "job_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
 
                 resolved_config = self._get_resolved_config(
                     self._cancel_config, request_options
                 )
 
-                request_body = CancelJobsRequest(
-                    job_ids=job_ids,
+                request_body = CancelJobRequest(
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-                    ),
+                    )
                 )
-                Validator(CancelJobsRequest).validate(request_body, "request_body")
+                Validator(CancelJobRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/cancel",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
                     .add_header(
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("job_id", job_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -16644,9 +16838,9 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        JobActionResponse.model_validate(response)
+                        JobResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(JobActionResponse, response)
+                        else construct_lenient(JobResponse, response)
                     )
                 )
 
@@ -17412,31 +17606,47 @@ patches:
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def pause(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobActionResponse]:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[JobResponse]:
                 data = JobsClient.pause(
-                    self._client, job_ids=job_ids, request_options=request_options
+                    self._client,
+                    job_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def resume(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobActionResponse]:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[JobResponse]:
                 data = JobsClient.resume(
-                    self._client, job_ids=job_ids, request_options=request_options
+                    self._client,
+                    job_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def cancel(
                 self,
+                job_id: str,
                 *,
-                job_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[JobActionResponse]:
+            ) -> HttpResponse[JobResponse]:
                 data = JobsClient.cancel(
                     self._client,
-                    job_ids=job_ids,
+                    job_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -17827,26 +18037,38 @@ patches:
                 )
 
             def pause(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
-                return to_async(super().pause)(job_ids=job_ids, request_options=request_options)
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[JobResponse]:  # type: ignore[override]
+                return to_async(super().pause)(
+                    job_id, idempotency_key=idempotency_key, request_options=request_options
+                )
 
             def resume(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[JobResponse]:  # type: ignore[override]
                 return to_async(super().resume)(
-                    job_ids=job_ids, request_options=request_options
+                    job_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def cancel(
                 self,
+                job_id: str,
                 *,
-                job_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[JobActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[JobResponse]:  # type: ignore[override]
                 return to_async(super().cancel)(
-                    job_ids=job_ids,
+                    job_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -18262,31 +18484,47 @@ patches:
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def pause(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobActionResponse]:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[JobResponse]:
                 data = await AsyncJobsClient.pause(
-                    self._client, job_ids=job_ids, request_options=request_options
+                    self._client,
+                    job_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def resume(
-                self, *, job_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[JobActionResponse]:
+                self,
+                job_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[JobResponse]:
                 data = await AsyncJobsClient.resume(
-                    self._client, job_ids=job_ids, request_options=request_options
+                    self._client,
+                    job_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def cancel(
                 self,
+                job_id: str,
                 *,
-                job_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[JobActionResponse]:
+            ) -> HttpResponse[JobResponse]:
                 data = await AsyncJobsClient.cancel(
                     self._client,
-                    job_ids=job_ids,
+                    job_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -18504,21 +18742,18 @@ patches:
         )
         from ..types import (
             BadRequestEncoded,
-            CancelRolloutsRequest,
+            CancelTrialRequest,
             ConflictEncoded,
             FilterValuesResponse,
             ForbiddenEncoded,
             InternalServerErrorEncoded,
             NotFoundEncoded,
-            RetryRolloutsRequest,
-            RetryRolloutsResponse,
-            RolloutActionRequest,
+            RetryRolloutResponse,
             RolloutResponse,
             RolloutsGetFiltersRequestField,
             RolloutsListBadRequestResponse,
             RolloutsListRequestSort,
             RunState,
-            TrialActionResponse,
             TrialPage,
             TrialSummary,
             UnauthorizedEncoded,
@@ -18954,196 +19189,32 @@ patches:
             @cast_models
             def pause(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
-                request_options: Optional[RequestOptions] = None,
-            ) -> TrialActionResponse:
-                """pause
-
-                :param request_body: The request body.
-                :type request_body: RolloutActionRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(self._pause_config, request_options)
-
-                request_body = RolloutActionRequest(rollout_ids=rollout_ids)
-                Validator(RolloutActionRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/pause",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def resume(
-                self,
-                *,
-                rollout_ids: List[str],
-                request_options: Optional[RequestOptions] = None,
-            ) -> TrialActionResponse:
-                """resume
-
-                :param request_body: The request body.
-                :type request_body: RolloutActionRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(
-                    self._resume_config, request_options
-                )
-
-                request_body = RolloutActionRequest(rollout_ids=rollout_ids)
-                Validator(RolloutActionRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/resume",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def cancel(
-                self,
-                *,
-                rollout_ids: List[str],
-                force: bool = SENTINEL,
-                request_options: Optional[RequestOptions] = None,
-            ) -> TrialActionResponse:
-                """Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-                :param request_body: The request body.
-                :type request_body: CancelRolloutsRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(
-                    self._cancel_config, request_options
-                )
-
-                request_body = CancelRolloutsRequest(
-                    rollout_ids=rollout_ids,
-                    **dict[str, Any](
-                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-                    ),
-                )
-                Validator(CancelRolloutsRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/cancel",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def retry(
-                self,
-                *,
-                rollout_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> RetryRolloutsResponse:
-                """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.
+            ) -> RolloutResponse:
+                """Pause this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
 
-                :param request_body: The request body.
-                :type request_body: RetryRolloutsRequest
+                :param rollout_id: rollout_id
+                :type rollout_id: str
                 :param idempotency_key: idempotency_key
                 :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: RetryRolloutsResponse
+                :rtype: RolloutResponse
                 """
 
+                Validator(str).validate(rollout_id, "rollout_id")
                 Validator(str).validate(idempotency_key, "idempotency_key")
 
-                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+                resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-                request_body = RetryRolloutsRequest(rollout_ids=rollout_ids)
-                Validator(RetryRolloutsRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/retry",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/pause",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -19151,6 +19222,132 @@ patches:
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
                     .add_header("idempotency-key", idempotency_key)
+                    .add_path("rollout_id", rollout_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RolloutResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RolloutResponse, response)
+                    )
+                )
+
+            @cast_models
+            def resume(
+                self,
+                rollout_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RolloutResponse:
+                """Resume this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
+
+                :param rollout_id: rollout_id
+                :type rollout_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RolloutResponse
+                """
+
+                Validator(str).validate(rollout_id, "rollout_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(
+                    self._resume_config, request_options
+                )
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/resume",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("rollout_id", rollout_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RolloutResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RolloutResponse, response)
+                    )
+                )
+
+            @cast_models
+            def cancel(
+                self,
+                rollout_id: str,
+                *,
+                idempotency_key: str,
+                force: bool = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RolloutResponse:
+                """Cancel this physical rollout. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+                :param request_body: The request body.
+                :type request_body: CancelTrialRequest
+                :param rollout_id: rollout_id
+                :type rollout_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RolloutResponse
+                """
+
+                Validator(str).validate(rollout_id, "rollout_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(
+                    self._cancel_config, request_options
+                )
+
+                request_body = CancelTrialRequest(
+                    **dict[str, Any](
+                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                    )
+                )
+                Validator(CancelTrialRequest).validate(request_body, "request_body")
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/cancel",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("rollout_id", rollout_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -19165,9 +19362,65 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        RetryRolloutsResponse.model_validate(response)
+                        RolloutResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(RetryRolloutsResponse, response)
+                        else construct_lenient(RolloutResponse, response)
+                    )
+                )
+
+            @cast_models
+            def retry(
+                self,
+                rollout_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RetryRolloutResponse:
+                """Retry this physical rollout. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+                :param rollout_id: rollout_id
+                :type rollout_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RetryRolloutResponse
+                """
+
+                Validator(str).validate(rollout_id, "rollout_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/retry",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("rollout_id", rollout_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RetryRolloutResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RetryRolloutResponse, response)
                     )
                 )
 
@@ -19295,36 +19548,46 @@ patches:
 
             def pause(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = RolloutsClient.pause(
-                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                    self._client,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def resume(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = RolloutsClient.resume(
-                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                    self._client,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def cancel(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = RolloutsClient.cancel(
                     self._client,
-                    rollout_ids=rollout_ids,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -19334,14 +19597,14 @@ patches:
 
             def retry(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[RetryRolloutsResponse]:
+            ) -> HttpResponse[RetryRolloutResponse]:
                 data = RolloutsClient.retry(
                     self._client,
-                    rollout_ids=rollout_ids,
+                    rollout_id,
                     idempotency_key=idempotency_key,
                     request_options=request_options,
                 )
@@ -19475,33 +19738,37 @@ patches:
 
             def pause(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
                 return to_async(super().pause)(
-                    rollout_ids=rollout_ids, request_options=request_options
+                    rollout_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def resume(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
                 return to_async(super().resume)(
-                    rollout_ids=rollout_ids, request_options=request_options
+                    rollout_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def cancel(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
                 return to_async(super().cancel)(
-                    rollout_ids=rollout_ids,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -19510,15 +19777,13 @@ patches:
 
             def retry(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[RetryRolloutsResponse]:  # type: ignore[override]
+            ) -> Awaitable[RetryRolloutResponse]:  # type: ignore[override]
                 return to_async(super().retry)(
-                    rollout_ids=rollout_ids,
-                    idempotency_key=idempotency_key,
-                    request_options=request_options,
+                    rollout_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
 
@@ -19641,36 +19906,46 @@ patches:
 
             async def pause(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = await AsyncRolloutsClient.pause(
-                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                    self._client,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def resume(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = await AsyncRolloutsClient.resume(
-                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                    self._client,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def cancel(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[RolloutResponse]:
                 data = await AsyncRolloutsClient.cancel(
                     self._client,
-                    rollout_ids=rollout_ids,
+                    rollout_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -19680,14 +19955,14 @@ patches:
 
             async def retry(
                 self,
+                rollout_id: str,
                 *,
-                rollout_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[RetryRolloutsResponse]:
+            ) -> HttpResponse[RetryRolloutResponse]:
                 data = await AsyncRolloutsClient.retry(
                     self._client,
-                    rollout_ids=rollout_ids,
+                    rollout_id,
                     idempotency_key=idempotency_key,
                     request_options=request_options,
                 )
@@ -19704,7 +19979,7 @@ patches:
         )
         from ..types import (
             BadRequestEncoded,
-            CancelTrialsRequest,
+            CancelTrialRequest,
             ConflictEncoded,
             CreatedResultTrial,
             FilterValuesResponse,
@@ -19714,14 +19989,11 @@ patches:
             ResultModelUsage,
             ResultTrialCreate,
             ResultTrialCreateAgent,
-            RetryTrialsRequest,
-            RetryTrialsResponse,
+            RetryTrialResponse,
             RunState,
             StorageCopyResult,
             StorageDownload,
             TooManyRequestsEncoded,
-            TrialActionRequest,
-            TrialActionResponse,
             TrialArtifactType,
             TrialPage,
             TrialResponse,
@@ -20298,191 +20570,33 @@ patches:
 
             @cast_models
             def pause(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> TrialActionResponse:
-                """pause
-
-                :param request_body: The request body.
-                :type request_body: TrialActionRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(self._pause_config, request_options)
-
-                request_body = TrialActionRequest(trial_ids=trial_ids)
-                Validator(TrialActionRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/pause",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def resume(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> TrialActionResponse:
-                """resume
-
-                :param request_body: The request body.
-                :type request_body: TrialActionRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(
-                    self._resume_config, request_options
-                )
-
-                request_body = TrialActionRequest(trial_ids=trial_ids)
-                Validator(TrialActionRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/resume",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def cancel(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
-                force: bool = SENTINEL,
-                request_options: Optional[RequestOptions] = None,
-            ) -> TrialActionResponse:
-                """Cancel the specified physical trial attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
-
-                :param request_body: The request body.
-                :type request_body: CancelTrialsRequest
-                ...
-                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-                ...
-                :return: The parsed response data.
-                :rtype: TrialActionResponse
-                """
-
-                resolved_config = self._get_resolved_config(
-                    self._cancel_config, request_options
-                )
-
-                request_body = CancelTrialsRequest(
-                    trial_ids=trial_ids,
-                    **dict[str, Any](
-                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-                    ),
-                )
-                Validator(CancelTrialsRequest).validate(request_body, "request_body")
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/cancel",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-                    )
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("POST")
-                    .set_body(request_body)
-                )
-
-                response, status, content = self.send_request(serialized_request)
-                return (
-                    None
-                    if response in (b"", "")
-                    else (
-                        TrialActionResponse.model_validate(response)
-                        if should_validate_response(resolved_config)
-                        else construct_lenient(TrialActionResponse, response)
-                    )
-                )
-
-            @cast_models
-            def retry(
-                self,
-                *,
-                trial_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> RetryTrialsResponse:
-                """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new trial IDs. Stale or active attempts return 409.
+            ) -> TrialResponse:
+                """Pause this physical trial. Reusing the same Idempotency-Key does not reapply the command.
 
-                :param request_body: The request body.
-                :type request_body: RetryTrialsRequest
+                :param trial_id: trial_id
+                :type trial_id: str
                 :param idempotency_key: idempotency_key
                 :type idempotency_key: str
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
                 :return: The parsed response data.
-                :rtype: RetryTrialsResponse
+                :rtype: TrialResponse
                 """
 
+                Validator(str).validate(trial_id, "trial_id")
                 Validator(str).validate(idempotency_key, "idempotency_key")
 
-                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+                resolved_config = self._get_resolved_config(self._pause_config, request_options)
 
-                request_body = RetryTrialsRequest(trial_ids=trial_ids)
-                Validator(RetryTrialsRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/retry",
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/pause",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -20490,6 +20604,132 @@ patches:
                         "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
                     )
                     .add_header("idempotency-key", idempotency_key)
+                    .add_path("trial_id", trial_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        TrialResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(TrialResponse, response)
+                    )
+                )
+
+            @cast_models
+            def resume(
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> TrialResponse:
+                """Resume this physical trial. Reusing the same Idempotency-Key does not reapply the command.
+
+                :param trial_id: trial_id
+                :type trial_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: TrialResponse
+                """
+
+                Validator(str).validate(trial_id, "trial_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(
+                    self._resume_config, request_options
+                )
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/resume",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("trial_id", trial_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        TrialResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(TrialResponse, response)
+                    )
+                )
+
+            @cast_models
+            def cancel(
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                force: bool = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> TrialResponse:
+                """Cancel this physical trial. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+                :param request_body: The request body.
+                :type request_body: CancelTrialRequest
+                :param trial_id: trial_id
+                :type trial_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: TrialResponse
+                """
+
+                Validator(str).validate(trial_id, "trial_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(
+                    self._cancel_config, request_options
+                )
+
+                request_body = CancelTrialRequest(
+                    **dict[str, Any](
+                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                    )
+                )
+                Validator(CancelTrialRequest).validate(request_body, "request_body")
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/cancel",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("trial_id", trial_id)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -20504,9 +20744,65 @@ patches:
                     None
                     if response in (b"", "")
                     else (
-                        RetryTrialsResponse.model_validate(response)
+                        TrialResponse.model_validate(response)
                         if should_validate_response(resolved_config)
-                        else construct_lenient(RetryTrialsResponse, response)
+                        else construct_lenient(TrialResponse, response)
+                    )
+                )
+
+            @cast_models
+            def retry(
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RetryTrialResponse:
+                """Retry this physical trial. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+                :param trial_id: trial_id
+                :type trial_id: str
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RetryTrialResponse
+                """
+
+                Validator(str).validate(trial_id, "trial_id")
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/retry",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_path("trial_id", trial_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RetryTrialResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RetryTrialResponse, response)
                     )
                 )
 
@@ -20823,31 +21119,47 @@ patches:
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def pause(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[TrialActionResponse]:
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialResponse]:
                 data = TrialsClient.pause(
-                    self._client, trial_ids=trial_ids, request_options=request_options
+                    self._client,
+                    trial_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def resume(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[TrialActionResponse]:
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialResponse]:
                 data = TrialsClient.resume(
-                    self._client, trial_ids=trial_ids, request_options=request_options
+                    self._client,
+                    trial_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             def cancel(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[TrialResponse]:
                 data = TrialsClient.cancel(
                     self._client,
-                    trial_ids=trial_ids,
+                    trial_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -20857,14 +21169,14 @@ patches:
 
             def retry(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[RetryTrialsResponse]:
+            ) -> HttpResponse[RetryTrialResponse]:
                 data = TrialsClient.retry(
                     self._client,
-                    trial_ids=trial_ids,
+                    trial_id,
                     idempotency_key=idempotency_key,
                     request_options=request_options,
                 )
@@ -21098,28 +21410,38 @@ patches:
                 )
 
             def pause(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[TrialResponse]:  # type: ignore[override]
                 return to_async(super().pause)(
-                    trial_ids=trial_ids, request_options=request_options
+                    trial_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def resume(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[TrialResponse]:  # type: ignore[override]
                 return to_async(super().resume)(
-                    trial_ids=trial_ids, request_options=request_options
+                    trial_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def cancel(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+            ) -> Awaitable[TrialResponse]:  # type: ignore[override]
                 return to_async(super().cancel)(
-                    trial_ids=trial_ids,
+                    trial_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -21128,15 +21450,13 @@ patches:
 
             def retry(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
+            ) -> Awaitable[RetryTrialResponse]:  # type: ignore[override]
                 return to_async(super().retry)(
-                    trial_ids=trial_ids,
-                    idempotency_key=idempotency_key,
-                    request_options=request_options,
+                    trial_id, idempotency_key=idempotency_key, request_options=request_options
                 )
 
             def get_artifact_download(
@@ -21355,31 +21675,47 @@ patches:
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def pause(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[TrialActionResponse]:
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialResponse]:
                 data = await AsyncTrialsClient.pause(
-                    self._client, trial_ids=trial_ids, request_options=request_options
+                    self._client,
+                    trial_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def resume(
-                self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-            ) -> HttpResponse[TrialActionResponse]:
+                self,
+                trial_id: str,
+                *,
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialResponse]:
                 data = await AsyncTrialsClient.resume(
-                    self._client, trial_ids=trial_ids, request_options=request_options
+                    self._client,
+                    trial_id,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
 
             async def cancel(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
+                idempotency_key: str,
                 force: bool = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[TrialActionResponse]:
+            ) -> HttpResponse[TrialResponse]:
                 data = await AsyncTrialsClient.cancel(
                     self._client,
-                    trial_ids=trial_ids,
+                    trial_id,
+                    idempotency_key=idempotency_key,
                     **dict[str, Any](
                         {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
                     ),
@@ -21389,14 +21725,14 @@ patches:
 
             async def retry(
                 self,
+                trial_id: str,
                 *,
-                trial_ids: List[str],
                 idempotency_key: str,
                 request_options: Optional[RequestOptions] = None,
-            ) -> HttpResponse[RetryTrialsResponse]:
+            ) -> HttpResponse[RetryTrialResponse]:
                 data = await AsyncTrialsClient.retry(
                     self._client,
-                    trial_ids=trial_ids,
+                    trial_id,
                     idempotency_key=idempotency_key,
                     request_options=request_options,
                 )
