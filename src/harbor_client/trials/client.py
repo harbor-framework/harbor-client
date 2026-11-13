@@ -63,15 +63,15 @@ class TrialsClient(BaseService):
         super().__init__(*args, **kwargs)
         self._raw_client = self.with_raw_response
         self._get_config: SdkConfig = {}
-        self._list_config: SdkConfig = {}
-        self._create_config: SdkConfig = {}
-        self._get_filters_config: SdkConfig = {}
+        self._get_artifact_download_config: SdkConfig = {}
         self._pause_config: SdkConfig = {}
         self._resume_config: SdkConfig = {}
         self._cancel_config: SdkConfig = {}
         self._retry_config: SdkConfig = {}
-        self._get_artifact_download_config: SdkConfig = {}
         self._copy_config: SdkConfig = {}
+        self._get_filters_config: SdkConfig = {}
+        self._list_config: SdkConfig = {}
+        self._create_config: SdkConfig = {}
 
     def set_get_config(self, config: SdkConfig):
         """
@@ -83,34 +83,14 @@ class TrialsClient(BaseService):
         self._get_config = config
         return self
 
-    def set_list_config(self, config: SdkConfig):
+    def set_get_artifact_download_config(self, config: SdkConfig):
         """
-        Sets method-level configuration for list.
+        Sets method-level configuration for get_artifact_download.
 
         :param SdkConfig config: Configuration dictionary to override service-level defaults.
         :return: The service instance for method chaining.
         """
-        self._list_config = config
-        return self
-
-    def set_create_config(self, config: SdkConfig):
-        """
-        Sets method-level configuration for create.
-
-        :param SdkConfig config: Configuration dictionary to override service-level defaults.
-        :return: The service instance for method chaining.
-        """
-        self._create_config = config
-        return self
-
-    def set_get_filters_config(self, config: SdkConfig):
-        """
-        Sets method-level configuration for get_filters.
-
-        :param SdkConfig config: Configuration dictionary to override service-level defaults.
-        :return: The service instance for method chaining.
-        """
-        self._get_filters_config = config
+        self._get_artifact_download_config = config
         return self
 
     def set_pause_config(self, config: SdkConfig):
@@ -153,16 +133,6 @@ class TrialsClient(BaseService):
         self._retry_config = config
         return self
 
-    def set_get_artifact_download_config(self, config: SdkConfig):
-        """
-        Sets method-level configuration for get_artifact_download.
-
-        :param SdkConfig config: Configuration dictionary to override service-level defaults.
-        :return: The service instance for method chaining.
-        """
-        self._get_artifact_download_config = config
-        return self
-
     def set_copy_config(self, config: SdkConfig):
         """
         Sets method-level configuration for copy.
@@ -171,6 +141,36 @@ class TrialsClient(BaseService):
         :return: The service instance for method chaining.
         """
         self._copy_config = config
+        return self
+
+    def set_get_filters_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for get_filters.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._get_filters_config = config
+        return self
+
+    def set_list_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for list.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._list_config = config
+        return self
+
+    def set_create_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for create.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._create_config = config
         return self
 
     @property
@@ -231,362 +231,48 @@ class TrialsClient(BaseService):
         )
 
     @cast_models
-    def list(
+    def get_artifact_download(
         self,
-        *,
-        task: List[str] = SENTINEL,
-        state: RunState = SENTINEL,
-        name: str = SENTINEL,
-        q: str = SENTINEL,
-        agent_name: List[str] = SENTINEL,
-        agent_version: List[str] = SENTINEL,
-        model_name: List[str] = SENTINEL,
-        model_provider: List[str] = SENTINEL,
-        reasoning_effort: List[str] = SENTINEL,
-        source: List[str] = SENTINEL,
-        created_after: str = SENTINEL,
-        created_before: str = SENTINEL,
-        job_id: str = SENTINEL,
-        page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        sort: TrialsListRequestSort = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> SyncPager[TrialSummary]:
-        """list
-
-        :param task: task, defaults to None
-        :type task: List[str], optional
-        :param state: state, defaults to None
-        :type state: RunState, optional
-        :param name: name, defaults to None
-        :type name: str, optional
-        :param q: q, defaults to None
-        :type q: str, optional
-        :param agent_name: agent_name, defaults to None
-        :type agent_name: List[str], optional
-        :param agent_version: agent_version, defaults to None
-        :type agent_version: List[str], optional
-        :param model_name: model_name, defaults to None
-        :type model_name: List[str], optional
-        :param model_provider: model_provider, defaults to None
-        :type model_provider: List[str], optional
-        :param reasoning_effort: reasoning_effort, defaults to None
-        :type reasoning_effort: List[str], optional
-        :param source: source, defaults to None
-        :type source: List[str], optional
-        :param created_after: created_after, defaults to None
-        :type created_after: str, optional
-        :param created_before: created_before, defaults to None
-        :type created_before: str, optional
-        :param job_id: job_id, defaults to None
-        :type job_id: str, optional
-        :param page_size: page_size, defaults to None
-        :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
-        :param sort: sort, defaults to None
-        :type sort: TrialsListRequestSort, optional
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: SyncPager[TrialSummary]
-        """
-
-        Validator(str).is_array().is_optional().validate(task, "task")
-        Validator(RunState).is_optional().validate(state, "state")
-        Validator(str).is_optional().validate(name, "name")
-        Validator(str).is_optional().validate(q, "q")
-        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
-        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
-        Validator(str).is_array().is_optional().validate(model_name, "model_name")
-        Validator(str).is_array().is_optional().validate(
-            model_provider, "model_provider"
-        )
-        Validator(str).is_array().is_optional().validate(
-            reasoning_effort, "reasoning_effort"
-        )
-        Validator(str).is_array().is_optional().validate(source, "source")
-        Validator(str).is_optional().validate(created_after, "created_after")
-        Validator(str).is_optional().validate(created_before, "created_before")
-        Validator(str).is_optional().validate(job_id, "job_id")
-        Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
-
-        resolved_config = self._get_resolved_config(self._list_config, request_options)
-
-        def _paginate() -> Generator[List[TrialSummary], None, None]:
-            nonlocal page_token
-            while True:
-                serialized_request = (
-                    Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
-                        [self.get_access_token(resolved_config)],
-                        resolved_config,
-                    )
-                    .add_header(
-                        "Harbor-API-Version",
-                        self._global_headers.get("Harbor-API-Version"),
-                    )
-                    .add_query("task", task)
-                    .add_query("state", state)
-                    .add_query("name", name)
-                    .add_query("q", q)
-                    .add_query("agent_name", agent_name)
-                    .add_query("agent_version", agent_version)
-                    .add_query("model_name", model_name)
-                    .add_query("model_provider", model_provider)
-                    .add_query("reasoning_effort", reasoning_effort)
-                    .add_query("source", source)
-                    .add_query("created_after", created_after)
-                    .add_query("created_before", created_before)
-                    .add_query("job_id", job_id)
-                    .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
-                    .add_query("sort", sort)
-                    .add_error(401, UnauthorizedEncoded)
-                    .add_error(403, ForbiddenEncoded)
-                    .add_error(404, NotFoundEncoded)
-                    .add_error(500, InternalServerErrorEncoded)
-                    .serialize()
-                    .set_method("GET")
-                )
-                response, status, content = self.send_request(serialized_request)
-                parsed_response = (
-                    TrialPage.model_validate(response)
-                    if should_validate_response(resolved_config)
-                    else construct_lenient(TrialPage, response)
-                )
-                current_page = parsed_response.items
-
-                if not current_page:
-                    break
-
-                yield current_page
-
-                next_cursor = parsed_response.next_page_token
-                if not next_cursor:
-                    break
-
-                page_token = next_cursor
-
-        return SyncPager(_paginate(), lambda: self._last_response)
-
-    @cast_models
-    def create(
-        self,
-        *,
         trial_id: str,
-        job_id: str,
-        trial_name: str,
-        task_name: str,
-        task_content_hash: str,
-        agent: ResultTrialCreateAgent,
-        config: dict,
-        lock: dict,
-        started_at: Union[str, None] = SENTINEL,
-        finished_at: Union[str, None] = SENTINEL,
-        rewards: Union[dict, None] = SENTINEL,
-        exception_type: Union[str, None] = SENTINEL,
-        models: List[ResultModelUsage] = SENTINEL,
-        environment_setup_started_at: Union[str, None] = SENTINEL,
-        environment_setup_finished_at: Union[str, None] = SENTINEL,
-        agent_setup_started_at: Union[str, None] = SENTINEL,
-        agent_setup_finished_at: Union[str, None] = SENTINEL,
-        agent_execution_started_at: Union[str, None] = SENTINEL,
-        agent_execution_finished_at: Union[str, None] = SENTINEL,
-        verifier_started_at: Union[str, None] = SENTINEL,
-        verifier_finished_at: Union[str, None] = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> CreatedResultTrial:
-        """create
-
-        :param request_body: The request body.
-        :type request_body: ResultTrialCreate
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: CreatedResultTrial
-        """
-
-        resolved_config = self._get_resolved_config(
-            self._create_config, request_options
-        )
-
-        request_body = ResultTrialCreate(
-            trial_id=trial_id,
-            job_id=job_id,
-            trial_name=trial_name,
-            task_name=task_name,
-            task_content_hash=task_content_hash,
-            agent=agent,
-            config=config,
-            lock=lock,
-            **dict[str, Any](
-                {
-                    k: v
-                    for k, v in {
-                        "started_at": started_at,
-                        "finished_at": finished_at,
-                        "rewards": rewards,
-                        "exception_type": exception_type,
-                        "models": models,
-                        "environment_setup_started_at": environment_setup_started_at,
-                        "environment_setup_finished_at": environment_setup_finished_at,
-                        "agent_setup_started_at": agent_setup_started_at,
-                        "agent_setup_finished_at": agent_setup_finished_at,
-                        "agent_execution_started_at": agent_execution_started_at,
-                        "agent_execution_finished_at": agent_execution_finished_at,
-                        "verifier_started_at": verifier_started_at,
-                        "verifier_finished_at": verifier_finished_at,
-                    }.items()
-                    if v is not SENTINEL
-                }
-            ),
-        )
-        Validator(ResultTrialCreate).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("POST")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                CreatedResultTrial.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(CreatedResultTrial, response)
-            )
-        )
-
-    @cast_models
-    def get_filters(
-        self,
         *,
-        field: TrialsGetFiltersRequestField,
-        task: List[str] = SENTINEL,
-        state: RunState = SENTINEL,
-        name: str = SENTINEL,
-        q: str = SENTINEL,
-        agent_name: List[str] = SENTINEL,
-        agent_version: List[str] = SENTINEL,
-        model_name: List[str] = SENTINEL,
-        model_provider: List[str] = SENTINEL,
-        reasoning_effort: List[str] = SENTINEL,
-        source: List[str] = SENTINEL,
-        created_after: str = SENTINEL,
-        created_before: str = SENTINEL,
-        job_id: str = SENTINEL,
-        limit: str = SENTINEL,
+        artifact_type: TrialArtifactType,
         request_options: Optional[RequestOptions] = None,
-    ) -> FilterValuesResponse:
-        """get_filters
+    ) -> StorageDownload:
+        """get_artifact_download
 
-        :param field: field
-        :type field: TrialsGetFiltersRequestField
-        :param task: task, defaults to None
-        :type task: List[str], optional
-        :param state: state, defaults to None
-        :type state: RunState, optional
-        :param name: name, defaults to None
-        :type name: str, optional
-        :param q: q, defaults to None
-        :type q: str, optional
-        :param agent_name: agent_name, defaults to None
-        :type agent_name: List[str], optional
-        :param agent_version: agent_version, defaults to None
-        :type agent_version: List[str], optional
-        :param model_name: model_name, defaults to None
-        :type model_name: List[str], optional
-        :param model_provider: model_provider, defaults to None
-        :type model_provider: List[str], optional
-        :param reasoning_effort: reasoning_effort, defaults to None
-        :type reasoning_effort: List[str], optional
-        :param source: source, defaults to None
-        :type source: List[str], optional
-        :param created_after: created_after, defaults to None
-        :type created_after: str, optional
-        :param created_before: created_before, defaults to None
-        :type created_before: str, optional
-        :param job_id: job_id, defaults to None
-        :type job_id: str, optional
-        :param limit: limit, defaults to None
-        :type limit: str, optional
+        :param trial_id: trial_id
+        :type trial_id: str
+        :param artifact_type: artifact_type
+        :type artifact_type: TrialArtifactType
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: FilterValuesResponse
+        :rtype: StorageDownload
         """
 
-        Validator(TrialsGetFiltersRequestField).validate(field, "field")
-        Validator(str).is_array().is_optional().validate(task, "task")
-        Validator(RunState).is_optional().validate(state, "state")
-        Validator(str).is_optional().validate(name, "name")
-        Validator(str).is_optional().validate(q, "q")
-        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
-        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
-        Validator(str).is_array().is_optional().validate(model_name, "model_name")
-        Validator(str).is_array().is_optional().validate(
-            model_provider, "model_provider"
-        )
-        Validator(str).is_array().is_optional().validate(
-            reasoning_effort, "reasoning_effort"
-        )
-        Validator(str).is_array().is_optional().validate(source, "source")
-        Validator(str).is_optional().validate(created_after, "created_after")
-        Validator(str).is_optional().validate(created_before, "created_before")
-        Validator(str).is_optional().validate(job_id, "job_id")
-        Validator(str).is_optional().validate(limit, "limit")
+        Validator(str).validate(trial_id, "trial_id")
+        Validator(TrialArtifactType).validate(artifact_type, "artifact_type")
 
         resolved_config = self._get_resolved_config(
-            self._get_filters_config, request_options
+            self._get_artifact_download_config, request_options
         )
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/filters",
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/artifacts",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
             .add_header(
                 "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
             )
-            .add_query("task", task)
-            .add_query("state", state)
-            .add_query("name", name)
-            .add_query("q", q)
-            .add_query("agent_name", agent_name)
-            .add_query("agent_version", agent_version)
-            .add_query("model_name", model_name)
-            .add_query("model_provider", model_provider)
-            .add_query("reasoning_effort", reasoning_effort)
-            .add_query("source", source)
-            .add_query("created_after", created_after)
-            .add_query("created_before", created_before)
-            .add_query("job_id", job_id)
-            .add_query("field", field)
-            .add_query("limit", limit)
+            .add_path("trial_id", trial_id)
+            .add_query("artifact_type", artifact_type)
             .add_error(401, UnauthorizedEncoded)
             .add_error(403, ForbiddenEncoded)
             .add_error(404, NotFoundEncoded)
+            .add_error(429, TooManyRequestsEncoded)
             .add_error(500, InternalServerErrorEncoded)
             .serialize()
             .set_method("GET")
@@ -597,9 +283,9 @@ class TrialsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                FilterValuesResponse.model_validate(response)
+                StorageDownload.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(FilterValuesResponse, response)
+                else construct_lenient(StorageDownload, response)
             )
         )
 
@@ -818,65 +504,6 @@ class TrialsClient(BaseService):
         )
 
     @cast_models
-    def get_artifact_download(
-        self,
-        trial_id: str,
-        *,
-        artifact_type: TrialArtifactType,
-        request_options: Optional[RequestOptions] = None,
-    ) -> StorageDownload:
-        """get_artifact_download
-
-        :param trial_id: trial_id
-        :type trial_id: str
-        :param artifact_type: artifact_type
-        :type artifact_type: TrialArtifactType
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: StorageDownload
-        """
-
-        Validator(str).validate(trial_id, "trial_id")
-        Validator(TrialArtifactType).validate(artifact_type, "artifact_type")
-
-        resolved_config = self._get_resolved_config(
-            self._get_artifact_download_config, request_options
-        )
-
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/artifacts",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_path("trial_id", trial_id)
-            .add_query("artifact_type", artifact_type)
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(429, TooManyRequestsEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("GET")
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                StorageDownload.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(StorageDownload, response)
-            )
-        )
-
-    @cast_models
     def copy(
         self,
         source_trial_id: str,
@@ -948,6 +575,377 @@ class TrialsClient(BaseService):
             )
         )
 
+    @cast_models
+    def get_filters(
+        self,
+        *,
+        field: TrialsGetFiltersRequestField,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
+        job_id: str = SENTINEL,
+        limit: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> FilterValuesResponse:
+        """get_filters
+
+        :param field: field
+        :type field: TrialsGetFiltersRequestField
+        :param task: task, defaults to None
+        :type task: List[str], optional
+        :param state: state, defaults to None
+        :type state: RunState, optional
+        :param name: name, defaults to None
+        :type name: str, optional
+        :param q: q, defaults to None
+        :type q: str, optional
+        :param agent_name: agent_name, defaults to None
+        :type agent_name: List[str], optional
+        :param agent_version: agent_version, defaults to None
+        :type agent_version: List[str], optional
+        :param model_name: model_name, defaults to None
+        :type model_name: List[str], optional
+        :param model_provider: model_provider, defaults to None
+        :type model_provider: List[str], optional
+        :param reasoning_effort: reasoning_effort, defaults to None
+        :type reasoning_effort: List[str], optional
+        :param source: source, defaults to None
+        :type source: List[str], optional
+        :param created_after: created_after, defaults to None
+        :type created_after: str, optional
+        :param created_before: created_before, defaults to None
+        :type created_before: str, optional
+        :param job_id: job_id, defaults to None
+        :type job_id: str, optional
+        :param limit: limit, defaults to None
+        :type limit: str, optional
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: FilterValuesResponse
+        """
+
+        Validator(TrialsGetFiltersRequestField).validate(field, "field")
+        Validator(str).is_array().is_optional().validate(task, "task")
+        Validator(RunState).is_optional().validate(state, "state")
+        Validator(str).is_optional().validate(name, "name")
+        Validator(str).is_optional().validate(q, "q")
+        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+        Validator(str).is_array().is_optional().validate(
+            model_provider, "model_provider"
+        )
+        Validator(str).is_array().is_optional().validate(
+            reasoning_effort, "reasoning_effort"
+        )
+        Validator(str).is_array().is_optional().validate(source, "source")
+        Validator(str).is_optional().validate(created_after, "created_after")
+        Validator(str).is_optional().validate(created_before, "created_before")
+        Validator(str).is_optional().validate(job_id, "job_id")
+        Validator(str).is_optional().validate(limit, "limit")
+
+        resolved_config = self._get_resolved_config(
+            self._get_filters_config, request_options
+        )
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/filters",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_query("task", task)
+            .add_query("state", state)
+            .add_query("name", name)
+            .add_query("q", q)
+            .add_query("agent_name", agent_name)
+            .add_query("agent_version", agent_version)
+            .add_query("model_name", model_name)
+            .add_query("model_provider", model_provider)
+            .add_query("reasoning_effort", reasoning_effort)
+            .add_query("source", source)
+            .add_query("created_after", created_after)
+            .add_query("created_before", created_before)
+            .add_query("job_id", job_id)
+            .add_query("field", field)
+            .add_query("limit", limit)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("GET")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                FilterValuesResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(FilterValuesResponse, response)
+            )
+        )
+
+    @cast_models
+    def list(
+        self,
+        *,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
+        job_id: str = SENTINEL,
+        page_size: str = SENTINEL,
+        page_token: str = SENTINEL,
+        sort: TrialsListRequestSort = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> SyncPager[TrialSummary]:
+        """list
+
+        :param task: task, defaults to None
+        :type task: List[str], optional
+        :param state: state, defaults to None
+        :type state: RunState, optional
+        :param name: name, defaults to None
+        :type name: str, optional
+        :param q: q, defaults to None
+        :type q: str, optional
+        :param agent_name: agent_name, defaults to None
+        :type agent_name: List[str], optional
+        :param agent_version: agent_version, defaults to None
+        :type agent_version: List[str], optional
+        :param model_name: model_name, defaults to None
+        :type model_name: List[str], optional
+        :param model_provider: model_provider, defaults to None
+        :type model_provider: List[str], optional
+        :param reasoning_effort: reasoning_effort, defaults to None
+        :type reasoning_effort: List[str], optional
+        :param source: source, defaults to None
+        :type source: List[str], optional
+        :param created_after: created_after, defaults to None
+        :type created_after: str, optional
+        :param created_before: created_before, defaults to None
+        :type created_before: str, optional
+        :param job_id: job_id, defaults to None
+        :type job_id: str, optional
+        :param page_size: page_size, defaults to None
+        :type page_size: str, optional
+        :param page_token: page_token, defaults to None
+        :type page_token: str, optional
+        :param sort: sort, defaults to None
+        :type sort: TrialsListRequestSort, optional
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: SyncPager[TrialSummary]
+        """
+        self = self._for_one_call()
+
+        Validator(str).is_array().is_optional().validate(task, "task")
+        Validator(RunState).is_optional().validate(state, "state")
+        Validator(str).is_optional().validate(name, "name")
+        Validator(str).is_optional().validate(q, "q")
+        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+        Validator(str).is_array().is_optional().validate(
+            model_provider, "model_provider"
+        )
+        Validator(str).is_array().is_optional().validate(
+            reasoning_effort, "reasoning_effort"
+        )
+        Validator(str).is_array().is_optional().validate(source, "source")
+        Validator(str).is_optional().validate(created_after, "created_after")
+        Validator(str).is_optional().validate(created_before, "created_before")
+        Validator(str).is_optional().validate(job_id, "job_id")
+        Validator(str).is_optional().validate(page_size, "page_size")
+        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
+
+        resolved_config = self._get_resolved_config(self._list_config, request_options)
+
+        def _paginate() -> Generator[List[TrialSummary], None, None]:
+            nonlocal page_token
+            while True:
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version",
+                        self._global_headers.get("Harbor-API-Version"),
+                    )
+                    .add_query("task", task)
+                    .add_query("state", state)
+                    .add_query("name", name)
+                    .add_query("q", q)
+                    .add_query("agent_name", agent_name)
+                    .add_query("agent_version", agent_version)
+                    .add_query("model_name", model_name)
+                    .add_query("model_provider", model_provider)
+                    .add_query("reasoning_effort", reasoning_effort)
+                    .add_query("source", source)
+                    .add_query("created_after", created_after)
+                    .add_query("created_before", created_before)
+                    .add_query("job_id", job_id)
+                    .add_query("page_size", page_size)
+                    .add_query("page_token", page_token)
+                    .add_query("sort", sort)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("GET")
+                )
+                response, status, content = self.send_request(serialized_request)
+                parsed_response = (
+                    TrialPage.model_validate(response)
+                    if should_validate_response(resolved_config)
+                    else construct_lenient(TrialPage, response)
+                )
+                current_page = parsed_response.items
+
+                yield current_page
+
+                next_cursor = parsed_response.next_page_token
+                if not next_cursor:
+                    break
+
+                page_token = next_cursor
+
+        return SyncPager(_paginate(), lambda: self._last_response)
+
+    @cast_models
+    def create(
+        self,
+        *,
+        trial_id: str,
+        job_id: str,
+        trial_name: str,
+        task_name: str,
+        task_content_hash: str,
+        agent: ResultTrialCreateAgent,
+        config: dict,
+        lock: dict,
+        started_at: Union[str, None] = SENTINEL,
+        finished_at: Union[str, None] = SENTINEL,
+        rewards: Union[dict, None] = SENTINEL,
+        exception_type: Union[str, None] = SENTINEL,
+        models: List[ResultModelUsage] = SENTINEL,
+        environment_setup_started_at: Union[str, None] = SENTINEL,
+        environment_setup_finished_at: Union[str, None] = SENTINEL,
+        agent_setup_started_at: Union[str, None] = SENTINEL,
+        agent_setup_finished_at: Union[str, None] = SENTINEL,
+        agent_execution_started_at: Union[str, None] = SENTINEL,
+        agent_execution_finished_at: Union[str, None] = SENTINEL,
+        verifier_started_at: Union[str, None] = SENTINEL,
+        verifier_finished_at: Union[str, None] = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> CreatedResultTrial:
+        """create
+
+        :param request_body: The request body.
+        :type request_body: ResultTrialCreate
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: CreatedResultTrial
+        """
+
+        resolved_config = self._get_resolved_config(
+            self._create_config, request_options
+        )
+
+        request_body = ResultTrialCreate(
+            trial_id=trial_id,
+            job_id=job_id,
+            trial_name=trial_name,
+            task_name=task_name,
+            task_content_hash=task_content_hash,
+            agent=agent,
+            config=config,
+            lock=lock,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "started_at": started_at,
+                        "finished_at": finished_at,
+                        "rewards": rewards,
+                        "exception_type": exception_type,
+                        "models": models,
+                        "environment_setup_started_at": environment_setup_started_at,
+                        "environment_setup_finished_at": environment_setup_finished_at,
+                        "agent_setup_started_at": agent_setup_started_at,
+                        "agent_setup_finished_at": agent_setup_finished_at,
+                        "agent_execution_started_at": agent_execution_started_at,
+                        "agent_execution_finished_at": agent_execution_finished_at,
+                        "verifier_started_at": verifier_started_at,
+                        "verifier_finished_at": verifier_finished_at,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+        )
+        Validator(ResultTrialCreate).validate(request_body, "request_body")
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+            .set_body(request_body)
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                CreatedResultTrial.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(CreatedResultTrial, response)
+            )
+        )
+
 
 class RawTrialsClient:
     """
@@ -966,6 +964,145 @@ class RawTrialsClient:
         self, trial_id: str, *, request_options: Optional[RequestOptions] = None
     ) -> HttpResponse[TrialResponse]:
         data = TrialsClient.get(self._client, trial_id, request_options=request_options)
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def get_artifact_download(
+        self,
+        trial_id: str,
+        *,
+        artifact_type: TrialArtifactType,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[StorageDownload]:
+        data = TrialsClient.get_artifact_download(
+            self._client,
+            trial_id,
+            artifact_type=artifact_type,
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def pause(
+        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[TrialActionResponse]:
+        data = TrialsClient.pause(
+            self._client, trial_ids=trial_ids, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def resume(
+        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[TrialActionResponse]:
+        data = TrialsClient.resume(
+            self._client, trial_ids=trial_ids, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def cancel(
+        self,
+        *,
+        trial_ids: List[str],
+        force: bool = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[TrialActionResponse]:
+        data = TrialsClient.cancel(
+            self._client,
+            trial_ids=trial_ids,
+            **dict[str, Any](
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+            ),
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def retry(
+        self,
+        *,
+        trial_ids: List[str],
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[RetryTrialsResponse]:
+        data = TrialsClient.retry(
+            self._client,
+            trial_ids=trial_ids,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def copy(
+        self,
+        source_trial_id: str,
+        *,
+        new_name: Union[str, None] = SENTINEL,
+        overwrite: Union[bool, None] = SENTINEL,
+        target_organization_id: Union[str, None] = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[StorageCopyResult]:
+        data = TrialsClient.copy(
+            self._client,
+            source_trial_id,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "new_name": new_name,
+                        "overwrite": overwrite,
+                        "target_organization_id": target_organization_id,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def get_filters(
+        self,
+        *,
+        field: TrialsGetFiltersRequestField,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
+        job_id: str = SENTINEL,
+        limit: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[FilterValuesResponse]:
+        data = TrialsClient.get_filters(
+            self._client,
+            field=field,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "task": task,
+                        "state": state,
+                        "name": name,
+                        "q": q,
+                        "agent_name": agent_name,
+                        "agent_version": agent_version,
+                        "model_name": model_name,
+                        "model_provider": model_provider,
+                        "reasoning_effort": reasoning_effort,
+                        "source": source,
+                        "created_after": created_after,
+                        "created_before": created_before,
+                        "job_id": job_id,
+                        "limit": limit,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
+        )
         return HttpResponse(data=data, response=self._client._last_response)
 
     def list(
@@ -1080,6 +1217,104 @@ class RawTrialsClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
+
+class AsyncTrialsClient(TrialsClient):
+    """
+    Async wrapper for TrialsClient. Mirrors the sync client's endpoints (awaitable) and, for a
+    resource with sub-resources, its lazy child accessors (returning the async child clients).
+    """
+
+    @property
+    def with_raw_response(self) -> "AsyncRawTrialsClient":  # type: ignore[override]
+        """
+        Returns an async raw-response client whose methods mirror this resource but return
+        ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
+        """
+        return AsyncRawTrialsClient(self)
+
+    def get(
+        self, trial_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> Awaitable[TrialResponse]:  # type: ignore[override]
+        return to_async(super().get)(trial_id, request_options=request_options)
+
+    def get_artifact_download(
+        self,
+        trial_id: str,
+        *,
+        artifact_type: TrialArtifactType,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[StorageDownload]:  # type: ignore[override]
+        return to_async(super().get_artifact_download)(
+            trial_id, artifact_type=artifact_type, request_options=request_options
+        )
+
+    def pause(
+        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+        return to_async(super().pause)(
+            trial_ids=trial_ids, request_options=request_options
+        )
+
+    def resume(
+        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+        return to_async(super().resume)(
+            trial_ids=trial_ids, request_options=request_options
+        )
+
+    def cancel(
+        self,
+        *,
+        trial_ids: List[str],
+        force: bool = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+        return to_async(super().cancel)(
+            trial_ids=trial_ids,
+            **dict[str, Any](
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+            ),
+            request_options=request_options,
+        )
+
+    def retry(
+        self,
+        *,
+        trial_ids: List[str],
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
+        return to_async(super().retry)(
+            trial_ids=trial_ids,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
+        )
+
+    def copy(
+        self,
+        source_trial_id: str,
+        *,
+        new_name: Union[str, None] = SENTINEL,
+        overwrite: Union[bool, None] = SENTINEL,
+        target_organization_id: Union[str, None] = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[StorageCopyResult]:  # type: ignore[override]
+        return to_async(super().copy)(
+            source_trial_id,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "new_name": new_name,
+                        "overwrite": overwrite,
+                        "target_organization_id": target_organization_id,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
+        )
+
     def get_filters(
         self,
         *,
@@ -1099,9 +1334,8 @@ class RawTrialsClient:
         job_id: str = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[FilterValuesResponse]:
-        data = TrialsClient.get_filters(
-            self._client,
+    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+        return to_async(super().get_filters)(
             field=field,
             **dict[str, Any](
                 {
@@ -1127,117 +1361,6 @@ class RawTrialsClient:
             ),
             request_options=request_options,
         )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def pause(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialActionResponse]:
-        data = TrialsClient.pause(
-            self._client, trial_ids=trial_ids, request_options=request_options
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def resume(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialActionResponse]:
-        data = TrialsClient.resume(
-            self._client, trial_ids=trial_ids, request_options=request_options
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def cancel(
-        self,
-        *,
-        trial_ids: List[str],
-        force: bool = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
-        data = TrialsClient.cancel(
-            self._client,
-            trial_ids=trial_ids,
-            **dict[str, Any](
-                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-            ),
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def retry(
-        self,
-        *,
-        trial_ids: List[str],
-        idempotency_key: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RetryTrialsResponse]:
-        data = TrialsClient.retry(
-            self._client,
-            trial_ids=trial_ids,
-            idempotency_key=idempotency_key,
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def get_artifact_download(
-        self,
-        trial_id: str,
-        *,
-        artifact_type: TrialArtifactType,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[StorageDownload]:
-        data = TrialsClient.get_artifact_download(
-            self._client,
-            trial_id,
-            artifact_type=artifact_type,
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def copy(
-        self,
-        source_trial_id: str,
-        *,
-        new_name: Union[str, None] = SENTINEL,
-        overwrite: Union[bool, None] = SENTINEL,
-        target_organization_id: Union[str, None] = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[StorageCopyResult]:
-        data = TrialsClient.copy(
-            self._client,
-            source_trial_id,
-            **dict[str, Any](
-                {
-                    k: v
-                    for k, v in {
-                        "new_name": new_name,
-                        "overwrite": overwrite,
-                        "target_organization_id": target_organization_id,
-                    }.items()
-                    if v is not SENTINEL
-                }
-            ),
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-
-class AsyncTrialsClient(TrialsClient):
-    """
-    Async wrapper for TrialsClient. Mirrors the sync client's endpoints (awaitable) and, for a
-    resource with sub-resources, its lazy child accessors (returning the async child clients).
-    """
-
-    @property
-    def with_raw_response(self) -> "AsyncRawTrialsClient":  # type: ignore[override]
-        """
-        Returns an async raw-response client whose methods mirror this resource but return
-        ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
-        """
-        return AsyncRawTrialsClient(self)
-
-    def get(
-        self, trial_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[TrialResponse]:  # type: ignore[override]
-        return to_async(super().get)(trial_id, request_options=request_options)
 
     def list(
         self,
@@ -1289,7 +1412,11 @@ class AsyncTrialsClient(TrialsClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1353,7 +1480,115 @@ class AsyncTrialsClient(TrialsClient):
             request_options=request_options,
         )
 
-    def get_filters(
+
+class AsyncRawTrialsClient:
+    """
+    Async raw-response client for AsyncTrialsClient.
+    """
+
+    def __init__(self, client: AsyncTrialsClient):
+        self._client = client
+        self._client_wrapper = client._client_wrapper
+
+    async def get(
+        self, trial_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[TrialResponse]:
+        data = await AsyncTrialsClient.get(
+            self._client, trial_id, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def get_artifact_download(
+        self,
+        trial_id: str,
+        *,
+        artifact_type: TrialArtifactType,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[StorageDownload]:
+        data = await AsyncTrialsClient.get_artifact_download(
+            self._client,
+            trial_id,
+            artifact_type=artifact_type,
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def pause(
+        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[TrialActionResponse]:
+        data = await AsyncTrialsClient.pause(
+            self._client, trial_ids=trial_ids, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def resume(
+        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[TrialActionResponse]:
+        data = await AsyncTrialsClient.resume(
+            self._client, trial_ids=trial_ids, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def cancel(
+        self,
+        *,
+        trial_ids: List[str],
+        force: bool = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[TrialActionResponse]:
+        data = await AsyncTrialsClient.cancel(
+            self._client,
+            trial_ids=trial_ids,
+            **dict[str, Any](
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+            ),
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def retry(
+        self,
+        *,
+        trial_ids: List[str],
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[RetryTrialsResponse]:
+        data = await AsyncTrialsClient.retry(
+            self._client,
+            trial_ids=trial_ids,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def copy(
+        self,
+        source_trial_id: str,
+        *,
+        new_name: Union[str, None] = SENTINEL,
+        overwrite: Union[bool, None] = SENTINEL,
+        target_organization_id: Union[str, None] = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[StorageCopyResult]:
+        data = await AsyncTrialsClient.copy(
+            self._client,
+            source_trial_id,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "new_name": new_name,
+                        "overwrite": overwrite,
+                        "target_organization_id": target_organization_id,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def get_filters(
         self,
         *,
         field: TrialsGetFiltersRequestField,
@@ -1372,8 +1607,9 @@ class AsyncTrialsClient(TrialsClient):
         job_id: str = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
-        return to_async(super().get_filters)(
+    ) -> HttpResponse[FilterValuesResponse]:
+        data = await AsyncTrialsClient.get_filters(
+            self._client,
             field=field,
             **dict[str, Any](
                 {
@@ -1398,101 +1634,6 @@ class AsyncTrialsClient(TrialsClient):
                 }
             ),
             request_options=request_options,
-        )
-
-    def pause(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
-        return to_async(super().pause)(
-            trial_ids=trial_ids, request_options=request_options
-        )
-
-    def resume(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
-        return to_async(super().resume)(
-            trial_ids=trial_ids, request_options=request_options
-        )
-
-    def cancel(
-        self,
-        *,
-        trial_ids: List[str],
-        force: bool = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
-        return to_async(super().cancel)(
-            trial_ids=trial_ids,
-            **dict[str, Any](
-                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-            ),
-            request_options=request_options,
-        )
-
-    def retry(
-        self,
-        *,
-        trial_ids: List[str],
-        idempotency_key: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[RetryTrialsResponse]:  # type: ignore[override]
-        return to_async(super().retry)(
-            trial_ids=trial_ids,
-            idempotency_key=idempotency_key,
-            request_options=request_options,
-        )
-
-    def get_artifact_download(
-        self,
-        trial_id: str,
-        *,
-        artifact_type: TrialArtifactType,
-        request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[StorageDownload]:  # type: ignore[override]
-        return to_async(super().get_artifact_download)(
-            trial_id, artifact_type=artifact_type, request_options=request_options
-        )
-
-    def copy(
-        self,
-        source_trial_id: str,
-        *,
-        new_name: Union[str, None] = SENTINEL,
-        overwrite: Union[bool, None] = SENTINEL,
-        target_organization_id: Union[str, None] = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[StorageCopyResult]:  # type: ignore[override]
-        return to_async(super().copy)(
-            source_trial_id,
-            **dict[str, Any](
-                {
-                    k: v
-                    for k, v in {
-                        "new_name": new_name,
-                        "overwrite": overwrite,
-                        "target_organization_id": target_organization_id,
-                    }.items()
-                    if v is not SENTINEL
-                }
-            ),
-            request_options=request_options,
-        )
-
-
-class AsyncRawTrialsClient:
-    """
-    Async raw-response client for AsyncTrialsClient.
-    """
-
-    def __init__(self, client: AsyncTrialsClient):
-        self._client = client
-        self._client_wrapper = client._client_wrapper
-
-    async def get(
-        self, trial_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialResponse]:
-        data = await AsyncTrialsClient.get(
-            self._client, trial_id, request_options=request_options
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
@@ -1600,145 +1741,6 @@ class AsyncRawTrialsClient:
                         "agent_execution_finished_at": agent_execution_finished_at,
                         "verifier_started_at": verifier_started_at,
                         "verifier_finished_at": verifier_finished_at,
-                    }.items()
-                    if v is not SENTINEL
-                }
-            ),
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def get_filters(
-        self,
-        *,
-        field: TrialsGetFiltersRequestField,
-        task: List[str] = SENTINEL,
-        state: RunState = SENTINEL,
-        name: str = SENTINEL,
-        q: str = SENTINEL,
-        agent_name: List[str] = SENTINEL,
-        agent_version: List[str] = SENTINEL,
-        model_name: List[str] = SENTINEL,
-        model_provider: List[str] = SENTINEL,
-        reasoning_effort: List[str] = SENTINEL,
-        source: List[str] = SENTINEL,
-        created_after: str = SENTINEL,
-        created_before: str = SENTINEL,
-        job_id: str = SENTINEL,
-        limit: str = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[FilterValuesResponse]:
-        data = await AsyncTrialsClient.get_filters(
-            self._client,
-            field=field,
-            **dict[str, Any](
-                {
-                    k: v
-                    for k, v in {
-                        "task": task,
-                        "state": state,
-                        "name": name,
-                        "q": q,
-                        "agent_name": agent_name,
-                        "agent_version": agent_version,
-                        "model_name": model_name,
-                        "model_provider": model_provider,
-                        "reasoning_effort": reasoning_effort,
-                        "source": source,
-                        "created_after": created_after,
-                        "created_before": created_before,
-                        "job_id": job_id,
-                        "limit": limit,
-                    }.items()
-                    if v is not SENTINEL
-                }
-            ),
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def pause(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialActionResponse]:
-        data = await AsyncTrialsClient.pause(
-            self._client, trial_ids=trial_ids, request_options=request_options
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def resume(
-        self, *, trial_ids: List[str], request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[TrialActionResponse]:
-        data = await AsyncTrialsClient.resume(
-            self._client, trial_ids=trial_ids, request_options=request_options
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def cancel(
-        self,
-        *,
-        trial_ids: List[str],
-        force: bool = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[TrialActionResponse]:
-        data = await AsyncTrialsClient.cancel(
-            self._client,
-            trial_ids=trial_ids,
-            **dict[str, Any](
-                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
-            ),
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def retry(
-        self,
-        *,
-        trial_ids: List[str],
-        idempotency_key: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RetryTrialsResponse]:
-        data = await AsyncTrialsClient.retry(
-            self._client,
-            trial_ids=trial_ids,
-            idempotency_key=idempotency_key,
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def get_artifact_download(
-        self,
-        trial_id: str,
-        *,
-        artifact_type: TrialArtifactType,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[StorageDownload]:
-        data = await AsyncTrialsClient.get_artifact_download(
-            self._client,
-            trial_id,
-            artifact_type=artifact_type,
-            request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def copy(
-        self,
-        source_trial_id: str,
-        *,
-        new_name: Union[str, None] = SENTINEL,
-        overwrite: Union[bool, None] = SENTINEL,
-        target_organization_id: Union[str, None] = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[StorageCopyResult]:
-        data = await AsyncTrialsClient.copy(
-            self._client,
-            source_trial_id,
-            **dict[str, Any](
-                {
-                    k: v
-                    for k, v in {
-                        "new_name": new_name,
-                        "overwrite": overwrite,
-                        "target_organization_id": target_organization_id,
                     }.items()
                     if v is not SENTINEL
                 }

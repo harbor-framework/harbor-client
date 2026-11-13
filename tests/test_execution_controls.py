@@ -86,6 +86,40 @@ def test_execution_controls_reject_extra_selector_fields(namespace, action, sele
             )
 
 
+@pytest.mark.parametrize("namespace,action", CONTROLS)
+@pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
+@pytest.mark.parametrize("count", [100, 101])
+async def test_control_limit_counts_submitted_ids_including_duplicates(
+    namespace, action, asynchronous, count
+):
+    payload = response_fixture(f"/v1/{namespace}/{action}", "post")
+    seen = []
+
+    def handler(request):
+        seen.append(json.loads(request.content)[f"{namespace[:-1]}_ids"])
+        return httpx.Response(200, json=payload)
+
+    arguments = control_arguments(namespace, action, [UUID] * count)
+    transport = httpx.MockTransport(handler)
+    if asynchronous:
+        async with async_client(transport=transport) as client:
+            call = getattr(getattr(client, namespace), action)
+            if count > 100:
+                with pytest.raises((ContractError, ValidationError)):
+                    await call(**arguments)
+            else:
+                await call(**arguments)
+    else:
+        with sync_client(transport=transport) as client:
+            call = getattr(getattr(client, namespace), action)
+            if count > 100:
+                with pytest.raises((ContractError, ValidationError)):
+                    call(**arguments)
+            else:
+                call(**arguments)
+    assert seen == ([[UUID] * count] if count == 100 else [])
+
+
 def test_submission_success_requires_only_the_job_id():
     model = types.SubmitJobResponse.model_validate({"job_id": UUID})
     assert model.model_dump(mode="json", exclude_unset=True) == {"job_id": UUID}
