@@ -1470,10 +1470,11 @@
             "required": true
           },
           {
-            "name": "organization_name",
+            "name": "organization_id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
             },
             "required": false
           },
@@ -3490,11 +3491,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "JobSubmission",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubmitJobResponse"
+                  "$ref": "#/components/schemas/JobSubmission"
                 }
               }
             }
@@ -3689,7 +3690,7 @@
             }
           }
         },
-        "description": "Cancel the latest active attempts. Send {job_id: null, trial_ids: [...], soft: false} for IDs across jobs, or select a job with explicit filters or all: true.",
+        "description": "Cancel the latest active attempts. Send trial_ids alone to select trials across jobs. An optional job_id asserts that every trial belongs to that job. For job-scoped selection, send job_id with filters or all: true. The server resolves jobs and validates the batch before making changes. The response includes counts by job.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3799,7 +3800,7 @@
             }
           }
         },
-        "description": "Retry the latest terminal attempts. Send {job_id: null, trial_ids: [...]} for IDs across jobs, or select a job with explicit filters or all: true.",
+        "description": "Retry the latest terminal attempts. Send trial_ids alone to select trials across jobs. An optional job_id asserts that every trial belongs to that job. For job-scoped selection, send job_id with filters or all: true. The server resolves jobs and validates the batch before making changes. The response includes counts by job.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3974,11 +3975,11 @@
         ],
         "responses": {
           "200": {
-            "description": "JobDetail",
+            "description": "ResultJob",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JobDetail"
+                  "$ref": "#/components/schemas/ResultJob"
                 }
               }
             }
@@ -4718,7 +4719,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CancelJobWithIdRequest"
+                "$ref": "#/components/schemas/CancelHostedJobRequest"
               }
             }
           },
@@ -14101,205 +14102,17 @@
         ],
         "additionalProperties": false
       },
-      "JobDetail": {
+      "ResultJob": {
         "type": "object",
         "properties": {
-          "jobs": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EvaluationJobReference"
-            }
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
-          "n_total_trials": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              }
-            ]
+          "job_name": {
+            "type": "string"
           },
-          "n_completed_trials": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              }
-            ]
-          },
-          "n_pending_trials": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              }
-            ]
-          },
-          "n_running_trials": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              }
-            ]
-          },
-          "n_planned_trials": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "n_errors": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              }
-            ]
-          },
-          "n_retries": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              }
-            ]
-          },
-          "input_tokens": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "output_tokens": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "cache_tokens": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "cost_usd": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "providers": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "models": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "evals": {
-            "$ref": "#/components/schemas/EvaluationSummary"
-          },
-          "sandbox_cost_usd": {
+          "archive_path": {
             "anyOf": [
               {
                 "type": "string"
@@ -14309,31 +14122,8 @@
               }
             ]
           },
-          "sandbox_cost_status": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "pending",
-                  "partial",
-                  "recorded",
-                  "empty"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "config": {
+            "type": "object"
           },
           "started_at": {
             "anyOf": [
@@ -14355,186 +14145,23 @@
               }
             ]
           },
+          "n_planned_trials": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "visibility": {
             "type": "string",
             "enum": [
               "public",
               "private"
-            ]
-          },
-          "created_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "created_by_user": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/JobCreator"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "owner_organization": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/JobOwnerOrganization"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "access_relation": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "owned",
-                  "shared"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "can_operate": {
-            "type": "boolean"
-          },
-          "can_manage_access": {
-            "type": "boolean"
-          },
-          "can_delete": {
-            "type": "boolean"
-          },
-          "can_transfer": {
-            "type": "boolean"
-          },
-          "is_hosted": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "billing_blocked": {
-            "type": "boolean"
-          },
-          "manual_pause": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/JobManualPauseSummary"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "cancellation": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/JobCancellationSummary"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "config": {
-            "type": "object"
-          },
-          "datasets": {
-            "anyOf": [
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "run_targets": {
-            "anyOf": [
-              {
-                "type": "array",
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/JobPackageRunTarget"
-                    },
-                    {
-                      "$ref": "#/components/schemas/JobPathRunTarget"
-                    }
-                  ]
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "stats": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/JobOverviewStatistics"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "circuit": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/JobCircuitState"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "circuits": {
-            "anyOf": [
-              {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/JobBucketCircuitState"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "job_name": {
-            "type": "string"
-          },
-          "archive_path": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
             ]
           },
           "organization_id": {
@@ -14543,48 +14170,14 @@
           }
         },
         "required": [
-          "jobs",
-          "n_total_trials",
-          "n_completed_trials",
-          "n_pending_trials",
-          "n_running_trials",
-          "n_planned_trials",
-          "n_errors",
-          "n_retries",
-          "input_tokens",
-          "output_tokens",
-          "cache_tokens",
-          "cost_usd",
-          "providers",
-          "models",
-          "evals",
-          "sandbox_cost_usd",
-          "sandbox_cost_status",
-          "name",
-          "started_at",
-          "finished_at",
-          "visibility",
-          "created_by",
-          "created_by_user",
-          "owner_organization",
-          "access_relation",
-          "can_operate",
-          "can_manage_access",
-          "can_delete",
-          "can_transfer",
-          "is_hosted",
-          "billing_blocked",
-          "manual_pause",
-          "cancellation",
-          "config",
-          "datasets",
-          "run_targets",
-          "stats",
-          "circuit",
-          "circuits",
           "id",
           "job_name",
           "archive_path",
+          "config",
+          "started_at",
+          "finished_at",
+          "n_planned_trials",
+          "visibility",
           "organization_id"
         ],
         "additionalProperties": false
@@ -15589,15 +15182,12 @@
         ],
         "additionalProperties": false
       },
-      "CancelJobWithIdRequest": {
+      "CancelHostedJobRequest": {
         "type": "object",
         "properties": {
           "job_id": {
             "type": "string",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "soft": {
-            "type": "boolean"
           },
           "reason": {
             "anyOf": [
@@ -15608,11 +15198,20 @@
                 "type": "null"
               }
             ]
+          },
+          "finish_running": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
-          "job_id",
-          "soft"
+          "job_id"
         ],
         "additionalProperties": false
       },
@@ -15852,44 +15451,40 @@
         "additionalProperties": false
       },
       "RetryTrialsRequest": {
-        "anyOf": [
-          {
-            "$ref": "#/components/schemas/RetryTrialsByIdRequest"
-          },
-          {
-            "$ref": "#/components/schemas/RetryTrialsByFilterRequest"
-          },
-          {
-            "$ref": "#/components/schemas/RetryAllJobTrialsRequest"
-          }
-        ]
-      },
-      "RetryAllJobTrialsRequest": {
         "type": "object",
         "properties": {
           "job_id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "all": {
-            "type": "boolean",
-            "enum": [
-              true
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+              },
+              {
+                "type": "null"
+              }
             ]
-          }
-        },
-        "required": [
-          "job_id",
-          "all"
-        ],
-        "additionalProperties": false
-      },
-      "RetryTrialsByFilterRequest": {
-        "type": "object",
-        "properties": {
-          "job_id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "trial_ids": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Act on exactly these trials. Cannot be combined with filters or all; [] acts on none."
           },
           "search": {
             "anyOf": [
@@ -15899,20 +15494,29 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Filter by text search. A blank search is no filter."
           },
           "agents": {
             "anyOf": [
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose agent is listed. Omitted or null: no filter; [] matches no trials."
           },
           "agent_version": {
             "anyOf": [
@@ -15929,55 +15533,95 @@
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose model provider is listed. Omitted or null: no filter; [] matches no trials."
           },
           "models": {
             "anyOf": [
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose model is listed. Omitted or null: no filter; [] matches no trials."
           },
           "tasks": {
             "anyOf": [
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose task is listed. Omitted or null: no filter; [] matches no trials."
           },
           "exceptions": {
             "anyOf": [
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose exception type is listed. Omitted or null: no filter; [] matches no trials."
           },
           "failed_only": {
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only failed trials. false or omitted is no filter."
           },
           "config_filters": {
             "anyOf": [
@@ -15988,20 +15632,19 @@
                 "type": "null"
               }
             ]
+          },
+          "all": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required, as true, to act on every eligible trial in the job when neither trial_ids nor a filter is given. Cannot be combined with them."
           }
         },
-        "required": [
-          "job_id",
-          "search",
-          "agents",
-          "agent_version",
-          "providers",
-          "models",
-          "tasks",
-          "exceptions",
-          "failed_only",
-          "config_filters"
-        ],
         "additionalProperties": false
       },
       "TrialConfigFilters": {
@@ -16026,34 +15669,6 @@
             "type": "null"
           }
         ]
-      },
-      "RetryTrialsByIdRequest": {
-        "type": "object",
-        "properties": {
-          "job_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            }
-          }
-        },
-        "required": [
-          "job_id",
-          "trial_ids"
-        ],
-        "additionalProperties": false
       },
       "CancelTrialsResponse": {
         "type": "object",
@@ -16091,58 +15706,40 @@
         "additionalProperties": false
       },
       "CancelTrialsRequest": {
-        "anyOf": [
-          {
-            "$ref": "#/components/schemas/CancelTrialsByIdRequest"
-          },
-          {
-            "$ref": "#/components/schemas/CancelTrialsByFilterRequest"
-          },
-          {
-            "$ref": "#/components/schemas/CancelAllJobTrialsRequest"
-          }
-        ]
-      },
-      "CancelAllJobTrialsRequest": {
         "type": "object",
         "properties": {
           "job_id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-          },
-          "all": {
-            "type": "boolean",
-            "enum": [
-              true
-            ]
-          },
-          "soft": {
-            "type": "boolean"
-          },
-          "reason": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
               },
               {
                 "type": "null"
               }
             ]
-          }
-        },
-        "required": [
-          "job_id",
-          "all",
-          "soft"
-        ],
-        "additionalProperties": false
-      },
-      "CancelTrialsByFilterRequest": {
-        "type": "object",
-        "properties": {
-          "job_id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "trial_ids": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Act on exactly these trials. Cannot be combined with filters or all; [] acts on none."
           },
           "search": {
             "anyOf": [
@@ -16152,20 +15749,29 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Filter by text search. A blank search is no filter."
           },
           "agents": {
             "anyOf": [
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose agent is listed. Omitted or null: no filter; [] matches no trials."
           },
           "agent_version": {
             "anyOf": [
@@ -16182,55 +15788,95 @@
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose model provider is listed. Omitted or null: no filter; [] matches no trials."
           },
           "models": {
             "anyOf": [
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose model is listed. Omitted or null: no filter; [] matches no trials."
           },
           "tasks": {
             "anyOf": [
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose task is listed. Omitted or null: no filter; [] matches no trials."
           },
           "exceptions": {
             "anyOf": [
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Only trials whose exception type is listed. Omitted or null: no filter; [] matches no trials."
           },
           "failed_only": {
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only failed trials. false or omitted is no filter."
           },
           "config_filters": {
             "anyOf": [
@@ -16242,8 +15888,16 @@
               }
             ]
           },
-          "soft": {
-            "type": "boolean"
+          "all": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required, as true, to act on every eligible trial in the job when neither trial_ids nor a filter is given. Cannot be combined with them."
           },
           "reason": {
             "anyOf": [
@@ -16254,51 +15908,11 @@
                 "type": "null"
               }
             ]
-          }
-        },
-        "required": [
-          "job_id",
-          "search",
-          "agents",
-          "agent_version",
-          "providers",
-          "models",
-          "tasks",
-          "exceptions",
-          "failed_only",
-          "config_filters",
-          "soft"
-        ],
-        "additionalProperties": false
-      },
-      "CancelTrialsByIdRequest": {
-        "type": "object",
-        "properties": {
-          "job_id": {
+          },
+          "finish_running": {
             "anyOf": [
               {
-                "type": "string",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "trial_ids": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
-            }
-          },
-          "soft": {
-            "type": "boolean"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
+                "type": "boolean"
               },
               {
                 "type": "null"
@@ -16306,11 +15920,6 @@
             ]
           }
         },
-        "required": [
-          "job_id",
-          "trial_ids",
-          "soft"
-        ],
         "additionalProperties": false
       },
       "ServiceUnavailableEncoded": {
@@ -16353,7 +15962,7 @@
         ],
         "additionalProperties": false
       },
-      "SubmitJobResponse": {
+      "JobSubmission": {
         "type": "object",
         "properties": {
           "job_id": {
@@ -16424,16 +16033,6 @@
             "items": {
               "$ref": "#/components/schemas/AgentSource"
             }
-          },
-          "session_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "required": [
@@ -16446,8 +16045,7 @@
           "owner_organization",
           "warnings",
           "selected_secrets",
-          "agent_sources",
-          "session_id"
+          "agent_sources"
         ],
         "additionalProperties": false
       },
@@ -16755,139 +16353,6 @@
               },
               "n_concurrent_trials": {
                 "type": "number"
-              },
-              "job_name": {
-                "type": "string"
-              },
-              "jobs_dir": {
-                "type": "string"
-              },
-              "timeout_multiplier": {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "string",
-                    "enum": [
-                      "Infinity",
-                      "-Infinity",
-                      "NaN"
-                    ]
-                  }
-                ]
-              },
-              "agent_timeout_multiplier": {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "string",
-                    "enum": [
-                      "Infinity",
-                      "-Infinity",
-                      "NaN"
-                    ]
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "verifier_timeout_multiplier": {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "string",
-                    "enum": [
-                      "Infinity",
-                      "-Infinity",
-                      "NaN"
-                    ]
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "agent_setup_timeout_multiplier": {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "string",
-                    "enum": [
-                      "Infinity",
-                      "-Infinity",
-                      "NaN"
-                    ]
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "environment_build_timeout_multiplier": {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "string",
-                    "enum": [
-                      "Infinity",
-                      "-Infinity",
-                      "NaN"
-                    ]
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "debug": {
-                "type": "boolean"
-              },
-              "quiet": {
-                "type": "boolean"
-              },
-              "verifier": {
-                "$ref": "#/components/schemas/HostedVerifierConfig"
-              },
-              "metrics": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/MetricConfig"
-                }
-              },
-              "artifacts": {
-                "type": "array",
-                "items": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "$ref": "#/components/schemas/ArtifactConfig"
-                    }
-                  ]
-                }
-              },
-              "extra_instruction_paths": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "extra_instructions": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
               }
             },
             "required": [
@@ -16897,29 +16362,6 @@
               {
                 "type": "object",
                 "additionalProperties": {}
-              }
-            ]
-          },
-          "dry_run": {
-            "type": "boolean"
-          },
-          "job_secrets": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "registry_credentials": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
               }
             ]
           },
@@ -16946,24 +16388,42 @@
             "type": "string",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
-          "relay_inference": {
-            "type": "boolean"
-          },
-          "session_id": {
+          "job_secrets": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "object"
               },
               {
                 "type": "null"
               }
             ]
+          },
+          "job_credentials": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registry_credentials": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dry_run": {
+            "type": "boolean"
           }
         },
         "required": [
-          "config",
-          "relay_inference",
-          "session_id"
+          "config"
         ],
         "additionalProperties": false
       },
@@ -16985,135 +16445,6 @@
           "source_trial_ids"
         ],
         "additionalProperties": false
-      },
-      "ArtifactConfig": {
-        "type": "object",
-        "properties": {
-          "source": {
-            "type": "string"
-          },
-          "destination": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "exclude": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "service": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "source"
-        ],
-        "allOf": [
-          {
-            "type": "object",
-            "additionalProperties": {}
-          }
-        ]
-      },
-      "MetricConfig": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string"
-          },
-          "kwargs": {
-            "type": "object"
-          }
-        },
-        "allOf": [
-          {
-            "type": "object",
-            "additionalProperties": {}
-          }
-        ]
-      },
-      "HostedVerifierConfig": {
-        "type": "object",
-        "properties": {
-          "override_timeout_sec": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "max_timeout_sec": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "Infinity",
-                  "-Infinity",
-                  "NaN"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "env": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "import_path": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "kwargs": {
-            "type": "object"
-          },
-          "disable": {
-            "type": "boolean"
-          }
-        },
-        "allOf": [
-          {
-            "type": "object",
-            "additionalProperties": {}
-          }
-        ]
       },
       "HostedSubmissionRetryConfig": {
         "type": "object",
@@ -19208,7 +18539,16 @@
           "content_hash": {
             "type": "string"
           },
-          "config": {},
+          "config": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "description": {
             "anyOf": [
               {
@@ -19377,7 +18717,16 @@
           "content_hash": {
             "type": "string"
           },
-          "config": {},
+          "config": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "description": {
             "anyOf": [
               {
@@ -19426,7 +18775,19 @@
           "verifier_config": {},
           "agent_config": {},
           "environment_config": {},
-          "required_env": {},
+          "required_env": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TaskEnvironmentRequirement"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "healthcheck_config": {},
           "multi_step_reward_strategy": {
             "anyOf": [
@@ -19555,7 +18916,16 @@
           "instruction": {
             "type": "string"
           },
-          "config": {},
+          "config": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "agent_config": {},
           "verifier_config": {},
           "healthcheck_config": {},
@@ -19572,6 +18942,36 @@
           "min_reward"
         ],
         "additionalProperties": false
+      },
+      "TaskEnvironmentRequirement": {
+        "type": "object",
+        "properties": {
+          "env_var": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "environment",
+              "verifier"
+            ]
+          },
+          "has_default": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "env_var",
+          "phase",
+          "has_default"
+        ],
+        "allOf": [
+          {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        ]
       },
       "PackageVersionDetail": {
         "anyOf": [
@@ -19809,7 +19209,16 @@
           "content_hash": {
             "type": "string"
           },
-          "config": {},
+          "config": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "description": {
             "anyOf": [
               {
@@ -19858,7 +19267,19 @@
           "verifier_config": {},
           "agent_config": {},
           "environment_config": {},
-          "required_env": {},
+          "required_env": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TaskEnvironmentRequirement"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "healthcheck_config": {},
           "multi_step_reward_strategy": {
             "anyOf": [
