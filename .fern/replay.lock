@@ -12,14 +12,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: eb2e6a419c30e357435a8e634f59fe7bd11e7e9c
+  - commit_sha: a573b0ac39d62db39a051ce4d301a47bc38dec29
+    tree_hash: 1053587f636ab4e3dcef080c40276dfb502581d5
+    timestamp: 2026-11-13T00:05:53.154Z
+    cli_version: 5.199.0
+    generator_versions:
+      python: 6.17.0
+current_generation: a573b0ac39d62db39a051ce4d301a47bc38dec29
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:00cb9ba66e25942f8b03ec7987786ec8212b80cce5cdaf51ad1dd340b3d87a04
+    content_hash: sha256:c6e614f9fa41dfb09c54a3a1269b06eb8d9a408a1c41ec837ef41f7cdb9b0975
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: eb2e6a419c30e357435a8e634f59fe7bd11e7e9c
+    base_generation: a573b0ac39d62db39a051ce4d301a47bc38dec29
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -50,12 +56,10 @@ patches:
       - src/harbor_client/types/job_bucket_circuit_state.py
       - src/harbor_client/types/job_cancellation_summary.py
       - src/harbor_client/types/job_circuit_state.py
-      - src/harbor_client/types/job_detail.py
       - src/harbor_client/types/job_manual_pause_summary.py
       - src/harbor_client/types/job_overview.py
       - src/harbor_client/types/job_overview_statistics.py
       - src/harbor_client/types/job_reward_metric_set.py
-      - src/harbor_client/types/job_summary.py
       - src/harbor_client/types/job_task_summary.py
       - src/harbor_client/types/job_trial_status_item.py
       - src/harbor_client/types/jobs_list_bad_request_response.py
@@ -87,6 +91,30 @@ patches:
       - src/harbor_client/types/utils/base_model.py
       - src/harbor_client/types/utils/cast_models.py
     patch_content: |
+      diff --git a/pyproject.toml b/pyproject.toml
+      index e7dc55e..61603eb 100644
+      --- a/pyproject.toml
+      +++ b/pyproject.toml
+      @@ -7,9 +7,16 @@ name = "harbor-client"
+       version = "0.1.0"
+       description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
+       readme = "PyPI_README.md"
+      -requires-python = ">=3.9"
+      +requires-python = ">=3.12"
+       dependencies = [
+           "requests>=2.31.0",
+      -    "pydantic>=2.0.0,<3.0.0",
+      -    "httpx>=0.21.2"
+      +    "pydantic>=2.14.0,<3",
+      +    "httpx>=0.27.0",
+      +    "jsonschema>=4.23.0"
+       ]
+      +
+      +[project.optional-dependencies]
+      +tus = ["tuspy>=1.1.0,<2"]
+      +
+      +[tool.setuptools.package-data]
+      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
       diff --git a/src/harbor_client/api_keys/client.py b/src/harbor_client/api_keys/client.py
       index cd20bb2..d641f1f 100644
       --- a/src/harbor_client/api_keys/client.py
@@ -223,6 +251,72 @@ patches:
            max_retries: int
            additional_headers: typing.Dict[str, typing.Any]
            additional_query_parameters: typing.Dict[str, typing.Any]
+      diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
+      index 3b68182..cbdaa3e 100644
+      --- a/src/harbor_client/jobs/client.py
+      +++ b/src/harbor_client/jobs/client.py
+      @@ -1153,6 +1153,7 @@ class JobsClient(BaseService):
+               :return: The parsed response data.
+               :rtype: SyncPager[JobSummary]
+               """
+      +        self = self._for_one_call()
+       
+               Validator(str).is_array().is_optional().validate(task, "task")
+               Validator(RunState).is_optional().validate(state, "state")
+      @@ -1219,9 +1220,6 @@ class JobsClient(BaseService):
+                       )
+                       current_page = parsed_response.items
+       
+      -                if not current_page:
+      -                    break
+      -
+                       yield current_page
+       
+                       next_cursor = parsed_response.next_page_token
+      @@ -1401,6 +1399,7 @@ class JobsClient(BaseService):
+               :return: The parsed response data.
+               :rtype: SyncPager[JobTaskSummary]
+               """
+      +        self = self._for_one_call()
+       
+               Validator(str).validate(job_id, "job_id")
+               Validator(str).is_optional().validate(page_size, "page_size")
+      @@ -1459,9 +1458,6 @@ class JobsClient(BaseService):
+                       )
+                       current_page = parsed_response.items
+       
+      -                if not current_page:
+      -                    break
+      -
+                       yield current_page
+       
+                       next_cursor = parsed_response.next_page_token
+      @@ -2349,7 +2345,11 @@ class AsyncJobsClient(JobsClient):
+               )
+       
+               async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+                       yield page
+       
+               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      @@ -2439,7 +2439,11 @@ class AsyncJobsClient(JobsClient):
+               )
+       
+               async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+                       yield page
+       
+               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/leaderboards/client.py b/src/harbor_client/leaderboards/client.py
       index 3f02570..1ba8e14 100644
       --- a/src/harbor_client/leaderboards/client.py
@@ -321,7 +415,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/net/transport/serializer.py b/src/harbor_client/net/transport/serializer.py
-      index 574145a..e9dc69f 100644
+      index cbe696e..d940ac9 100644
       --- a/src/harbor_client/net/transport/serializer.py
       +++ b/src/harbor_client/net/transport/serializer.py
       @@ -263,7 +263,7 @@ class Serializer:
@@ -462,6 +556,41 @@ patches:
        
                        next_cursor = parsed_response.next_page_token
       @@ -935,7 +933,11 @@ class AsyncSecretsClient(SecretsClient):
+               )
+       
+               async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+                       yield page
+       
+               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
+      index fe07cb7..c70e5de 100644
+      --- a/src/harbor_client/trials/client.py
+      +++ b/src/harbor_client/trials/client.py
+      @@ -764,6 +764,7 @@ class TrialsClient(BaseService):
+               :return: The parsed response data.
+               :rtype: SyncPager[TrialSummary]
+               """
+      +        self = self._for_one_call()
+       
+               Validator(str).is_array().is_optional().validate(task, "task")
+               Validator(RunState).is_optional().validate(state, "state")
+      @@ -832,9 +833,6 @@ class TrialsClient(BaseService):
+                       )
+                       current_page = parsed_response.items
+       
+      -                if not current_page:
+      -                    break
+      -
+                       yield current_page
+       
+                       next_cursor = parsed_response.next_page_token
+      @@ -1414,7 +1412,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
                async def _paginate():
@@ -1150,156 +1279,6 @@ patches:
                    # Pydantic models: use model_validate() for each item. Validated one at a time so the
                    # failing element's index reaches the error message.
                    if hasattr(element_type, "model_validate"):
-      diff --git a/pyproject.toml b/pyproject.toml
-      index ee4bc40..61603eb 100644
-      --- a/pyproject.toml
-      +++ b/pyproject.toml
-      @@ -4,12 +4,19 @@ build-backend = "setuptools.build_meta"
-       
-       [project]
-       name = "harbor-client"
-      -version = "1.0.0"
-      +version = "0.1.0"
-       description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
-       readme = "PyPI_README.md"
-      -requires-python = ">=3.9"
-      +requires-python = ">=3.12"
-       dependencies = [
-           "requests>=2.31.0",
-      -    "pydantic>=2.0.0,<3.0.0",
-      -    "httpx>=0.21.2"
-      +    "pydantic>=2.14.0,<3",
-      +    "httpx>=0.27.0",
-      +    "jsonschema>=4.23.0"
-       ]
-      +
-      +[project.optional-dependencies]
-      +tus = ["tuspy>=1.1.0,<2"]
-      +
-      +[tool.setuptools.package-data]
-      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
-      diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 3b68182..cbdaa3e 100644
-      --- a/src/harbor_client/jobs/client.py
-      +++ b/src/harbor_client/jobs/client.py
-      @@ -1153,6 +1153,7 @@ class JobsClient(BaseService):
-               :return: The parsed response data.
-               :rtype: SyncPager[JobSummary]
-               """
-      +        self = self._for_one_call()
-       
-               Validator(str).is_array().is_optional().validate(task, "task")
-               Validator(RunState).is_optional().validate(state, "state")
-      @@ -1219,9 +1220,6 @@ class JobsClient(BaseService):
-                       )
-                       current_page = parsed_response.items
-       
-      -                if not current_page:
-      -                    break
-      -
-                       yield current_page
-       
-                       next_cursor = parsed_response.next_page_token
-      @@ -1401,6 +1399,7 @@ class JobsClient(BaseService):
-               :return: The parsed response data.
-               :rtype: SyncPager[JobTaskSummary]
-               """
-      +        self = self._for_one_call()
-       
-               Validator(str).validate(job_id, "job_id")
-               Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -1459,9 +1458,6 @@ class JobsClient(BaseService):
-                       )
-                       current_page = parsed_response.items
-       
-      -                if not current_page:
-      -                    break
-      -
-                       yield current_page
-       
-                       next_cursor = parsed_response.next_page_token
-      @@ -2349,7 +2345,11 @@ class AsyncJobsClient(JobsClient):
-               )
-       
-               async def _paginate():
-      -            for page in sync_pager.iter_pages():
-      +            pages = sync_pager.iter_pages()
-      +            while True:
-      +                page = await to_async(next)(pages, None)
-      +                if page is None:
-      +                    return
-                       yield page
-       
-               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2439,7 +2439,11 @@ class AsyncJobsClient(JobsClient):
-               )
-       
-               async def _paginate():
-      -            for page in sync_pager.iter_pages():
-      +            pages = sync_pager.iter_pages()
-      +            while True:
-      +                page = await to_async(next)(pages, None)
-      +                if page is None:
-      +                    return
-                       yield page
-       
-               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      diff --git a/src/harbor_client/py.typed b/src/harbor_client/py.typed
-      new file mode 100644
-      index 0000000..e69de29
-      diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index fe07cb7..c70e5de 100644
-      --- a/src/harbor_client/trials/client.py
-      +++ b/src/harbor_client/trials/client.py
-      @@ -764,6 +764,7 @@ class TrialsClient(BaseService):
-               :return: The parsed response data.
-               :rtype: SyncPager[TrialSummary]
-               """
-      +        self = self._for_one_call()
-       
-               Validator(str).is_array().is_optional().validate(task, "task")
-               Validator(RunState).is_optional().validate(state, "state")
-      @@ -832,9 +833,6 @@ class TrialsClient(BaseService):
-                       )
-                       current_page = parsed_response.items
-       
-      -                if not current_page:
-      -                    break
-      -
-                       yield current_page
-       
-                       next_cursor = parsed_response.next_page_token
-      @@ -1414,7 +1412,11 @@ class AsyncTrialsClient(TrialsClient):
-               )
-       
-               async def _paginate():
-      -            for page in sync_pager.iter_pages():
-      +            pages = sync_pager.iter_pages()
-      +            while True:
-      +                page = await to_async(next)(pages, None)
-      +                if page is None:
-      +                    return
-                       yield page
-       
-               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      diff --git a/src/harbor_client/types/job_detail.py b/src/harbor_client/types/job_detail.py
-      index 0eb4873..9555fd6 100644
-      --- a/src/harbor_client/types/job_detail.py
-      +++ b/src/harbor_client/types/job_detail.py
-      @@ -82,3 +82,4 @@ class JobDetail(BaseModel):
-           )
-           config: Dict[str, Any]
-           session_id: Optional[str]
-      +
-      diff --git a/src/harbor_client/types/job_summary.py b/src/harbor_client/types/job_summary.py
-      index cf6cd70..ded533e 100644
-      --- a/src/harbor_client/types/job_summary.py
-      +++ b/src/harbor_client/types/job_summary.py
-      @@ -71,3 +71,4 @@ class JobSummary(BaseModel):
-           sources: List[str]
-           rewards: Dict[str, MeanAggregate]
-           usage: UsageAggregates
-      +
     theirs_snapshot:
       pyproject.toml: |
         [build-system]
@@ -7086,14 +7065,14 @@ patches:
                 self.errors: dict[int, ApiError] = {}
                 self.config: Optional["SdkConfig"] = config
 
-                self.headers["User-Agent"] = "harbor-client/1.0.0"
+                self.headers["User-Agent"] = "harbor-client/0.1.0"
                 self.headers["X-Fern-Language"] = "Python"
                 self.headers["X-Fern-Runtime"] = f"python/{platform.python_version()}"
                 self.headers["X-Fern-Platform"] = (
                     f"{platform.system().lower()}/{platform.release()}"
                 )
                 self.headers["X-Fern-SDK-Name"] = "harbor-client"
-                self.headers["X-Fern-SDK-Version"] = "1.0.0"
+                self.headers["X-Fern-SDK-Version"] = "0.1.0"
 
                 # Apply default headers, FIRST contributor of a header name winning (FSDK-1671).
                 #
@@ -9828,7 +9807,6 @@ patches:
                     request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
-      src/harbor_client/py.typed: ""
       src/harbor_client/secrets/client.py: |
         from typing import Any, Optional, Generator, List, Union
         from ..services.utils.validator import Validator
@@ -14070,92 +14048,6 @@ patches:
 
         # Rebuild model to resolve forward references from submodels
         JobCircuitState.model_rebuild()
-      src/harbor_client/types/job_detail.py: |+
-        from __future__ import annotations
-        from typing import List
-        from pydantic import Field
-        from typing import Optional
-        from typing import Any
-        from typing import Union
-        from typing import Dict
-        from .utils.base_model import BaseModel
-        from .run_state import RunState
-        from .trial_counts import TrialCounts
-        from .mean_aggregate import MeanAggregate
-        from .usage_aggregates import UsageAggregates
-
-
-        class JobDetail(BaseModel):
-            """JobDetail
-
-            :param created_at: created_at
-            :type created_at: str
-            :param updated_at: updated_at
-            :type updated_at: str
-            :param started_at: started_at
-            :type started_at: str
-            :param finished_at: finished_at
-            :type finished_at: str
-            :param id: id
-            :type id: str
-            :param name: name
-            :type name: str
-            :param state: state
-            :type state: RunState
-            :param rollouts: rollouts
-            :type rollouts: TrialCounts
-            :param trials: trials, defaults to None
-            :type trials: TrialCounts, optional
-            :param n_retries: n_retries
-            :type n_retries: int
-            :param n_errors: n_errors
-            :type n_errors: int
-            :param agent_names: agent_names
-            :type agent_names: List[str]
-            :param model_names: model_names
-            :type model_names: List[str]
-            :param model_providers: model_providers
-            :type model_providers: List[str]
-            :param reasoning_efforts: reasoning_efforts
-            :type reasoning_efforts: List[str]
-            :param sources: sources
-            :type sources: List[str]
-            :param rewards: rewards
-            :type rewards: Dict[str, MeanAggregate]
-            :param usage: usage
-            :type usage: UsageAggregates
-            :param lock_uri: Null when no standalone job lock was stored. Artifact downloads use the storage API.
-            :type lock_uri: str
-            :param config: config
-            :type config: Dict[str, Any]
-            :param session_id: session_id
-            :type session_id: str
-            """
-
-            created_at: str
-            updated_at: str
-            started_at: Optional[str]
-            finished_at: Optional[str]
-            id: str
-            name: str
-            state: RunState
-            rollouts: TrialCounts
-            trials: Optional[TrialCounts] = Field(default=None)
-            n_retries: int
-            n_errors: int
-            agent_names: List[str]
-            model_names: List[str]
-            model_providers: List[str]
-            reasoning_efforts: List[str]
-            sources: List[str]
-            rewards: Dict[str, MeanAggregate]
-            usage: UsageAggregates
-            lock_uri: Optional[str] = Field(
-                description="Null when no standalone job lock was stored. Artifact downloads use the storage API."
-            )
-            config: Dict[str, Any]
-            session_id: Optional[str]
-
       src/harbor_client/types/job_manual_pause_summary.py: |
         from __future__ import annotations
         import typing
@@ -14693,81 +14585,6 @@ patches:
 
         # Rebuild model to resolve forward references from submodels
         JobRewardMetricSet.model_rebuild()
-      src/harbor_client/types/job_summary.py: |+
-        from __future__ import annotations
-        from typing import List
-        from pydantic import Field
-        from typing import Optional
-        from typing import Any
-        from typing import Union
-        from typing import Dict
-        from .utils.base_model import BaseModel
-        from .run_state import RunState
-        from .trial_counts import TrialCounts
-        from .mean_aggregate import MeanAggregate
-        from .usage_aggregates import UsageAggregates
-
-
-        class JobSummary(BaseModel):
-            """JobSummary
-
-            :param created_at: created_at
-            :type created_at: str
-            :param updated_at: updated_at
-            :type updated_at: str
-            :param started_at: started_at
-            :type started_at: str
-            :param finished_at: finished_at
-            :type finished_at: str
-            :param id: id
-            :type id: str
-            :param name: name
-            :type name: str
-            :param state: state
-            :type state: RunState
-            :param rollouts: rollouts
-            :type rollouts: TrialCounts
-            :param trials: trials, defaults to None
-            :type trials: TrialCounts, optional
-            :param n_retries: n_retries
-            :type n_retries: int
-            :param n_errors: n_errors
-            :type n_errors: int
-            :param agent_names: agent_names
-            :type agent_names: List[str]
-            :param model_names: model_names
-            :type model_names: List[str]
-            :param model_providers: model_providers
-            :type model_providers: List[str]
-            :param reasoning_efforts: reasoning_efforts
-            :type reasoning_efforts: List[str]
-            :param sources: sources
-            :type sources: List[str]
-            :param rewards: rewards
-            :type rewards: Dict[str, MeanAggregate]
-            :param usage: usage
-            :type usage: UsageAggregates
-            """
-
-            created_at: str
-            updated_at: str
-            started_at: Optional[str]
-            finished_at: Optional[str]
-            id: str
-            name: str
-            state: RunState
-            rollouts: TrialCounts
-            trials: Optional[TrialCounts] = Field(default=None)
-            n_retries: int
-            n_errors: int
-            agent_names: List[str]
-            model_names: List[str]
-            model_providers: List[str]
-            reasoning_efforts: List[str]
-            sources: List[str]
-            rewards: Dict[str, MeanAggregate]
-            usage: UsageAggregates
-
       src/harbor_client/types/job_task_summary.py: |
         from __future__ import annotations
         import typing
@@ -16993,7 +16810,7 @@ patches:
     original_commit: 61a37708c2a4e72346405c1176c431715170524c
     original_message: Use native Fern generation PRs and persistent Replay history
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: eb2e6a419c30e357435a8e634f59fe7bd11e7e9c
+    base_generation: a573b0ac39d62db39a051ce4d301a47bc38dec29
     files:
       - build_support.py
     patch_content: |
@@ -17063,3 +16880,2194 @@ patches:
       -        super().run()
       -        generate_export_stubs(Path(self.build_lib) / "harbor_client")
     user_owned: true
+  - id: patch-54e30fcc
+    content_hash: sha256:7c7db93cf4ec3d9a427202bf62b4854ba2d96efd6bcc69ef1d117dd134d9a4e2
+    original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
+    original_message: Align typed execution controls and rollout cursor behavior
+    original_author: Sam Vance <samvance243@gmail.com>
+    base_generation: a573b0ac39d62db39a051ce4d301a47bc38dec29
+    files:
+      - examples/sample.py
+      - src/harbor_client/rollouts/client.py
+      - src/harbor_client/types/job_detail.py
+      - src/harbor_client/types/job_summary.py
+      - src/harbor_client/types/jobs_submit_response.py
+      - src/harbor_client/types/rollouts_list_bad_request_response.py
+      - src/harbor_client/types/trial_detail.py
+      - src/harbor_client/types/trial_detail1.py
+    patch_content: |
+      diff --git a/examples/sample.py b/examples/sample.py
+      index 08ce74b..e12a37c 100644
+      --- a/examples/sample.py
+      +++ b/examples/sample.py
+      @@ -1,5 +1,4 @@
+       from harbor_client import HarborAPIClient
+      -from harbor_client.types import RunState, JobsListRequestSort
+       
+       client = HarborAPIClient(
+           harbor_api_version="YOUR_HARBOR_API_VERSION",
+      diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
+      index cc98a69..6363c11 100644
+      --- a/src/harbor_client/rollouts/client.py
+      +++ b/src/harbor_client/rollouts/client.py
+      @@ -597,6 +597,7 @@ class RolloutsClient(BaseService):
+               :return: The parsed response data.
+               :rtype: SyncPager[TrialSummary]
+               """
+      +        self = self._for_one_call()
+       
+               Validator(str).is_array().is_optional().validate(task, "task")
+               Validator(RunState).is_optional().validate(state, "state")
+      @@ -665,9 +666,6 @@ class RolloutsClient(BaseService):
+                       )
+                       current_page = parsed_response.items
+       
+      -                if not current_page:
+      -                    break
+      -
+                       yield current_page
+       
+                       next_cursor = parsed_response.next_page_token
+      @@ -1019,7 +1017,11 @@ class AsyncRolloutsClient(RolloutsClient):
+               )
+       
+               async def _paginate():
+      -            for page in sync_pager.iter_pages():
+      +            pages = sync_pager.iter_pages()
+      +            while True:
+      +                page = await to_async(next)(pages, None)
+      +                if page is None:
+      +                    return
+                       yield page
+       
+               return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+      diff --git a/src/harbor_client/types/jobs_submit_response.py b/src/harbor_client/types/jobs_submit_response.py
+      index 2e3ca82..53134d6 100644
+      --- a/src/harbor_client/types/jobs_submit_response.py
+      +++ b/src/harbor_client/types/jobs_submit_response.py
+      @@ -11,6 +11,5 @@ from .dry_run_response import DryRunResponse
+       JobsSubmitResponse = Union[SubmitJobResponse, DryRunResponse]
+       # TypeAdapter for runtime validation of JobsSubmitResponse
+       # This allows validation of Union types which are not directly instantiable
+      -from pydantic import TypeAdapter
+       
+       JobsSubmitResponse_adapter = TypeAdapter(JobsSubmitResponse)
+      diff --git a/src/harbor_client/types/rollouts_list_bad_request_response.py b/src/harbor_client/types/rollouts_list_bad_request_response.py
+      index 2e9fe15..02251b5 100644
+      --- a/src/harbor_client/types/rollouts_list_bad_request_response.py
+      +++ b/src/harbor_client/types/rollouts_list_bad_request_response.py
+      @@ -30,6 +30,5 @@ RolloutsListBadRequestResponse = Union[
+       ]
+       # TypeAdapter for runtime validation of RolloutsListBadRequestResponse
+       # This allows validation of Union types which are not directly instantiable
+      -from pydantic import TypeAdapter
+       
+       RolloutsListBadRequestResponse_adapter = TypeAdapter(RolloutsListBadRequestResponse)
+      diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
+      index cd3822c..856689d 100644
+      --- a/src/harbor_client/types/trial_detail.py
+      +++ b/src/harbor_client/types/trial_detail.py
+      @@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
+           :param model: model
+           :type model: ModelIdentity
+           :param rewards: rewards
+      -    :type rewards: Dict[str, float]
+      +    :type rewards: Dict[str, Optional[float]]
+           :param usage: usage
+           :type usage: Usage
+           :param error_type: error_type
+      @@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
+           task: TaskIdentity
+           agent: AgentIdentity
+           model: ModelIdentity
+      -    rewards: Optional[Dict[str, float]]
+      +    rewards: Optional[Dict[str, Optional[float]]]
+           usage: Usage
+           error_type: Optional[str]
+           lock: Optional[Dict[str, Any]] = Field(
+      @@ -95,9 +95,9 @@ class TrialDetail(BaseModel):
+           artifacts: Dict[str, str] = Field(
+               description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+           )
+      -    storage_error: Optional[Any] = Field(
+      +    storage_error: None = Field(
+               description="Storage failures are not persisted in the trial resource."
+           )
+      -    result: Optional[Any] = Field(
+      +    result: None = Field(
+               description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+           )
+      diff --git a/src/harbor_client/types/trial_detail1.py b/src/harbor_client/types/trial_detail1.py
+      index 12a8de5..8050a7b 100644
+      --- a/src/harbor_client/types/trial_detail1.py
+      +++ b/src/harbor_client/types/trial_detail1.py
+      @@ -56,7 +56,7 @@ class TrialDetail1(BaseModel):
+           :param model: model
+           :type model: ModelIdentity
+           :param rewards: rewards
+      -    :type rewards: Dict[str, float]
+      +    :type rewards: Dict[str, Optional[float]]
+           :param usage: usage
+           :type usage: Usage
+           :param error_type: error_type
+      @@ -86,7 +86,7 @@ class TrialDetail1(BaseModel):
+           task: TaskIdentity
+           agent: AgentIdentity
+           model: ModelIdentity
+      -    rewards: Optional[Dict[str, float]]
+      +    rewards: Optional[Dict[str, Optional[float]]]
+           usage: Usage
+           error_type: Optional[str]
+           lock: Optional[Dict[str, Any]] = Field(
+      @@ -95,9 +95,9 @@ class TrialDetail1(BaseModel):
+           artifacts: Dict[str, str] = Field(
+               description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+           )
+      -    storage_error: Optional[Any] = Field(
+      +    storage_error: None = Field(
+               description="Storage failures are not persisted in the trial resource."
+           )
+      -    result: Optional[Any] = Field(
+      +    result: None = Field(
+               description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+           )
+    theirs_snapshot:
+      examples/sample.py: |
+        from harbor_client import HarborAPIClient
+
+        client = HarborAPIClient(
+            harbor_api_version="YOUR_HARBOR_API_VERSION",
+        )
+        response = client.jobs.list(
+            task=["task"],
+            state="queued",
+            name="name",
+            q="q",
+            agent_name=["agent_name"],
+            agent_version=["agent_version"],
+            model_name=["model_name"],
+            model_provider=["model_provider"],
+            reasoning_effort=["reasoning_effort"],
+            source=["source"],
+            created_after="created_after",
+            created_before="created_before",
+            page_size="page_size",
+            page_token="page_token",
+            sort="id",
+        )
+        for item in response:
+            print(item)
+        # alternatively, you can paginate page-by-page
+        for page in response.iter_pages():
+            print(page)
+      src/harbor_client/rollouts/client.py: |
+        from typing import Any, Optional, Generator, List, Union
+        from ..services.utils.validator import Validator
+        from ..services.utils.base_service import BaseService
+        from ..types.utils.sentinel import SENTINEL
+        from ..types.utils.cast_models import cast_models
+        from ..types.utils.base_model import construct_lenient
+        from ..types.rollouts_list_bad_request_response import (
+            RolloutsListBadRequestResponse_adapter,
+        )
+        from ..types import (
+            BadRequestEncoded,
+            CancelRolloutsRequest,
+            ConflictEncoded,
+            FilterValuesResponse,
+            ForbiddenEncoded,
+            InternalServerErrorEncoded,
+            NotFoundEncoded,
+            RetryRolloutsRequest,
+            RetryRolloutsResponse,
+            RolloutActionRequest,
+            RolloutResponse,
+            RolloutsGetFiltersRequestField,
+            RolloutsListBadRequestResponse,
+            RolloutsListRequestSort,
+            RunState,
+            TrialActionResponse,
+            TrialPage1,
+            TrialSummary,
+            UnauthorizedEncoded,
+        )
+        from ..net.transport.serializer import Serializer
+        from ..net.transport.pagination import SyncPager
+        from ..net.transport.http_response import HttpResponse
+        from ..net.sdk_config import should_validate_response
+        from ..net.sdk_config import SdkConfig
+        from ..net.environment.environment import HarborAPIClientEnvironment
+        from ..core.request_options import RequestOptions
+        from ..services.async_.utils.to_async import to_async
+        from typing import Awaitable
+        from ..net.transport.pagination import AsyncPager
+        import asyncio
+
+
+        class RolloutsClient(BaseService):
+            """
+            Fern-style resource client for RolloutsClient.
+            Exposes this resource's endpoints and, when the resource has sub-resources, lazy
+            accessors to its child clients (`client.<parent>.<child>.method(...)`).
+            Inherits authentication, base-url and request handling from BaseService.
+            """
+
+            def __init__(self, *args, **kwargs):
+                """Initialize the resource client, its child clients and method-level configs."""
+                super().__init__(*args, **kwargs)
+                self._raw_client = self.with_raw_response
+                self._get_config: SdkConfig = {}
+                self._pause_config: SdkConfig = {}
+                self._resume_config: SdkConfig = {}
+                self._cancel_config: SdkConfig = {}
+                self._retry_config: SdkConfig = {}
+                self._get_filters_config: SdkConfig = {}
+                self._list_config: SdkConfig = {}
+
+            def set_get_config(self, config: SdkConfig):
+                """
+                Sets method-level configuration for get.
+
+                :param SdkConfig config: Configuration dictionary to override service-level defaults.
+                :return: The service instance for method chaining.
+                """
+                self._get_config = config
+                return self
+
+            def set_pause_config(self, config: SdkConfig):
+                """
+                Sets method-level configuration for pause.
+
+                :param SdkConfig config: Configuration dictionary to override service-level defaults.
+                :return: The service instance for method chaining.
+                """
+                self._pause_config = config
+                return self
+
+            def set_resume_config(self, config: SdkConfig):
+                """
+                Sets method-level configuration for resume.
+
+                :param SdkConfig config: Configuration dictionary to override service-level defaults.
+                :return: The service instance for method chaining.
+                """
+                self._resume_config = config
+                return self
+
+            def set_cancel_config(self, config: SdkConfig):
+                """
+                Sets method-level configuration for cancel.
+
+                :param SdkConfig config: Configuration dictionary to override service-level defaults.
+                :return: The service instance for method chaining.
+                """
+                self._cancel_config = config
+                return self
+
+            def set_retry_config(self, config: SdkConfig):
+                """
+                Sets method-level configuration for retry.
+
+                :param SdkConfig config: Configuration dictionary to override service-level defaults.
+                :return: The service instance for method chaining.
+                """
+                self._retry_config = config
+                return self
+
+            def set_get_filters_config(self, config: SdkConfig):
+                """
+                Sets method-level configuration for get_filters.
+
+                :param SdkConfig config: Configuration dictionary to override service-level defaults.
+                :return: The service instance for method chaining.
+                """
+                self._get_filters_config = config
+                return self
+
+            def set_list_config(self, config: SdkConfig):
+                """
+                Sets method-level configuration for list.
+
+                :param SdkConfig config: Configuration dictionary to override service-level defaults.
+                :return: The service instance for method chaining.
+                """
+                self._list_config = config
+                return self
+
+            @property
+            def with_raw_response(self) -> "RawRolloutsClient":
+                """
+                Returns a raw-response client whose methods mirror this resource but return
+                ``HttpResponse[T]`` (parsed body plus the raw status code and headers) instead of
+                the bare deserialized body.
+                """
+                return RawRolloutsClient(self)
+
+            @cast_models
+            def get(
+                self, rollout_id: str, *, request_options: Optional[RequestOptions] = None
+            ) -> RolloutResponse:
+                """get
+
+                :param rollout_id: rollout_id
+                :type rollout_id: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RolloutResponse
+                """
+
+                Validator(str).validate(rollout_id, "rollout_id")
+
+                resolved_config = self._get_resolved_config(self._get_config, request_options)
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_path("rollout_id", rollout_id)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("GET")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RolloutResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RolloutResponse, response)
+                    )
+                )
+
+            @cast_models
+            def pause(
+                self,
+                *,
+                rollout_ids: List[str],
+                request_options: Optional[RequestOptions] = None,
+            ) -> TrialActionResponse:
+                """pause
+
+                :param request_body: The request body.
+                :type request_body: RolloutActionRequest
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: TrialActionResponse
+                """
+
+                resolved_config = self._get_resolved_config(self._pause_config, request_options)
+
+                request_body = RolloutActionRequest(rollout_ids=rollout_ids)
+                Validator(RolloutActionRequest).validate(request_body, "request_body")
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/pause",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                    .set_body(request_body)
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        TrialActionResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(TrialActionResponse, response)
+                    )
+                )
+
+            @cast_models
+            def resume(
+                self,
+                *,
+                rollout_ids: List[str],
+                request_options: Optional[RequestOptions] = None,
+            ) -> TrialActionResponse:
+                """resume
+
+                :param request_body: The request body.
+                :type request_body: RolloutActionRequest
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: TrialActionResponse
+                """
+
+                resolved_config = self._get_resolved_config(
+                    self._resume_config, request_options
+                )
+
+                request_body = RolloutActionRequest(rollout_ids=rollout_ids)
+                Validator(RolloutActionRequest).validate(request_body, "request_body")
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/resume",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                    .set_body(request_body)
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        TrialActionResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(TrialActionResponse, response)
+                    )
+                )
+
+            @cast_models
+            def cancel(
+                self,
+                *,
+                rollout_ids: List[str],
+                force: bool = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> TrialActionResponse:
+                """Cancel the specified physical rollout attempts. force defaults to true; false lets running attempts finish. Terminal attempts are unchanged.
+
+                :param request_body: The request body.
+                :type request_body: CancelRolloutsRequest
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: TrialActionResponse
+                """
+
+                resolved_config = self._get_resolved_config(
+                    self._cancel_config, request_options
+                )
+
+                request_body = CancelRolloutsRequest(
+                    rollout_ids=rollout_ids,
+                    **dict[str, Any](
+                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                    ),
+                )
+                Validator(CancelRolloutsRequest).validate(request_body, "request_body")
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/cancel",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                    .set_body(request_body)
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        TrialActionResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(TrialActionResponse, response)
+                    )
+                )
+
+            @cast_models
+            def retry(
+                self,
+                *,
+                rollout_ids: List[str],
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> RetryRolloutsResponse:
+                """Retry the specified latest terminal attempts. Idempotency-Key is required; replaying the same ordered selection returns the same new rollout IDs. Stale or active attempts return 409.
+
+                :param request_body: The request body.
+                :type request_body: RetryRolloutsRequest
+                :param idempotency_key: idempotency_key
+                :type idempotency_key: str
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: RetryRolloutsResponse
+                """
+
+                Validator(str).validate(idempotency_key, "idempotency_key")
+
+                resolved_config = self._get_resolved_config(self._retry_config, request_options)
+
+                request_body = RetryRolloutsRequest(rollout_ids=rollout_ids)
+                Validator(RetryRolloutsRequest).validate(request_body, "request_body")
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/retry",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_header("idempotency-key", idempotency_key)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("POST")
+                    .set_body(request_body)
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        RetryRolloutsResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(RetryRolloutsResponse, response)
+                    )
+                )
+
+            @cast_models
+            def get_filters(
+                self,
+                *,
+                field: RolloutsGetFiltersRequestField,
+                task: List[str] = SENTINEL,
+                state: RunState = SENTINEL,
+                name: str = SENTINEL,
+                q: str = SENTINEL,
+                agent_name: List[str] = SENTINEL,
+                agent_version: List[str] = SENTINEL,
+                model_name: List[str] = SENTINEL,
+                model_provider: List[str] = SENTINEL,
+                reasoning_effort: List[str] = SENTINEL,
+                source: List[str] = SENTINEL,
+                created_after: str = SENTINEL,
+                created_before: str = SENTINEL,
+                job_id: str = SENTINEL,
+                limit: str = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> FilterValuesResponse:
+                """get_filters
+
+                :param field: field
+                :type field: RolloutsGetFiltersRequestField
+                :param task: task, defaults to None
+                :type task: List[str], optional
+                :param state: state, defaults to None
+                :type state: RunState, optional
+                :param name: name, defaults to None
+                :type name: str, optional
+                :param q: q, defaults to None
+                :type q: str, optional
+                :param agent_name: agent_name, defaults to None
+                :type agent_name: List[str], optional
+                :param agent_version: agent_version, defaults to None
+                :type agent_version: List[str], optional
+                :param model_name: model_name, defaults to None
+                :type model_name: List[str], optional
+                :param model_provider: model_provider, defaults to None
+                :type model_provider: List[str], optional
+                :param reasoning_effort: reasoning_effort, defaults to None
+                :type reasoning_effort: List[str], optional
+                :param source: source, defaults to None
+                :type source: List[str], optional
+                :param created_after: created_after, defaults to None
+                :type created_after: str, optional
+                :param created_before: created_before, defaults to None
+                :type created_before: str, optional
+                :param job_id: job_id, defaults to None
+                :type job_id: str, optional
+                :param limit: limit, defaults to None
+                :type limit: str, optional
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: FilterValuesResponse
+                """
+
+                Validator(RolloutsGetFiltersRequestField).validate(field, "field")
+                Validator(str).is_array().is_optional().validate(task, "task")
+                Validator(RunState).is_optional().validate(state, "state")
+                Validator(str).is_optional().validate(name, "name")
+                Validator(str).is_optional().validate(q, "q")
+                Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+                Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+                Validator(str).is_array().is_optional().validate(model_name, "model_name")
+                Validator(str).is_array().is_optional().validate(
+                    model_provider, "model_provider"
+                )
+                Validator(str).is_array().is_optional().validate(
+                    reasoning_effort, "reasoning_effort"
+                )
+                Validator(str).is_array().is_optional().validate(source, "source")
+                Validator(str).is_optional().validate(created_after, "created_after")
+                Validator(str).is_optional().validate(created_before, "created_before")
+                Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_optional().validate(limit, "limit")
+
+                resolved_config = self._get_resolved_config(
+                    self._get_filters_config, request_options
+                )
+
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/filters",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+                    )
+                    .add_query("task", task)
+                    .add_query("state", state)
+                    .add_query("name", name)
+                    .add_query("q", q)
+                    .add_query("agent_name", agent_name)
+                    .add_query("agent_version", agent_version)
+                    .add_query("model_name", model_name)
+                    .add_query("model_provider", model_provider)
+                    .add_query("reasoning_effort", reasoning_effort)
+                    .add_query("source", source)
+                    .add_query("created_after", created_after)
+                    .add_query("created_before", created_before)
+                    .add_query("job_id", job_id)
+                    .add_query("field", field)
+                    .add_query("limit", limit)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("GET")
+                )
+
+                response, status, content = self.send_request(serialized_request)
+                return (
+                    None
+                    if response in (b"", "")
+                    else (
+                        FilterValuesResponse.model_validate(response)
+                        if should_validate_response(resolved_config)
+                        else construct_lenient(FilterValuesResponse, response)
+                    )
+                )
+
+            @cast_models
+            def list(
+                self,
+                *,
+                task: List[str] = SENTINEL,
+                state: RunState = SENTINEL,
+                name: str = SENTINEL,
+                q: str = SENTINEL,
+                agent_name: List[str] = SENTINEL,
+                agent_version: List[str] = SENTINEL,
+                model_name: List[str] = SENTINEL,
+                model_provider: List[str] = SENTINEL,
+                reasoning_effort: List[str] = SENTINEL,
+                source: List[str] = SENTINEL,
+                created_after: str = SENTINEL,
+                created_before: str = SENTINEL,
+                job_id: str = SENTINEL,
+                page_size: str = SENTINEL,
+                page_token: str = SENTINEL,
+                sort: RolloutsListRequestSort = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> SyncPager[TrialSummary]:
+                """list
+
+                :param task: task, defaults to None
+                :type task: List[str], optional
+                :param state: state, defaults to None
+                :type state: RunState, optional
+                :param name: name, defaults to None
+                :type name: str, optional
+                :param q: q, defaults to None
+                :type q: str, optional
+                :param agent_name: agent_name, defaults to None
+                :type agent_name: List[str], optional
+                :param agent_version: agent_version, defaults to None
+                :type agent_version: List[str], optional
+                :param model_name: model_name, defaults to None
+                :type model_name: List[str], optional
+                :param model_provider: model_provider, defaults to None
+                :type model_provider: List[str], optional
+                :param reasoning_effort: reasoning_effort, defaults to None
+                :type reasoning_effort: List[str], optional
+                :param source: source, defaults to None
+                :type source: List[str], optional
+                :param created_after: created_after, defaults to None
+                :type created_after: str, optional
+                :param created_before: created_before, defaults to None
+                :type created_before: str, optional
+                :param job_id: job_id, defaults to None
+                :type job_id: str, optional
+                :param page_size: page_size, defaults to None
+                :type page_size: str, optional
+                :param page_token: page_token, defaults to None
+                :type page_token: str, optional
+                :param sort: sort, defaults to None
+                :type sort: RolloutsListRequestSort, optional
+                ...
+                :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+                ...
+                :return: The parsed response data.
+                :rtype: SyncPager[TrialSummary]
+                """
+                self = self._for_one_call()
+
+                Validator(str).is_array().is_optional().validate(task, "task")
+                Validator(RunState).is_optional().validate(state, "state")
+                Validator(str).is_optional().validate(name, "name")
+                Validator(str).is_optional().validate(q, "q")
+                Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+                Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+                Validator(str).is_array().is_optional().validate(model_name, "model_name")
+                Validator(str).is_array().is_optional().validate(
+                    model_provider, "model_provider"
+                )
+                Validator(str).is_array().is_optional().validate(
+                    reasoning_effort, "reasoning_effort"
+                )
+                Validator(str).is_array().is_optional().validate(source, "source")
+                Validator(str).is_optional().validate(created_after, "created_after")
+                Validator(str).is_optional().validate(created_before, "created_before")
+                Validator(str).is_optional().validate(job_id, "job_id")
+                Validator(str).is_optional().validate(page_size, "page_size")
+                Validator(str).is_optional().validate(page_token, "page_token")
+                Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
+
+                resolved_config = self._get_resolved_config(self._list_config, request_options)
+
+                def _paginate() -> Generator[List[TrialSummary], None, None]:
+                    nonlocal page_token
+                    while True:
+                        serialized_request = (
+                            Serializer(
+                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts",
+                                [self.get_access_token(resolved_config)],
+                                resolved_config,
+                            )
+                            .add_header(
+                                "Harbor-API-Version",
+                                self._global_headers.get("Harbor-API-Version"),
+                            )
+                            .add_query("task", task)
+                            .add_query("state", state)
+                            .add_query("name", name)
+                            .add_query("q", q)
+                            .add_query("agent_name", agent_name)
+                            .add_query("agent_version", agent_version)
+                            .add_query("model_name", model_name)
+                            .add_query("model_provider", model_provider)
+                            .add_query("reasoning_effort", reasoning_effort)
+                            .add_query("source", source)
+                            .add_query("created_after", created_after)
+                            .add_query("created_before", created_before)
+                            .add_query("job_id", job_id)
+                            .add_query("page_size", page_size)
+                            .add_query("page_token", page_token)
+                            .add_query("sort", sort)
+                            .add_error(401, UnauthorizedEncoded)
+                            .add_error(403, ForbiddenEncoded)
+                            .add_error(404, NotFoundEncoded)
+                            .add_error(500, InternalServerErrorEncoded)
+                            .serialize()
+                            .set_method("GET")
+                        )
+                        response, status, content = self.send_request(serialized_request)
+                        parsed_response = (
+                            TrialPage1.model_validate(response)
+                            if should_validate_response(resolved_config)
+                            else construct_lenient(TrialPage1, response)
+                        )
+                        current_page = parsed_response.items
+
+                        yield current_page
+
+                        next_cursor = parsed_response.next_page_token
+                        if not next_cursor:
+                            break
+
+                        page_token = next_cursor
+
+                return SyncPager(_paginate(), lambda: self._last_response)
+
+
+        class RawRolloutsClient:
+            """
+            Raw-response client for RolloutsClient.
+
+            Each method delegates to the matching :class:`RolloutsClient` method and wraps the result in
+            an ``HttpResponse[T]`` so callers can read ``.data`` alongside ``.status_code`` and
+            ``.headers``.
+            """
+
+            def __init__(self, client: RolloutsClient):
+                self._client = client
+                self._client_wrapper = client._client_wrapper
+
+            def get(
+                self, rollout_id: str, *, request_options: Optional[RequestOptions] = None
+            ) -> HttpResponse[RolloutResponse]:
+                data = RolloutsClient.get(
+                    self._client, rollout_id, request_options=request_options
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            def pause(
+                self,
+                *,
+                rollout_ids: List[str],
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialActionResponse]:
+                data = RolloutsClient.pause(
+                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            def resume(
+                self,
+                *,
+                rollout_ids: List[str],
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialActionResponse]:
+                data = RolloutsClient.resume(
+                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            def cancel(
+                self,
+                *,
+                rollout_ids: List[str],
+                force: bool = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialActionResponse]:
+                data = RolloutsClient.cancel(
+                    self._client,
+                    rollout_ids=rollout_ids,
+                    **dict[str, Any](
+                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                    ),
+                    request_options=request_options,
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            def retry(
+                self,
+                *,
+                rollout_ids: List[str],
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[RetryRolloutsResponse]:
+                data = RolloutsClient.retry(
+                    self._client,
+                    rollout_ids=rollout_ids,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            def get_filters(
+                self,
+                *,
+                field: RolloutsGetFiltersRequestField,
+                task: List[str] = SENTINEL,
+                state: RunState = SENTINEL,
+                name: str = SENTINEL,
+                q: str = SENTINEL,
+                agent_name: List[str] = SENTINEL,
+                agent_version: List[str] = SENTINEL,
+                model_name: List[str] = SENTINEL,
+                model_provider: List[str] = SENTINEL,
+                reasoning_effort: List[str] = SENTINEL,
+                source: List[str] = SENTINEL,
+                created_after: str = SENTINEL,
+                created_before: str = SENTINEL,
+                job_id: str = SENTINEL,
+                limit: str = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[FilterValuesResponse]:
+                data = RolloutsClient.get_filters(
+                    self._client,
+                    field=field,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "task": task,
+                                "state": state,
+                                "name": name,
+                                "q": q,
+                                "agent_name": agent_name,
+                                "agent_version": agent_version,
+                                "model_name": model_name,
+                                "model_provider": model_provider,
+                                "reasoning_effort": reasoning_effort,
+                                "source": source,
+                                "created_after": created_after,
+                                "created_before": created_before,
+                                "job_id": job_id,
+                                "limit": limit,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            def list(
+                self,
+                *,
+                task: List[str] = SENTINEL,
+                state: RunState = SENTINEL,
+                name: str = SENTINEL,
+                q: str = SENTINEL,
+                agent_name: List[str] = SENTINEL,
+                agent_version: List[str] = SENTINEL,
+                model_name: List[str] = SENTINEL,
+                model_provider: List[str] = SENTINEL,
+                reasoning_effort: List[str] = SENTINEL,
+                source: List[str] = SENTINEL,
+                created_after: str = SENTINEL,
+                created_before: str = SENTINEL,
+                job_id: str = SENTINEL,
+                page_size: str = SENTINEL,
+                page_token: str = SENTINEL,
+                sort: RolloutsListRequestSort = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[SyncPager[TrialSummary]]:
+                data = RolloutsClient.list(
+                    self._client,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "task": task,
+                                "state": state,
+                                "name": name,
+                                "q": q,
+                                "agent_name": agent_name,
+                                "agent_version": agent_version,
+                                "model_name": model_name,
+                                "model_provider": model_provider,
+                                "reasoning_effort": reasoning_effort,
+                                "source": source,
+                                "created_after": created_after,
+                                "created_before": created_before,
+                                "job_id": job_id,
+                                "page_size": page_size,
+                                "page_token": page_token,
+                                "sort": sort,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
+                )
+                return HttpResponse(data=data, response_source=lambda: data.last_response)
+
+
+        class AsyncRolloutsClient(RolloutsClient):
+            """
+            Async wrapper for RolloutsClient. Mirrors the sync client's endpoints (awaitable) and, for a
+            resource with sub-resources, its lazy child accessors (returning the async child clients).
+            """
+
+            @property
+            def with_raw_response(self) -> "AsyncRawRolloutsClient":  # type: ignore[override]
+                """
+                Returns an async raw-response client whose methods mirror this resource but return
+                ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
+                """
+                return AsyncRawRolloutsClient(self)
+
+            def get(
+                self, rollout_id: str, *, request_options: Optional[RequestOptions] = None
+            ) -> Awaitable[RolloutResponse]:  # type: ignore[override]
+                return to_async(super().get)(rollout_id, request_options=request_options)
+
+            def pause(
+                self,
+                *,
+                rollout_ids: List[str],
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+                return to_async(super().pause)(
+                    rollout_ids=rollout_ids, request_options=request_options
+                )
+
+            def resume(
+                self,
+                *,
+                rollout_ids: List[str],
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+                return to_async(super().resume)(
+                    rollout_ids=rollout_ids, request_options=request_options
+                )
+
+            def cancel(
+                self,
+                *,
+                rollout_ids: List[str],
+                force: bool = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[TrialActionResponse]:  # type: ignore[override]
+                return to_async(super().cancel)(
+                    rollout_ids=rollout_ids,
+                    **dict[str, Any](
+                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                    ),
+                    request_options=request_options,
+                )
+
+            def retry(
+                self,
+                *,
+                rollout_ids: List[str],
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[RetryRolloutsResponse]:  # type: ignore[override]
+                return to_async(super().retry)(
+                    rollout_ids=rollout_ids,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
+                )
+
+            def get_filters(
+                self,
+                *,
+                field: RolloutsGetFiltersRequestField,
+                task: List[str] = SENTINEL,
+                state: RunState = SENTINEL,
+                name: str = SENTINEL,
+                q: str = SENTINEL,
+                agent_name: List[str] = SENTINEL,
+                agent_version: List[str] = SENTINEL,
+                model_name: List[str] = SENTINEL,
+                model_provider: List[str] = SENTINEL,
+                reasoning_effort: List[str] = SENTINEL,
+                source: List[str] = SENTINEL,
+                created_after: str = SENTINEL,
+                created_before: str = SENTINEL,
+                job_id: str = SENTINEL,
+                limit: str = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+                return to_async(super().get_filters)(
+                    field=field,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "task": task,
+                                "state": state,
+                                "name": name,
+                                "q": q,
+                                "agent_name": agent_name,
+                                "agent_version": agent_version,
+                                "model_name": model_name,
+                                "model_provider": model_provider,
+                                "reasoning_effort": reasoning_effort,
+                                "source": source,
+                                "created_after": created_after,
+                                "created_before": created_before,
+                                "job_id": job_id,
+                                "limit": limit,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
+                )
+
+            def list(
+                self,
+                *,
+                task: List[str] = SENTINEL,
+                state: RunState = SENTINEL,
+                name: str = SENTINEL,
+                q: str = SENTINEL,
+                agent_name: List[str] = SENTINEL,
+                agent_version: List[str] = SENTINEL,
+                model_name: List[str] = SENTINEL,
+                model_provider: List[str] = SENTINEL,
+                reasoning_effort: List[str] = SENTINEL,
+                source: List[str] = SENTINEL,
+                created_after: str = SENTINEL,
+                created_before: str = SENTINEL,
+                job_id: str = SENTINEL,
+                page_size: str = SENTINEL,
+                page_token: str = SENTINEL,
+                sort: RolloutsListRequestSort = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> AsyncPager[TrialSummary]:  # type: ignore[override]
+                sync_pager = super().list(
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "task": task,
+                                "state": state,
+                                "name": name,
+                                "q": q,
+                                "agent_name": agent_name,
+                                "agent_version": agent_version,
+                                "model_name": model_name,
+                                "model_provider": model_provider,
+                                "reasoning_effort": reasoning_effort,
+                                "source": source,
+                                "created_after": created_after,
+                                "created_before": created_before,
+                                "job_id": job_id,
+                                "page_size": page_size,
+                                "page_token": page_token,
+                                "sort": sort,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
+                )
+
+                async def _paginate():
+                    pages = sync_pager.iter_pages()
+                    while True:
+                        page = await to_async(next)(pages, None)
+                        if page is None:
+                            return
+                        yield page
+
+                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
+
+
+        class AsyncRawRolloutsClient:
+            """
+            Async raw-response client for AsyncRolloutsClient.
+            """
+
+            def __init__(self, client: AsyncRolloutsClient):
+                self._client = client
+                self._client_wrapper = client._client_wrapper
+
+            async def get(
+                self, rollout_id: str, *, request_options: Optional[RequestOptions] = None
+            ) -> HttpResponse[RolloutResponse]:
+                data = await AsyncRolloutsClient.get(
+                    self._client, rollout_id, request_options=request_options
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            async def pause(
+                self,
+                *,
+                rollout_ids: List[str],
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialActionResponse]:
+                data = await AsyncRolloutsClient.pause(
+                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            async def resume(
+                self,
+                *,
+                rollout_ids: List[str],
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialActionResponse]:
+                data = await AsyncRolloutsClient.resume(
+                    self._client, rollout_ids=rollout_ids, request_options=request_options
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            async def cancel(
+                self,
+                *,
+                rollout_ids: List[str],
+                force: bool = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[TrialActionResponse]:
+                data = await AsyncRolloutsClient.cancel(
+                    self._client,
+                    rollout_ids=rollout_ids,
+                    **dict[str, Any](
+                        {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+                    ),
+                    request_options=request_options,
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            async def retry(
+                self,
+                *,
+                rollout_ids: List[str],
+                idempotency_key: str,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[RetryRolloutsResponse]:
+                data = await AsyncRolloutsClient.retry(
+                    self._client,
+                    rollout_ids=rollout_ids,
+                    idempotency_key=idempotency_key,
+                    request_options=request_options,
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            async def get_filters(
+                self,
+                *,
+                field: RolloutsGetFiltersRequestField,
+                task: List[str] = SENTINEL,
+                state: RunState = SENTINEL,
+                name: str = SENTINEL,
+                q: str = SENTINEL,
+                agent_name: List[str] = SENTINEL,
+                agent_version: List[str] = SENTINEL,
+                model_name: List[str] = SENTINEL,
+                model_provider: List[str] = SENTINEL,
+                reasoning_effort: List[str] = SENTINEL,
+                source: List[str] = SENTINEL,
+                created_after: str = SENTINEL,
+                created_before: str = SENTINEL,
+                job_id: str = SENTINEL,
+                limit: str = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[FilterValuesResponse]:
+                data = await AsyncRolloutsClient.get_filters(
+                    self._client,
+                    field=field,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "task": task,
+                                "state": state,
+                                "name": name,
+                                "q": q,
+                                "agent_name": agent_name,
+                                "agent_version": agent_version,
+                                "model_name": model_name,
+                                "model_provider": model_provider,
+                                "reasoning_effort": reasoning_effort,
+                                "source": source,
+                                "created_after": created_after,
+                                "created_before": created_before,
+                                "job_id": job_id,
+                                "limit": limit,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
+                )
+                return HttpResponse(data=data, response=self._client._last_response)
+
+            def list(
+                self,
+                *,
+                task: List[str] = SENTINEL,
+                state: RunState = SENTINEL,
+                name: str = SENTINEL,
+                q: str = SENTINEL,
+                agent_name: List[str] = SENTINEL,
+                agent_version: List[str] = SENTINEL,
+                model_name: List[str] = SENTINEL,
+                model_provider: List[str] = SENTINEL,
+                reasoning_effort: List[str] = SENTINEL,
+                source: List[str] = SENTINEL,
+                created_after: str = SENTINEL,
+                created_before: str = SENTINEL,
+                job_id: str = SENTINEL,
+                page_size: str = SENTINEL,
+                page_token: str = SENTINEL,
+                sort: RolloutsListRequestSort = SENTINEL,
+                request_options: Optional[RequestOptions] = None,
+            ) -> HttpResponse[AsyncPager[TrialSummary]]:
+                data = AsyncRolloutsClient.list(
+                    self._client,
+                    **dict[str, Any](
+                        {
+                            k: v
+                            for k, v in {
+                                "task": task,
+                                "state": state,
+                                "name": name,
+                                "q": q,
+                                "agent_name": agent_name,
+                                "agent_version": agent_version,
+                                "model_name": model_name,
+                                "model_provider": model_provider,
+                                "reasoning_effort": reasoning_effort,
+                                "source": source,
+                                "created_after": created_after,
+                                "created_before": created_before,
+                                "job_id": job_id,
+                                "page_size": page_size,
+                                "page_token": page_token,
+                                "sort": sort,
+                            }.items()
+                            if v is not SENTINEL
+                        }
+                    ),
+                    request_options=request_options,
+                )
+                return HttpResponse(data=data, response_source=lambda: data.last_response)
+      src/harbor_client/types/job_detail.py: |
+        from __future__ import annotations
+        from typing import List
+        from pydantic import Field
+        from typing import Optional
+        from typing import Any
+        from typing import Union
+        from typing import Dict
+        from .utils.base_model import BaseModel
+        from .run_state import RunState
+        from .trial_counts import TrialCounts
+        from .mean_aggregate import MeanAggregate
+        from .usage_aggregates import UsageAggregates
+
+
+        class JobDetail(BaseModel):
+            """JobDetail
+
+            :param created_at: created_at
+            :type created_at: str
+            :param updated_at: updated_at
+            :type updated_at: str
+            :param started_at: started_at
+            :type started_at: str
+            :param finished_at: finished_at
+            :type finished_at: str
+            :param id: id
+            :type id: str
+            :param name: name
+            :type name: str
+            :param state: state
+            :type state: RunState
+            :param rollouts: rollouts
+            :type rollouts: TrialCounts
+            :param trials: trials, defaults to None
+            :type trials: TrialCounts, optional
+            :param n_retries: n_retries
+            :type n_retries: int
+            :param n_errors: n_errors
+            :type n_errors: int
+            :param agent_names: agent_names
+            :type agent_names: List[str]
+            :param model_names: model_names
+            :type model_names: List[str]
+            :param model_providers: model_providers
+            :type model_providers: List[str]
+            :param reasoning_efforts: reasoning_efforts
+            :type reasoning_efforts: List[str]
+            :param sources: sources
+            :type sources: List[str]
+            :param rewards: rewards
+            :type rewards: Dict[str, MeanAggregate]
+            :param usage: usage
+            :type usage: UsageAggregates
+            :param lock_uri: Null when no standalone job lock was stored. Artifact downloads use the storage API.
+            :type lock_uri: str
+            :param config: config
+            :type config: Dict[str, Any]
+            :param session_id: session_id
+            :type session_id: str
+            """
+
+            created_at: str
+            updated_at: str
+            started_at: Optional[str]
+            finished_at: Optional[str]
+            id: str
+            name: str
+            state: RunState
+            rollouts: TrialCounts
+            trials: Optional[TrialCounts] = Field(default=None)
+            n_retries: int
+            n_errors: int
+            agent_names: List[str]
+            model_names: List[str]
+            model_providers: List[str]
+            reasoning_efforts: List[str]
+            sources: List[str]
+            rewards: Dict[str, MeanAggregate]
+            usage: UsageAggregates
+            lock_uri: Optional[str] = Field(
+                description="Null when no standalone job lock was stored. Artifact downloads use the storage API."
+            )
+            config: Dict[str, Any]
+            session_id: Optional[str]
+      src/harbor_client/types/job_summary.py: |
+        from __future__ import annotations
+        from typing import List
+        from pydantic import Field
+        from typing import Optional
+        from typing import Any
+        from typing import Union
+        from typing import Dict
+        from .utils.base_model import BaseModel
+        from .run_state import RunState
+        from .trial_counts import TrialCounts
+        from .mean_aggregate import MeanAggregate
+        from .usage_aggregates import UsageAggregates
+
+
+        class JobSummary(BaseModel):
+            """JobSummary
+
+            :param created_at: created_at
+            :type created_at: str
+            :param updated_at: updated_at
+            :type updated_at: str
+            :param started_at: started_at
+            :type started_at: str
+            :param finished_at: finished_at
+            :type finished_at: str
+            :param id: id
+            :type id: str
+            :param name: name
+            :type name: str
+            :param state: state
+            :type state: RunState
+            :param rollouts: rollouts
+            :type rollouts: TrialCounts
+            :param trials: trials, defaults to None
+            :type trials: TrialCounts, optional
+            :param n_retries: n_retries
+            :type n_retries: int
+            :param n_errors: n_errors
+            :type n_errors: int
+            :param agent_names: agent_names
+            :type agent_names: List[str]
+            :param model_names: model_names
+            :type model_names: List[str]
+            :param model_providers: model_providers
+            :type model_providers: List[str]
+            :param reasoning_efforts: reasoning_efforts
+            :type reasoning_efforts: List[str]
+            :param sources: sources
+            :type sources: List[str]
+            :param rewards: rewards
+            :type rewards: Dict[str, MeanAggregate]
+            :param usage: usage
+            :type usage: UsageAggregates
+            """
+
+            created_at: str
+            updated_at: str
+            started_at: Optional[str]
+            finished_at: Optional[str]
+            id: str
+            name: str
+            state: RunState
+            rollouts: TrialCounts
+            trials: Optional[TrialCounts] = Field(default=None)
+            n_retries: int
+            n_errors: int
+            agent_names: List[str]
+            model_names: List[str]
+            model_providers: List[str]
+            reasoning_efforts: List[str]
+            sources: List[str]
+            rewards: Dict[str, MeanAggregate]
+            usage: UsageAggregates
+      src/harbor_client/types/jobs_submit_response.py: |
+        from __future__ import annotations
+        from typing import Union
+        from typing import Any
+        from typing import Annotated
+        from pydantic import TypeAdapter
+        from .submit_job_response import SubmitJobResponse
+        from .dry_run_response import DryRunResponse
+
+        # Union type for JobsSubmitResponse
+        # Pydantic will attempt to validate against each type in order
+        JobsSubmitResponse = Union[SubmitJobResponse, DryRunResponse]
+        # TypeAdapter for runtime validation of JobsSubmitResponse
+        # This allows validation of Union types which are not directly instantiable
+
+        JobsSubmitResponse_adapter = TypeAdapter(JobsSubmitResponse)
+      src/harbor_client/types/rollouts_list_bad_request_response.py: |
+        from __future__ import annotations
+        from typing import Union
+        from typing import Any
+        from typing import Annotated
+        from pydantic import TypeAdapter
+        from .bad_request_encoded import BadRequestEncodedData
+        from .invalid_page_size_encoded import InvalidPageSizeEncoded
+        from .invalid_page_token_encoded import InvalidPageTokenEncoded
+
+
+        # fernMode variant type for a shared-component member of RolloutsListBadRequestResponse
+        class RolloutsListBadRequestResponse_BadRequest(BadRequestEncodedData):
+            pass
+
+
+        # fernMode variant type for a shared-component member of RolloutsListBadRequestResponse
+        class RolloutsListBadRequestResponse_InvalidPageSize(InvalidPageSizeEncoded):
+            pass
+
+
+        # fernMode variant type for a shared-component member of RolloutsListBadRequestResponse
+        class RolloutsListBadRequestResponse_InvalidPageToken(InvalidPageTokenEncoded):
+            pass
+
+
+        # Union type for RolloutsListBadRequestResponse
+        # Pydantic will attempt to validate against each type in order
+        RolloutsListBadRequestResponse = Union[
+            BadRequestEncodedData, InvalidPageSizeEncoded, InvalidPageTokenEncoded
+        ]
+        # TypeAdapter for runtime validation of RolloutsListBadRequestResponse
+        # This allows validation of Union types which are not directly instantiable
+
+        RolloutsListBadRequestResponse_adapter = TypeAdapter(RolloutsListBadRequestResponse)
+      src/harbor_client/types/trial_detail.py: |
+        from __future__ import annotations
+        import typing
+        from typing import List
+        from pydantic import Field
+        from typing import Optional
+        from typing import Any
+        from typing import Union
+        from typing import Dict
+        from .utils.base_model import BaseModel
+        from .run_state import RunState
+        from .task_identity import TaskIdentity
+        from .agent_identity import AgentIdentity
+        from .model_identity import ModelIdentity
+        from .usage import Usage
+
+        TrialDetailPhase = typing.Union[
+            typing.Literal[
+                "environment_setup",
+                "agent_setup",
+                "agent_execution",
+                "verifier",
+                "collection",
+                "cleanup",
+            ],
+            typing.Any,
+        ]
+
+
+        class TrialDetail(BaseModel):
+            """TrialDetail
+
+            :param created_at: created_at
+            :type created_at: str
+            :param updated_at: updated_at
+            :type updated_at: str
+            :param started_at: started_at
+            :type started_at: str
+            :param finished_at: finished_at
+            :type finished_at: str
+            :param id: id
+            :type id: str
+            :param job_id: job_id
+            :type job_id: str
+            :param name: name
+            :type name: str
+            :param state: state
+            :type state: RunState
+            :param retry_ids: All readable attempts of this logical trial, newest first, including this attempt.
+            :type retry_ids: List[str]
+            :param phase: phase
+            :type phase: TrialDetailPhase
+            :param task: task
+            :type task: TaskIdentity
+            :param agent: agent
+            :type agent: AgentIdentity
+            :param model: model
+            :type model: ModelIdentity
+            :param rewards: rewards
+            :type rewards: Dict[str, Optional[float]]
+            :param usage: usage
+            :type usage: Usage
+            :param error_type: error_type
+            :type error_type: str
+            :param lock: The persisted trial lock, or null for historical uploads without a lock.
+            :type lock: Dict[str, Any]
+            :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
+            :type artifacts: Dict[str, str]
+            :param storage_error: Storage failures are not persisted in the trial resource.
+            :type storage_error: Any
+            :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
+            :type result: Any
+            """
+
+            created_at: str
+            updated_at: str
+            started_at: Optional[str]
+            finished_at: Optional[str]
+            id: str
+            job_id: str
+            name: str
+            state: RunState
+            retry_ids: List[str] = Field(
+                description="All readable attempts of this logical trial, newest first, including this attempt."
+            )
+            phase: Optional[TrialDetailPhase]
+            task: TaskIdentity
+            agent: AgentIdentity
+            model: ModelIdentity
+            rewards: Optional[Dict[str, Optional[float]]]
+            usage: Usage
+            error_type: Optional[str]
+            lock: Optional[Dict[str, Any]] = Field(
+                description="The persisted trial lock, or null for historical uploads without a lock."
+            )
+            artifacts: Dict[str, str] = Field(
+                description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+            )
+            storage_error: None = Field(
+                description="Storage failures are not persisted in the trial resource."
+            )
+            result: None = Field(
+                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+            )
+      src/harbor_client/types/trial_detail1.py: |
+        from __future__ import annotations
+        import typing
+        from typing import List
+        from pydantic import Field
+        from typing import Optional
+        from typing import Any
+        from typing import Union
+        from typing import Dict
+        from .utils.base_model import BaseModel
+        from .run_state import RunState
+        from .task_identity import TaskIdentity
+        from .agent_identity import AgentIdentity
+        from .model_identity import ModelIdentity
+        from .usage import Usage
+
+        TrialDetail1Phase = typing.Union[
+            typing.Literal[
+                "environment_setup",
+                "agent_setup",
+                "agent_execution",
+                "verifier",
+                "collection",
+                "cleanup",
+            ],
+            typing.Any,
+        ]
+
+
+        class TrialDetail1(BaseModel):
+            """TrialDetail1
+
+            :param created_at: created_at
+            :type created_at: str
+            :param updated_at: updated_at
+            :type updated_at: str
+            :param started_at: started_at
+            :type started_at: str
+            :param finished_at: finished_at
+            :type finished_at: str
+            :param id: id
+            :type id: str
+            :param job_id: job_id
+            :type job_id: str
+            :param name: name
+            :type name: str
+            :param state: state
+            :type state: RunState
+            :param retry_ids: All readable attempts of this logical trial, newest first, including this attempt.
+            :type retry_ids: List[str]
+            :param phase: phase
+            :type phase: TrialDetail1Phase
+            :param task: task
+            :type task: TaskIdentity
+            :param agent: agent
+            :type agent: AgentIdentity
+            :param model: model
+            :type model: ModelIdentity
+            :param rewards: rewards
+            :type rewards: Dict[str, Optional[float]]
+            :param usage: usage
+            :type usage: Usage
+            :param error_type: error_type
+            :type error_type: str
+            :param lock: The persisted trial lock, or null for historical uploads without a lock.
+            :type lock: Dict[str, Any]
+            :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
+            :type artifacts: Dict[str, str]
+            :param storage_error: Storage failures are not persisted in the trial resource.
+            :type storage_error: Any
+            :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
+            :type result: Any
+            """
+
+            created_at: str
+            updated_at: str
+            started_at: Optional[str]
+            finished_at: Optional[str]
+            id: str
+            job_id: str
+            name: str
+            state: RunState
+            retry_ids: List[str] = Field(
+                description="All readable attempts of this logical trial, newest first, including this attempt."
+            )
+            phase: Optional[TrialDetail1Phase]
+            task: TaskIdentity
+            agent: AgentIdentity
+            model: ModelIdentity
+            rewards: Optional[Dict[str, Optional[float]]]
+            usage: Usage
+            error_type: Optional[str]
+            lock: Optional[Dict[str, Any]] = Field(
+                description="The persisted trial lock, or null for historical uploads without a lock."
+            )
+            artifacts: Dict[str, str] = Field(
+                description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+            )
+            storage_error: None = Field(
+                description="Storage failures are not persisted in the trial resource."
+            )
+            result: None = Field(
+                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+            )
+  - id: patch-7c950c27
+    content_hash: sha256:82e5a5d521853807a4b174e031c634b9c452e75207af3401ea68736b70719f4c
+    original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
+    original_message: Preserve nullable reward-map entries in execution responses
+    original_author: Sam Vance <samvance243@gmail.com>
+    base_generation: a573b0ac39d62db39a051ce4d301a47bc38dec29
+    files:
+      - src/harbor_client/types/trial_detail.py
+      - src/harbor_client/types/trial_detail1.py
+      - src/harbor_client/types/trial_summary.py
+    patch_content: |
+      diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
+      index cd3822c..856689d 100644
+      --- a/src/harbor_client/types/trial_detail.py
+      +++ b/src/harbor_client/types/trial_detail.py
+      @@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
+           :param model: model
+           :type model: ModelIdentity
+           :param rewards: rewards
+      -    :type rewards: Dict[str, float]
+      +    :type rewards: Dict[str, Optional[float]]
+           :param usage: usage
+           :type usage: Usage
+           :param error_type: error_type
+      @@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
+           task: TaskIdentity
+           agent: AgentIdentity
+           model: ModelIdentity
+      -    rewards: Optional[Dict[str, float]]
+      +    rewards: Optional[Dict[str, Optional[float]]]
+           usage: Usage
+           error_type: Optional[str]
+           lock: Optional[Dict[str, Any]] = Field(
+      @@ -95,9 +95,9 @@ class TrialDetail(BaseModel):
+           artifacts: Dict[str, str] = Field(
+               description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+           )
+      -    storage_error: Optional[Any] = Field(
+      +    storage_error: None = Field(
+               description="Storage failures are not persisted in the trial resource."
+           )
+      -    result: Optional[Any] = Field(
+      +    result: None = Field(
+               description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+           )
+      diff --git a/src/harbor_client/types/trial_detail1.py b/src/harbor_client/types/trial_detail1.py
+      index 12a8de5..8050a7b 100644
+      --- a/src/harbor_client/types/trial_detail1.py
+      +++ b/src/harbor_client/types/trial_detail1.py
+      @@ -56,7 +56,7 @@ class TrialDetail1(BaseModel):
+           :param model: model
+           :type model: ModelIdentity
+           :param rewards: rewards
+      -    :type rewards: Dict[str, float]
+      +    :type rewards: Dict[str, Optional[float]]
+           :param usage: usage
+           :type usage: Usage
+           :param error_type: error_type
+      @@ -86,7 +86,7 @@ class TrialDetail1(BaseModel):
+           task: TaskIdentity
+           agent: AgentIdentity
+           model: ModelIdentity
+      -    rewards: Optional[Dict[str, float]]
+      +    rewards: Optional[Dict[str, Optional[float]]]
+           usage: Usage
+           error_type: Optional[str]
+           lock: Optional[Dict[str, Any]] = Field(
+      @@ -95,9 +95,9 @@ class TrialDetail1(BaseModel):
+           artifacts: Dict[str, str] = Field(
+               description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+           )
+      -    storage_error: Optional[Any] = Field(
+      +    storage_error: None = Field(
+               description="Storage failures are not persisted in the trial resource."
+           )
+      -    result: Optional[Any] = Field(
+      +    result: None = Field(
+               description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+           )
+      diff --git a/src/harbor_client/types/trial_summary.py b/src/harbor_client/types/trial_summary.py
+      index e55e2d5..0004203 100644
+      --- a/src/harbor_client/types/trial_summary.py
+      +++ b/src/harbor_client/types/trial_summary.py
+      @@ -56,7 +56,7 @@ class TrialSummary(BaseModel):
+           :param model: model
+           :type model: ModelIdentity
+           :param rewards: rewards
+      -    :type rewards: Dict[str, float]
+      +    :type rewards: Dict[str, Optional[float]]
+           :param usage: usage
+           :type usage: Usage
+           :param error_type: error_type
+      @@ -78,6 +78,6 @@ class TrialSummary(BaseModel):
+           task: TaskIdentity
+           agent: AgentIdentity
+           model: ModelIdentity
+      -    rewards: Optional[Dict[str, float]]
+      +    rewards: Optional[Dict[str, Optional[float]]]
+           usage: Usage
+           error_type: Optional[str]
+    theirs_snapshot:
+      src/harbor_client/types/trial_detail.py: |
+        from __future__ import annotations
+        import typing
+        from typing import List
+        from pydantic import Field
+        from typing import Optional
+        from typing import Any
+        from typing import Union
+        from typing import Dict
+        from .utils.base_model import BaseModel
+        from .run_state import RunState
+        from .task_identity import TaskIdentity
+        from .agent_identity import AgentIdentity
+        from .model_identity import ModelIdentity
+        from .usage import Usage
+
+        TrialDetailPhase = typing.Union[
+            typing.Literal[
+                "environment_setup",
+                "agent_setup",
+                "agent_execution",
+                "verifier",
+                "collection",
+                "cleanup",
+            ],
+            typing.Any,
+        ]
+
+
+        class TrialDetail(BaseModel):
+            """TrialDetail
+
+            :param created_at: created_at
+            :type created_at: str
+            :param updated_at: updated_at
+            :type updated_at: str
+            :param started_at: started_at
+            :type started_at: str
+            :param finished_at: finished_at
+            :type finished_at: str
+            :param id: id
+            :type id: str
+            :param job_id: job_id
+            :type job_id: str
+            :param name: name
+            :type name: str
+            :param state: state
+            :type state: RunState
+            :param retry_ids: All readable attempts of this logical trial, newest first, including this attempt.
+            :type retry_ids: List[str]
+            :param phase: phase
+            :type phase: TrialDetailPhase
+            :param task: task
+            :type task: TaskIdentity
+            :param agent: agent
+            :type agent: AgentIdentity
+            :param model: model
+            :type model: ModelIdentity
+            :param rewards: rewards
+            :type rewards: Dict[str, Optional[float]]
+            :param usage: usage
+            :type usage: Usage
+            :param error_type: error_type
+            :type error_type: str
+            :param lock: The persisted trial lock, or null for historical uploads without a lock.
+            :type lock: Dict[str, Any]
+            :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
+            :type artifacts: Dict[str, str]
+            :param storage_error: Storage failures are not persisted in the trial resource.
+            :type storage_error: Any
+            :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
+            :type result: Any
+            """
+
+            created_at: str
+            updated_at: str
+            started_at: Optional[str]
+            finished_at: Optional[str]
+            id: str
+            job_id: str
+            name: str
+            state: RunState
+            retry_ids: List[str] = Field(
+                description="All readable attempts of this logical trial, newest first, including this attempt."
+            )
+            phase: Optional[TrialDetailPhase]
+            task: TaskIdentity
+            agent: AgentIdentity
+            model: ModelIdentity
+            rewards: Optional[Dict[str, Optional[float]]]
+            usage: Usage
+            error_type: Optional[str]
+            lock: Optional[Dict[str, Any]] = Field(
+                description="The persisted trial lock, or null for historical uploads without a lock."
+            )
+            artifacts: Dict[str, str] = Field(
+                description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+            )
+            storage_error: None = Field(
+                description="Storage failures are not persisted in the trial resource."
+            )
+            result: None = Field(
+                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+            )
+      src/harbor_client/types/trial_detail1.py: |
+        from __future__ import annotations
+        import typing
+        from typing import List
+        from pydantic import Field
+        from typing import Optional
+        from typing import Any
+        from typing import Union
+        from typing import Dict
+        from .utils.base_model import BaseModel
+        from .run_state import RunState
+        from .task_identity import TaskIdentity
+        from .agent_identity import AgentIdentity
+        from .model_identity import ModelIdentity
+        from .usage import Usage
+
+        TrialDetail1Phase = typing.Union[
+            typing.Literal[
+                "environment_setup",
+                "agent_setup",
+                "agent_execution",
+                "verifier",
+                "collection",
+                "cleanup",
+            ],
+            typing.Any,
+        ]
+
+
+        class TrialDetail1(BaseModel):
+            """TrialDetail1
+
+            :param created_at: created_at
+            :type created_at: str
+            :param updated_at: updated_at
+            :type updated_at: str
+            :param started_at: started_at
+            :type started_at: str
+            :param finished_at: finished_at
+            :type finished_at: str
+            :param id: id
+            :type id: str
+            :param job_id: job_id
+            :type job_id: str
+            :param name: name
+            :type name: str
+            :param state: state
+            :type state: RunState
+            :param retry_ids: All readable attempts of this logical trial, newest first, including this attempt.
+            :type retry_ids: List[str]
+            :param phase: phase
+            :type phase: TrialDetail1Phase
+            :param task: task
+            :type task: TaskIdentity
+            :param agent: agent
+            :type agent: AgentIdentity
+            :param model: model
+            :type model: ModelIdentity
+            :param rewards: rewards
+            :type rewards: Dict[str, Optional[float]]
+            :param usage: usage
+            :type usage: Usage
+            :param error_type: error_type
+            :type error_type: str
+            :param lock: The persisted trial lock, or null for historical uploads without a lock.
+            :type lock: Dict[str, Any]
+            :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
+            :type artifacts: Dict[str, str]
+            :param storage_error: Storage failures are not persisted in the trial resource.
+            :type storage_error: Any
+            :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
+            :type result: Any
+            """
+
+            created_at: str
+            updated_at: str
+            started_at: Optional[str]
+            finished_at: Optional[str]
+            id: str
+            job_id: str
+            name: str
+            state: RunState
+            retry_ids: List[str] = Field(
+                description="All readable attempts of this logical trial, newest first, including this attempt."
+            )
+            phase: Optional[TrialDetail1Phase]
+            task: TaskIdentity
+            agent: AgentIdentity
+            model: ModelIdentity
+            rewards: Optional[Dict[str, Optional[float]]]
+            usage: Usage
+            error_type: Optional[str]
+            lock: Optional[Dict[str, Any]] = Field(
+                description="The persisted trial lock, or null for historical uploads without a lock."
+            )
+            artifacts: Dict[str, str] = Field(
+                description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
+            )
+            storage_error: None = Field(
+                description="Storage failures are not persisted in the trial resource."
+            )
+            result: None = Field(
+                description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+            )
+      src/harbor_client/types/trial_summary.py: |
+        from __future__ import annotations
+        import typing
+        from typing import List
+        from pydantic import Field
+        from typing import Optional
+        from typing import Any
+        from typing import Union
+        from typing import Dict
+        from .utils.base_model import BaseModel
+        from .run_state import RunState
+        from .task_identity import TaskIdentity
+        from .agent_identity import AgentIdentity
+        from .model_identity import ModelIdentity
+        from .usage import Usage
+
+        TrialSummaryPhase = typing.Union[
+            typing.Literal[
+                "environment_setup",
+                "agent_setup",
+                "agent_execution",
+                "verifier",
+                "collection",
+                "cleanup",
+            ],
+            typing.Any,
+        ]
+
+
+        class TrialSummary(BaseModel):
+            """TrialSummary
+
+            :param created_at: created_at
+            :type created_at: str
+            :param updated_at: updated_at
+            :type updated_at: str
+            :param started_at: started_at
+            :type started_at: str
+            :param finished_at: finished_at
+            :type finished_at: str
+            :param id: id
+            :type id: str
+            :param job_id: job_id
+            :type job_id: str
+            :param name: name
+            :type name: str
+            :param state: state
+            :type state: RunState
+            :param retry_ids: All readable attempts of this logical trial, newest first, including this attempt.
+            :type retry_ids: List[str]
+            :param phase: phase
+            :type phase: TrialSummaryPhase
+            :param task: task
+            :type task: TaskIdentity
+            :param agent: agent
+            :type agent: AgentIdentity
+            :param model: model
+            :type model: ModelIdentity
+            :param rewards: rewards
+            :type rewards: Dict[str, Optional[float]]
+            :param usage: usage
+            :type usage: Usage
+            :param error_type: error_type
+            :type error_type: str
+            """
+
+            created_at: str
+            updated_at: str
+            started_at: Optional[str]
+            finished_at: Optional[str]
+            id: str
+            job_id: str
+            name: str
+            state: RunState
+            retry_ids: List[str] = Field(
+                description="All readable attempts of this logical trial, newest first, including this attempt."
+            )
+            phase: Optional[TrialSummaryPhase]
+            task: TaskIdentity
+            agent: AgentIdentity
+            model: ModelIdentity
+            rewards: Optional[Dict[str, Optional[float]]]
+            usage: Usage
+            error_type: Optional[str]

@@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
     :param model: model
     :type model: ModelIdentity
     :param rewards: rewards
-    :type rewards: Dict[str, float]
+    :type rewards: Dict[str, Optional[float]]
     :param usage: usage
     :type usage: Usage
     :param error_type: error_type
@@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
     task: TaskIdentity
     agent: AgentIdentity
     model: ModelIdentity
-    rewards: Optional[Dict[str, float]]
+    rewards: Optional[Dict[str, Optional[float]]]
     usage: Usage
     error_type: Optional[str]
     lock: Optional[Dict[str, Any]] = Field(
@@ -95,9 +95,9 @@ class TrialDetail(BaseModel):
     artifacts: Dict[str, str] = Field(
         description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
     )
-    storage_error: Optional[Any] = Field(
+    storage_error: None = Field(
         description="Storage failures are not persisted in the trial resource."
     )
-    result: Optional[Any] = Field(
+    result: None = Field(
         description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
     )
