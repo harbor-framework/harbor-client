@@ -1,13 +1,15 @@
-"""Execution controls use ID arrays and reject retired selector bodies."""
+"""Execution controls address one resource and reject retired bulk inputs."""
 
+import inspect
+import importlib.util
 import json
+import re
 
 import httpx
 import pytest
-from pydantic import ValidationError
 
 from harbor_client import types
-from harbor_client.validation import ContractError, async_client, sync_client
+from harbor_client.validation import async_client, sync_client
 from test_contract import SPEC, UUID, response_fixture
 
 CONTROLS = [
@@ -18,106 +20,141 @@ CONTROLS = [
 ]
 
 
-def control_arguments(namespace, action, ids):
-    result = {f"{namespace[:-1]}_ids": ids}
-    if action == "retry":
-        result["idempotency_key"] = "opaque-key"
-    return result
+def control_path(namespace, action):
+    return f"/v1/{namespace}/{{{namespace[:-1]}_id}}/{action}"
+
+
+def control_arguments(namespace):
+    return {f"{namespace[:-1]}_id": UUID, "idempotency_key": "opaque-key"}
+
+
+async def invoke(namespace, action, arguments, handler, asynchronous):
+    transport = httpx.MockTransport(handler)
+    if asynchronous:
+        async with async_client(transport=transport) as client:
+            return await getattr(getattr(client, namespace), action)(**arguments)
+    with sync_client(transport=transport) as client:
+        return getattr(getattr(client, namespace), action)(**arguments)
 
 
 @pytest.mark.parametrize("namespace,action", CONTROLS)
 @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
-async def test_execution_controls_send_arrays_and_decode_typed_results(
+async def test_execution_controls_send_one_path_id_and_decode_typed_results(
     namespace, action, asynchronous
 ):
-    path = f"/v1/{namespace}/{action}"
+    path = control_path(namespace, action)
     payload = response_fixture(path, "post")
     seen = []
 
     def handler(request):
-        body = json.loads(request.content)
-        seen.append(body)
-        assert body[f"{namespace[:-1]}_ids"] == [UUID]
-        assert request.url.path.endswith(path)
-        if action == "retry":
-            assert request.headers["idempotency-key"] == "opaque-key"
+        seen.append(request)
+        assert request.url.path.endswith(f"/v1/{namespace}/{UUID}/{action}")
+        assert request.headers["idempotency-key"] == "opaque-key"
+        if action == "cancel":
+            assert json.loads(request.content) in ({}, {"force": True})
+        else:
+            assert not request.content
         return httpx.Response(200, json=payload)
 
-    arguments = control_arguments(namespace, action, [UUID])
-    transport = httpx.MockTransport(handler)
-    if asynchronous:
-        async with async_client(transport=transport) as client:
-            result = await getattr(getattr(client, namespace), action)(**arguments)
-    else:
-        with sync_client(transport=transport) as client:
-            result = getattr(getattr(client, namespace), action)(**arguments)
+    result = await invoke(
+        namespace, action, control_arguments(namespace), handler, asynchronous
+    )
     assert len(seen) == 1
     assert result.model_dump(mode="json", exclude_unset=True) == payload
 
 
 @pytest.mark.parametrize("namespace,action", CONTROLS)
-@pytest.mark.parametrize("ids", [[], "all", {"all": True}, [None], [123]])
-def test_execution_controls_reject_invalid_arrays_before_network(
-    namespace, action, ids
+@pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
+async def test_controls_reject_bulk_arguments_before_network(
+    namespace, action, asynchronous
 ):
-    with sync_client(
-        transport=httpx.MockTransport(
-            lambda request: pytest.fail("Invalid array reached the network")
+    arguments = control_arguments(namespace)
+    arguments[f"{namespace[:-1]}_ids"] = [UUID]
+    with pytest.raises(TypeError):
+        await invoke(
+            namespace,
+            action,
+            arguments,
+            lambda request: pytest.fail("Retired bulk input reached the network"),
+            asynchronous,
         )
-    ) as client:
-        with pytest.raises((ContractError, ValidationError, TypeError)):
-            getattr(getattr(client, namespace), action)(
-                **control_arguments(namespace, action, ids)
-            )
-
-
-@pytest.mark.parametrize("namespace,action", CONTROLS)
-@pytest.mark.parametrize("selector", [{"all": True}, {"filters": {}}, {"scope": "my"}])
-def test_execution_controls_reject_extra_selector_fields(namespace, action, selector):
-    with sync_client(
-        transport=httpx.MockTransport(
-            lambda request: pytest.fail("Retired selector reached the network")
-        )
-    ) as client:
-        with pytest.raises(ContractError):
-            getattr(getattr(client, namespace), action)(
-                **control_arguments(namespace, action, [UUID]),
-                request_options={"additional_body_parameters": selector},
-            )
 
 
 @pytest.mark.parametrize("namespace,action", CONTROLS)
 @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
-@pytest.mark.parametrize("count", [100, 101])
-async def test_control_limit_counts_submitted_ids_including_duplicates(
-    namespace, action, asynchronous, count
+async def test_all_controls_require_an_idempotency_key(namespace, action, asynchronous):
+    arguments = {f"{namespace[:-1]}_id": UUID}
+    with pytest.raises(TypeError):
+        await invoke(
+            namespace,
+            action,
+            arguments,
+            lambda request: pytest.fail("Control without a key reached the network"),
+            asynchronous,
+        )
+
+
+@pytest.mark.parametrize("namespace", ["jobs", "trials", "rollouts"])
+@pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
+@pytest.mark.parametrize("force", [False, True])
+async def test_single_resource_cancellation_preserves_explicit_force(
+    namespace, asynchronous, force
 ):
-    payload = response_fixture(f"/v1/{namespace}/{action}", "post")
     seen = []
+    payload = response_fixture(control_path(namespace, "cancel"), "post")
 
     def handler(request):
-        seen.append(json.loads(request.content)[f"{namespace[:-1]}_ids"])
+        seen.append(json.loads(request.content))
         return httpx.Response(200, json=payload)
 
-    arguments = control_arguments(namespace, action, [UUID] * count)
-    transport = httpx.MockTransport(handler)
-    if asynchronous:
-        async with async_client(transport=transport) as client:
-            call = getattr(getattr(client, namespace), action)
-            if count > 100:
-                with pytest.raises((ContractError, ValidationError)):
-                    await call(**arguments)
-            else:
-                await call(**arguments)
-    else:
-        with sync_client(transport=transport) as client:
-            call = getattr(getattr(client, namespace), action)
-            if count > 100:
-                with pytest.raises((ContractError, ValidationError)):
-                    call(**arguments)
-            else:
-                call(**arguments)
-    assert seen == ([[UUID] * count] if count == 100 else [])
+    await invoke(
+        namespace,
+        "cancel",
+        {**control_arguments(namespace), "force": force},
+        handler,
+        asynchronous,
+    )
+    assert seen == [{"force": force}]
+
+
+@pytest.mark.parametrize("namespace,action", CONTROLS)
+def test_control_contracts_and_signatures_have_no_bulk_inputs(namespace, action):
+    singular_id = f"{namespace[:-1]}_id"
+    path = control_path(namespace, action)
+    assert f"/v1/{namespace}/{action}" not in SPEC["paths"]
+    assert SPEC["paths"][path]["post"]["operationId"] == f"{namespace}.{action}"
+    with sync_client(transport=httpx.MockTransport(lambda request: None)) as client:
+        signature = inspect.signature(getattr(getattr(client, namespace), action))
+        assert singular_id in signature.parameters
+        assert f"{namespace[:-1]}_ids" not in signature.parameters
+        assert (
+            signature.parameters["idempotency_key"].default is inspect.Parameter.empty
+        )
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "CancelJobsRequest",
+        "CancelTrialsRequest",
+        "CancelRolloutsRequest",
+        "JobActionRequest",
+        "JobActionResponse",
+        "TrialActionRequest",
+        "TrialActionResponse",
+        "RolloutActionRequest",
+        "RetryTrialsRequest",
+        "RetryTrialsResponse",
+        "RetryRolloutsRequest",
+        "RetryRolloutsResponse",
+    ],
+)
+def test_retired_bulk_models_are_not_public_exports(name):
+    assert name not in SPEC["components"]["schemas"]
+    with pytest.raises(AttributeError):
+        getattr(types, name)
+    module = re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+    assert importlib.util.find_spec(f"harbor_client.types.{module}") is None
 
 
 def test_submission_success_requires_only_the_job_id():
