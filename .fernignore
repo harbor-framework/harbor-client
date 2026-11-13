@@ -20,3 +20,4 @@ MANIFEST.in
 fern/
 README.md
 src/harbor_client/_openapi.json.gz
+src/harbor_client/py.typed

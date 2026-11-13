@@ -46,13 +46,13 @@ class Serializer:
         self.errors: dict[int, ApiError] = {}
         self.config: Optional["SdkConfig"] = config
 
-        self.headers["User-Agent"] = "harbor-client/0.1.0"
+        self.headers["User-Agent"] = "harbor-framework-client/0.1.0"
         self.headers["X-Fern-Language"] = "Python"
         self.headers["X-Fern-Runtime"] = f"python/{platform.python_version()}"
         self.headers["X-Fern-Platform"] = (
             f"{platform.system().lower()}/{platform.release()}"
         )
-        self.headers["X-Fern-SDK-Name"] = "harbor-client"
+        self.headers["X-Fern-SDK-Name"] = "harbor-framework-client"
         self.headers["X-Fern-SDK-Version"] = "0.1.0"
 
         # Apply default headers, FIRST contributor of a header name winning (FSDK-1671).
@@ -263,7 +263,7 @@ class Serializer:
             prefix = "" if (explode and isinstance(data, dict)) else f"{key}="
             query_param = f"{prefix}{self._serialize_value(data=data, explode=explode, separator=separator)}"
         elif style == "spaceDelimited":
-            separator = f"&{key}=" if explode else "%20"
+            separator = f"&{key}=" if explode else f"%20"
             query_param = f"{key}={self._serialize_value(data=data, explode=explode, separator=separator)}"
         elif style == "pipeDelimited":
             separator = f"&{key}=" if explode else "|"

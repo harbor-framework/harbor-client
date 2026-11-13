@@ -2,6 +2,22 @@ name: Generate SDK
 on:
   workflow_dispatch:
     inputs:
+      spec_ref:
+        description: SDK Git ref containing a candidate fern/openapi.json; no API deployment required
+        type: string
+        default: ""
+      spec_url:
+        description: HTTPS OpenAPI document URL; mutually exclusive with spec_ref
+        type: string
+        default: ""
+      sdk_branch:
+        description: SDK branch to receive the generated update PR
+        type: string
+        default: main
+      sdk_version:
+        description: Fern SDK version override; AUTO computes the version for review
+        type: string
+        default: AUTO
       force:
         description: Regenerate even when the API document is unchanged
         type: boolean
@@ -26,27 +42,65 @@ jobs:
       pull-requests: write
       actions: write
     env:
-      API_SPEC_URL: https://api.harborframework.com/functions/v1/api/v1/2026-09-10.preview/openapi.json
+      API_SPEC_URL: ${{ vars.OPENAPI_SPEC_URL || 'https://api.harborframework.com/functions/v1/api/v1/2026-09-10.preview/openapi.json' }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: false
       - uses: fern-api/setup-fern-cli@d07601425e9c9ede8745d71ca75c4c462d98755d # v1
         with:
           version: 5.199.0
-      - name: Read the authoritative public API document
+      - name: Select the SDK destination branch
+        env:
+          SDK_BRANCH: ${{ inputs.sdk_branch || 'main' }}
+        run: |
+          set -euo pipefail
+          git check-ref-format "refs/heads/$SDK_BRANCH"
+          git ls-remote --exit-code origin "refs/heads/$SDK_BRANCH" > /dev/null
+          uv run --no-project --with PyYAML==6.0.2 python - <<'PYCODE'
+          import os
+          from pathlib import Path
+          import yaml
+          path = Path("fern/sdk-config.yml")
+          config = yaml.safe_load(path.read_text())
+          for target in config["targets"]:
+              target["output"]["github"]["branch"] = os.environ["SDK_BRANCH"]
+          path.write_text(yaml.safe_dump(config, sort_keys=False))
+          PYCODE
+      - name: Read the selected API document
         id: spec
         env:
           FORCE: ${{ inputs.force || github.event_name == 'push' }}
+          SPEC_REF: ${{ inputs.spec_ref }}
+          SPEC_URL: ${{ inputs.spec_url }}
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --retry 3 "$API_SPEC_URL" -o "$RUNNER_TEMP/openapi.json"
+          if [[ -n "$SPEC_REF" && -n "$SPEC_URL" ]]; then
+            echo "::error::Choose spec_ref or spec_url, not both."
+            exit 1
+          fi
+          if [[ -n "$SPEC_REF" ]]; then
+            git fetch --no-tags -- origin "$SPEC_REF"
+            git show FETCH_HEAD:fern/openapi.json > "$RUNNER_TEMP/openapi.json"
+          else
+            source_url="${SPEC_URL:-$API_SPEC_URL}"
+            if [[ "$source_url" != https://* ]]; then
+              echo "::error::The API document URL must use HTTPS."
+              exit 1
+            fi
+            curl --fail --silent --show-error --retry 3 "$source_url" -o "$RUNNER_TEMP/openapi.json"
+          fi
           jq -e '(.openapi | type == "string") and (.paths | type == "object" and length > 0)' "$RUNNER_TEMP/openapi.json" > /dev/null
-          if cmp -s fern/openapi.json "$RUNNER_TEMP/openapi.json" && [[ "$FORCE" != true ]]; then
+          jq -Sc . fern/openapi.json > "$RUNNER_TEMP/previous.canonical.json"
+          jq -Sc . "$RUNNER_TEMP/openapi.json" > "$RUNNER_TEMP/next.canonical.json"
+          if cmp -s "$RUNNER_TEMP/previous.canonical.json" "$RUNNER_TEMP/next.canonical.json" && [[ "$FORCE" != true ]]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            cp "$RUNNER_TEMP/openapi.json" fern/openapi.json
+            jq . "$RUNNER_TEMP/openapi.json" > fern/openapi.json
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Generate and replay through Fern's native GitHub publisher
@@ -54,9 +108,10 @@ jobs:
         id: fern
         env:
           FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
+          SDK_VERSION: ${{ inputs.sdk_version || 'AUTO' }}
         run: |
           set -euo pipefail
-          if ! fern generate --target python --version AUTO --force > "$RUNNER_TEMP/fern.log" 2>&1; then
+          if ! fern generate --target python --version "$SDK_VERSION" --force > "$RUNNER_TEMP/fern.log" 2>&1; then
             echo "::error::Fern generation failed. Inspect the authenticated Fern build; private build logs were not uploaded."
             exit 1
           fi
@@ -73,7 +128,7 @@ jobs:
         run: |
           set -euo pipefail
           cp fern/openapi.json "$RUNNER_TEMP/generated-openapi.json"
-          git restore fern/openapi.json
+          git restore fern/openapi.json fern/sdk-config.yml
           gh pr checkout "$PR_URL"
           cp "$RUNNER_TEMP/generated-openapi.json" fern/openapi.json
           gzip -n -c fern/openapi.json > src/harbor_client/_openapi.json.gz

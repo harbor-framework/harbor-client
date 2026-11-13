@@ -16,6 +16,7 @@ from .hosted_secret_selection import HostedSecretSelection
 HostedAgentConfigSecrets = Union[List[str], List[HostedSecretSelection]]
 # TypeAdapter for runtime validation of HostedAgentConfigSecrets
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 HostedAgentConfigSecrets_adapter = TypeAdapter(HostedAgentConfigSecrets)
 

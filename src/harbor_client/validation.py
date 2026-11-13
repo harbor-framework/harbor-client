@@ -24,7 +24,6 @@ from jsonschema.protocols import Validator
 from . import AsyncHarborAPIClient, HarborAPIClient
 
 DEFAULT_BASE_URL = "https://api.harborframework.com/functions/v1/api"
-API_VERSION = "2026-09-10.preview"
 
 
 class ContractError(ValueError):
@@ -54,6 +53,10 @@ def _schema(response: bool = False) -> dict[str, Any]:
             files("harbor_client").joinpath("_openapi.json.gz").read_bytes()
         )
     )
+
+
+# Follow the selected contract when its API version advances.
+API_VERSION: str = _schema()["info"]["version"]
 
 
 def _pointer(parts: tuple[str, ...]) -> str:

@@ -155,6 +155,7 @@ JobOverviewNTotalTrialsOne = typing.Union[
 JobOverviewNTotalTrials = Union[float, str]
 # TypeAdapter for runtime validation of JobOverviewNTotalTrials
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 JobOverviewNTotalTrials_adapter = TypeAdapter(JobOverviewNTotalTrials)
 
