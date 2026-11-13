@@ -26,6 +26,7 @@ StorageUploadReceiptResult = Union[
 ]
 # TypeAdapter for runtime validation of StorageUploadReceiptResult
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 StorageUploadReceiptResult_adapter = TypeAdapter(StorageUploadReceiptResult)
 

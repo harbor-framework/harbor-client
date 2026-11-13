@@ -77,6 +77,7 @@ JobTaskSummaryInputTokensOne = typing.Union[
 JobTaskSummaryInputTokens = Union[float, str]
 # TypeAdapter for runtime validation of JobTaskSummaryInputTokens
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 JobTaskSummaryInputTokens_adapter = TypeAdapter(JobTaskSummaryInputTokens)
 
