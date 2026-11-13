@@ -9,11 +9,13 @@ from .utils.base_model import BaseModel
 class CancelRolloutsRequest(BaseModel):
     """CancelRolloutsRequest
 
-    :param rollout_ids: rollout_ids
+    :param rollout_ids: One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order.
     :type rollout_ids: List[str]
     :param force: force, defaults to None
     :type force: bool, optional
     """
 
-    rollout_ids: List[str]
+    rollout_ids: List[str] = Field(
+        description="One to 100 IDs per request. Repeated IDs count toward the limit; results contain each ID once in first-occurrence order."
+    )
     force: Optional[bool] = Field(default=None)
