@@ -1,5 +1,7 @@
 """Trial and rollout aliases reuse one detail and page contract."""
 
+from importlib.resources import files
+
 import httpx
 import pytest
 
@@ -25,6 +27,8 @@ def test_execution_aliases_reference_the_same_named_contracts():
     )
     assert not hasattr(types, "TrialDetail1")
     assert not hasattr(types, "TrialPage1")
+    assert not files("harbor_client").joinpath("types/trial_detail1.py").is_file()
+    assert not files("harbor_client").joinpath("types/trial_page1.py").is_file()
     assert "TrialDetail_1" not in SPEC["components"]["schemas"]
     assert "TrialPage_1" not in SPEC["components"]["schemas"]
 

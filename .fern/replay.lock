@@ -16905,7 +16905,6 @@ patches:
       - src/harbor_client/types/jobs_submit_response.py
       - src/harbor_client/types/rollouts_list_bad_request_response.py
       - src/harbor_client/types/trial_detail.py
-      - src/harbor_client/types/trial_detail1.py
     patch_content: |
       diff --git a/examples/sample.py b/examples/sample.py
       index 08ce74b..e12a37c 100644
@@ -18559,7 +18558,6 @@ patches:
     base_generation: 0bae291e1fe5f02287aef3486628f039f4843624
     files:
       - src/harbor_client/types/trial_detail.py
-      - src/harbor_client/types/trial_detail1.py
       - src/harbor_client/types/trial_summary.py
     patch_content: |
       diff --git a/src/harbor_client/types/trial_detail.py b/src/harbor_client/types/trial_detail.py
