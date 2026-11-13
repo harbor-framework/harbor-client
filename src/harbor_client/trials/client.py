@@ -12,7 +12,6 @@ from ..types import (
     CancelTrialRequest,
     ConflictEncoded,
     CreatedResultTrial,
-    FilterValuesResponse,
     ForbiddenEncoded,
     InternalServerErrorEncoded,
     NotFoundEncoded,
@@ -25,12 +24,19 @@ from ..types import (
     StorageDownload,
     TooManyRequestsEncoded,
     TrialArtifactType,
+    TrialFilterValuesResponse,
     TrialPage,
     TrialResponse,
     TrialsCopyRequest,
+    TrialsGetFiltersRequestAttempts,
+    TrialsGetFiltersRequestFailedOnly,
     TrialsGetFiltersRequestField,
+    TrialsGetFiltersRequestTerminal,
     TrialsListBadRequestResponse,
+    TrialsListRequestAttempts,
+    TrialsListRequestFailedOnly,
     TrialsListRequestSort,
+    TrialsListRequestTerminal,
     TrialSummary,
     UnauthorizedEncoded,
 )
@@ -233,6 +239,10 @@ class TrialsClient(BaseService):
         *,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: TrialsListRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: TrialsListRequestFailedOnly = SENTINEL,
+        terminal: TrialsListRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -244,6 +254,7 @@ class TrialsClient(BaseService):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         sort: TrialsListRequestSort = SENTINEL,
@@ -255,6 +266,14 @@ class TrialsClient(BaseService):
         :type task: List[str], optional
         :param state: state, defaults to None
         :type state: RunState, optional
+        :param attempts: attempts, defaults to None
+        :type attempts: TrialsListRequestAttempts, optional
+        :param error_type: error_type, defaults to None
+        :type error_type: List[str], optional
+        :param failed_only: failed_only, defaults to None
+        :type failed_only: TrialsListRequestFailedOnly, optional
+        :param terminal: terminal, defaults to None
+        :type terminal: TrialsListRequestTerminal, optional
         :param name: name, defaults to None
         :type name: str, optional
         :param q: q, defaults to None
@@ -277,6 +296,8 @@ class TrialsClient(BaseService):
         :type created_before: str, optional
         :param job_id: job_id, defaults to None
         :type job_id: str, optional
+        :param job_ids: job_ids, defaults to None
+        :type job_ids: List[str], optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
@@ -289,10 +310,19 @@ class TrialsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[TrialSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
+        Validator(TrialsListRequestAttempts).is_optional().validate(
+            attempts, "attempts"
+        )
+        Validator(str).is_array().is_optional().validate(error_type, "error_type")
+        Validator(TrialsListRequestFailedOnly).is_optional().validate(
+            failed_only, "failed_only"
+        )
+        Validator(TrialsListRequestTerminal).is_optional().validate(
+            terminal, "terminal"
+        )
         Validator(str).is_optional().validate(name, "name")
         Validator(str).is_optional().validate(q, "q")
         Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -308,6 +338,7 @@ class TrialsClient(BaseService):
         Validator(str).is_optional().validate(created_after, "created_after")
         Validator(str).is_optional().validate(created_before, "created_before")
         Validator(str).is_optional().validate(job_id, "job_id")
+        Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
         Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
@@ -329,6 +360,10 @@ class TrialsClient(BaseService):
                     )
                     .add_query("task", task)
                     .add_query("state", state)
+                    .add_query("attempts", attempts)
+                    .add_query("error_type", error_type)
+                    .add_query("failed_only", failed_only)
+                    .add_query("terminal", terminal)
                     .add_query("name", name)
                     .add_query("q", q)
                     .add_query("agent_name", agent_name)
@@ -340,6 +375,7 @@ class TrialsClient(BaseService):
                     .add_query("created_after", created_after)
                     .add_query("created_before", created_before)
                     .add_query("job_id", job_id)
+                    .add_query("job_ids", job_ids)
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
                     .add_query("sort", sort)
@@ -357,6 +393,9 @@ class TrialsClient(BaseService):
                     else construct_lenient(TrialPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -478,6 +517,10 @@ class TrialsClient(BaseService):
         field: TrialsGetFiltersRequestField,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+        terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -489,9 +532,10 @@ class TrialsClient(BaseService):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> FilterValuesResponse:
+    ) -> TrialFilterValuesResponse:
         """get_filters
 
         :param field: field
@@ -500,6 +544,14 @@ class TrialsClient(BaseService):
         :type task: List[str], optional
         :param state: state, defaults to None
         :type state: RunState, optional
+        :param attempts: attempts, defaults to None
+        :type attempts: TrialsGetFiltersRequestAttempts, optional
+        :param error_type: error_type, defaults to None
+        :type error_type: List[str], optional
+        :param failed_only: failed_only, defaults to None
+        :type failed_only: TrialsGetFiltersRequestFailedOnly, optional
+        :param terminal: terminal, defaults to None
+        :type terminal: TrialsGetFiltersRequestTerminal, optional
         :param name: name, defaults to None
         :type name: str, optional
         :param q: q, defaults to None
@@ -522,18 +574,30 @@ class TrialsClient(BaseService):
         :type created_before: str, optional
         :param job_id: job_id, defaults to None
         :type job_id: str, optional
+        :param job_ids: job_ids, defaults to None
+        :type job_ids: List[str], optional
         :param limit: limit, defaults to None
         :type limit: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: FilterValuesResponse
+        :rtype: TrialFilterValuesResponse
         """
 
         Validator(TrialsGetFiltersRequestField).validate(field, "field")
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
+        Validator(TrialsGetFiltersRequestAttempts).is_optional().validate(
+            attempts, "attempts"
+        )
+        Validator(str).is_array().is_optional().validate(error_type, "error_type")
+        Validator(TrialsGetFiltersRequestFailedOnly).is_optional().validate(
+            failed_only, "failed_only"
+        )
+        Validator(TrialsGetFiltersRequestTerminal).is_optional().validate(
+            terminal, "terminal"
+        )
         Validator(str).is_optional().validate(name, "name")
         Validator(str).is_optional().validate(q, "q")
         Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
@@ -549,6 +613,7 @@ class TrialsClient(BaseService):
         Validator(str).is_optional().validate(created_after, "created_after")
         Validator(str).is_optional().validate(created_before, "created_before")
         Validator(str).is_optional().validate(job_id, "job_id")
+        Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
         Validator(str).is_optional().validate(limit, "limit")
 
         resolved_config = self._get_resolved_config(
@@ -566,6 +631,10 @@ class TrialsClient(BaseService):
             )
             .add_query("task", task)
             .add_query("state", state)
+            .add_query("attempts", attempts)
+            .add_query("error_type", error_type)
+            .add_query("failed_only", failed_only)
+            .add_query("terminal", terminal)
             .add_query("name", name)
             .add_query("q", q)
             .add_query("agent_name", agent_name)
@@ -577,6 +646,7 @@ class TrialsClient(BaseService):
             .add_query("created_after", created_after)
             .add_query("created_before", created_before)
             .add_query("job_id", job_id)
+            .add_query("job_ids", job_ids)
             .add_query("field", field)
             .add_query("limit", limit)
             .add_error(401, UnauthorizedEncoded)
@@ -592,9 +662,9 @@ class TrialsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                FilterValuesResponse.model_validate(response)
+                TrialFilterValuesResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(FilterValuesResponse, response)
+                else construct_lenient(TrialFilterValuesResponse, response)
             )
         )
 
@@ -992,6 +1062,10 @@ class RawTrialsClient:
         *,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: TrialsListRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: TrialsListRequestFailedOnly = SENTINEL,
+        terminal: TrialsListRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -1003,6 +1077,7 @@ class RawTrialsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         sort: TrialsListRequestSort = SENTINEL,
@@ -1016,6 +1091,10 @@ class RawTrialsClient:
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -1027,6 +1106,7 @@ class RawTrialsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "page_size": page_size,
                         "page_token": page_token,
                         "sort": sort,
@@ -1105,6 +1185,10 @@ class RawTrialsClient:
         field: TrialsGetFiltersRequestField,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+        terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -1116,9 +1200,10 @@ class RawTrialsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[FilterValuesResponse]:
+    ) -> HttpResponse[TrialFilterValuesResponse]:
         data = TrialsClient.get_filters(
             self._client,
             field=field,
@@ -1128,6 +1213,10 @@ class RawTrialsClient:
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -1139,6 +1228,7 @@ class RawTrialsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL
@@ -1279,6 +1369,10 @@ class AsyncTrialsClient(TrialsClient):
         *,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: TrialsListRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: TrialsListRequestFailedOnly = SENTINEL,
+        terminal: TrialsListRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -1290,6 +1384,7 @@ class AsyncTrialsClient(TrialsClient):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         sort: TrialsListRequestSort = SENTINEL,
@@ -1302,6 +1397,10 @@ class AsyncTrialsClient(TrialsClient):
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -1313,6 +1412,7 @@ class AsyncTrialsClient(TrialsClient):
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "page_size": page_size,
                         "page_token": page_token,
                         "sort": sort,
@@ -1324,11 +1424,7 @@ class AsyncTrialsClient(TrialsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1398,6 +1494,10 @@ class AsyncTrialsClient(TrialsClient):
         field: TrialsGetFiltersRequestField,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+        terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -1409,9 +1509,10 @@ class AsyncTrialsClient(TrialsClient):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+    ) -> Awaitable[TrialFilterValuesResponse]:  # type: ignore[override]
         return to_async(super().get_filters)(
             field=field,
             **dict[str, Any](
@@ -1420,6 +1521,10 @@ class AsyncTrialsClient(TrialsClient):
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -1431,6 +1536,7 @@ class AsyncTrialsClient(TrialsClient):
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL
@@ -1548,6 +1654,10 @@ class AsyncRawTrialsClient:
         *,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: TrialsListRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: TrialsListRequestFailedOnly = SENTINEL,
+        terminal: TrialsListRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -1559,6 +1669,7 @@ class AsyncRawTrialsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         sort: TrialsListRequestSort = SENTINEL,
@@ -1572,6 +1683,10 @@ class AsyncRawTrialsClient:
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -1583,6 +1698,7 @@ class AsyncRawTrialsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "page_size": page_size,
                         "page_token": page_token,
                         "sort": sort,
@@ -1661,6 +1777,10 @@ class AsyncRawTrialsClient:
         field: TrialsGetFiltersRequestField,
         task: List[str] = SENTINEL,
         state: RunState = SENTINEL,
+        attempts: TrialsGetFiltersRequestAttempts = SENTINEL,
+        error_type: List[str] = SENTINEL,
+        failed_only: TrialsGetFiltersRequestFailedOnly = SENTINEL,
+        terminal: TrialsGetFiltersRequestTerminal = SENTINEL,
         name: str = SENTINEL,
         q: str = SENTINEL,
         agent_name: List[str] = SENTINEL,
@@ -1672,9 +1792,10 @@ class AsyncRawTrialsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         job_id: str = SENTINEL,
+        job_ids: List[str] = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[FilterValuesResponse]:
+    ) -> HttpResponse[TrialFilterValuesResponse]:
         data = await AsyncTrialsClient.get_filters(
             self._client,
             field=field,
@@ -1684,6 +1805,10 @@ class AsyncRawTrialsClient:
                     for k, v in {
                         "task": task,
                         "state": state,
+                        "attempts": attempts,
+                        "error_type": error_type,
+                        "failed_only": failed_only,
+                        "terminal": terminal,
                         "name": name,
                         "q": q,
                         "agent_name": agent_name,
@@ -1695,6 +1820,7 @@ class AsyncRawTrialsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "job_id": job_id,
+                        "job_ids": job_ids,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL

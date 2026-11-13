@@ -377,6 +377,10 @@
 
 - `task`
 - `state`
+- `attempts`
+- `error_type`
+- `failed_only`
+- `terminal`
 - `name`
 - `q`
 - `agent_name`
@@ -388,6 +392,7 @@
 - `created_after`
 - `created_before`
 - `job_id`
+- `job_ids`
 - `page_size`
 - `page_token`
 - `sort`
@@ -405,6 +410,10 @@
 - `field` (required)
 - `task`
 - `state`
+- `attempts`
+- `error_type`
+- `failed_only`
+- `terminal`
 - `name`
 - `q`
 - `agent_name`
@@ -416,6 +425,7 @@
 - `created_after`
 - `created_before`
 - `job_id`
+- `job_ids`
 - `limit`
 
 ### `client.trials.pause`
@@ -497,6 +507,10 @@ Retry this physical trial. Reusing the same Idempotency-Key does not reapply the
 
 - `task`
 - `state`
+- `attempts`
+- `error_type`
+- `failed_only`
+- `terminal`
 - `name`
 - `q`
 - `agent_name`
@@ -508,6 +522,7 @@ Retry this physical trial. Reusing the same Idempotency-Key does not reapply the
 - `created_after`
 - `created_before`
 - `job_id`
+- `job_ids`
 - `page_size`
 - `page_token`
 - `sort`
@@ -521,6 +536,10 @@ Retry this physical trial. Reusing the same Idempotency-Key does not reapply the
 - `field` (required)
 - `task`
 - `state`
+- `attempts`
+- `error_type`
+- `failed_only`
+- `terminal`
 - `name`
 - `q`
 - `agent_name`
@@ -532,6 +551,7 @@ Retry this physical trial. Reusing the same Idempotency-Key does not reapply the
 - `created_after`
 - `created_before`
 - `job_id`
+- `job_ids`
 - `limit`
 
 ### `client.rollouts.pause`

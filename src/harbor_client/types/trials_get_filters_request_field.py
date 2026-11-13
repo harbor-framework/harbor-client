@@ -5,6 +5,7 @@ from typing import Any
 TrialsGetFiltersRequestField = typing.Union[
     typing.Literal[
         "state",
+        "error_type",
         "task",
         "agent_name",
         "agent_version",
