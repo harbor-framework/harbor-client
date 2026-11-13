@@ -1,10 +1,10 @@
-# HarborApiClient Python SDK 1.0.0<a id="harborapiclient-python-sdk-100"></a>
+# HarborApiClient Python SDK 0.1.0<a id="harborapiclient-python-sdk-010"></a>
 
 Welcome to the HarborApiClient SDK documentation. This guide will help you get started with integrating and using the HarborApiClient SDK in your project.
 
 ## Versions<a id="versions"></a>
 
-- SDK version: `1.0.0`
+- SDK version: `0.1.0`
 
 ## About the API<a id="about-the-api"></a>
 

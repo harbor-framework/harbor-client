@@ -30,5 +30,6 @@ JobsListTasksBadRequestResponse = Union[
 ]
 # TypeAdapter for runtime validation of JobsListTasksBadRequestResponse
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 JobsListTasksBadRequestResponse_adapter = TypeAdapter(JobsListTasksBadRequestResponse)
