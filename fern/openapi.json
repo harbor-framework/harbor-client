@@ -21456,7 +21456,8 @@
         "type": "object",
         "properties": {
           "package_id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
           "package_type": {
             "type": "string",
@@ -21502,13 +21503,42 @@
           "can_manage_access",
           "organization_grants"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "dependentRequired": {
+              "direct_public": [
+                "public_grants"
+              ],
+              "public_grants": [
+                "direct_public"
+              ]
+            },
+            "if": {
+              "properties": {
+                "can_manage_access": {
+                  "const": true
+                }
+              },
+              "required": [
+                "can_manage_access"
+              ]
+            },
+            "then": {
+              "required": [
+                "direct_public",
+                "public_grants"
+              ]
+            }
+          }
+        ]
       },
       "PackagePublicGrant": {
         "type": "object",
         "properties": {
           "source_package_id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
           "source_package_name": {
             "type": "string"
@@ -21526,7 +21556,8 @@
           "created_by": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
               },
               {
                 "type": "null"
@@ -21562,7 +21593,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
           "username": {
             "anyOf": [
@@ -21596,7 +21628,8 @@
         "type": "object",
         "properties": {
           "source_package_id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
           "source_package_name": {
             "type": "string"
@@ -21614,7 +21647,8 @@
           "created_by": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
               },
               {
                 "type": "null"
@@ -21654,7 +21688,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
           "name": {
             "type": "string"
@@ -21689,7 +21724,8 @@
         "type": "object",
         "properties": {
           "package_id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
           "package_type": {
             "type": "string",
@@ -21734,17 +21770,17 @@
           },
           "newly_shared_task_count": {
             "type": "integer",
-            "minimum": -9007199254740991,
+            "minimum": 0,
             "maximum": 9007199254740991
           },
           "newly_unshared_task_count": {
             "type": "integer",
-            "minimum": -9007199254740991,
+            "minimum": 0,
             "maximum": 9007199254740991
           },
           "potentially_unavailable_third_party_task_count": {
             "type": "integer",
-            "minimum": -9007199254740991,
+            "minimum": 0,
             "maximum": 9007199254740991
           }
         },
@@ -21761,7 +21797,35 @@
           "newly_unshared_task_count",
           "potentially_unavailable_third_party_task_count"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "dependentRequired": {
+              "direct_public": [
+                "public_grants"
+              ],
+              "public_grants": [
+                "direct_public"
+              ]
+            },
+            "if": {
+              "properties": {
+                "can_manage_access": {
+                  "const": true
+                }
+              },
+              "required": [
+                "can_manage_access"
+              ]
+            },
+            "then": {
+              "required": [
+                "direct_public",
+                "public_grants"
+              ]
+            }
+          }
+        ]
       },
       "SetPackageVisibilityResponse": {
         "type": "object",
