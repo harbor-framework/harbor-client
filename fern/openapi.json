@@ -17830,12 +17830,26 @@
             "description": "Stored artifact paths by role; use the storage API to obtain authorized download URLs."
           },
           "storage_error": {
-            "type": "null",
-            "description": "Storage failures are not persisted in the trial resource."
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Structured storage failure when available; otherwise null."
           },
           "result": {
-            "type": "null",
-            "description": "Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
           }
         },
         "required": [

@@ -9,6 +9,7 @@ from pydantic import TypeAdapter
 LeaderboardPackageSelectorEncoded = Union[str, str]
 # TypeAdapter for runtime validation of LeaderboardPackageSelectorEncoded
 # This allows validation of Union types which are not directly instantiable
+from pydantic import TypeAdapter
 
 LeaderboardPackageSelectorEncoded_adapter = TypeAdapter(
     LeaderboardPackageSelectorEncoded

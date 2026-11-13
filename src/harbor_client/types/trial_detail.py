@@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
     :param model: model
     :type model: ModelIdentity
     :param rewards: rewards
-    :type rewards: Dict[str, Optional[float]]
+    :type rewards: Dict[str, float]
     :param usage: usage
     :type usage: Usage
     :param error_type: error_type
@@ -65,10 +65,10 @@ class TrialDetail(BaseModel):
     :type lock: Dict[str, Any]
     :param artifacts: Stored artifact paths by role; use the storage API to obtain authorized download URLs.
     :type artifacts: Dict[str, str]
-    :param storage_error: Storage failures are not persisted in the trial resource.
-    :type storage_error: Any
-    :param result: Full result.json is available in the archived artifacts and is not reconstructed from partial database fields.
-    :type result: Any
+    :param storage_error: Structured storage failure when available; otherwise null.
+    :type storage_error: Dict[str, Any]
+    :param result: Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers.
+    :type result: Dict[str, Any]
     """
 
     created_at: str
@@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
     task: TaskIdentity
     agent: AgentIdentity
     model: ModelIdentity
-    rewards: Optional[Dict[str, Optional[float]]]
+    rewards: Optional[Dict[str, float]]
     usage: Usage
     error_type: Optional[str]
     lock: Optional[Dict[str, Any]] = Field(
@@ -95,9 +95,9 @@ class TrialDetail(BaseModel):
     artifacts: Dict[str, str] = Field(
         description="Stored artifact paths by role; use the storage API to obtain authorized download URLs."
     )
-    storage_error: None = Field(
-        description="Storage failures are not persisted in the trial resource."
+    storage_error: Optional[Dict[str, Any]] = Field(
+        description="Structured storage failure when available; otherwise null."
     )
-    result: None = Field(
-        description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
+    result: Optional[Dict[str, Any]] = Field(
+        description="Full execution result when supplied by the backend; otherwise null. Stored results can also be read through artifact transfers."
     )
