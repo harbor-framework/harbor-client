@@ -32,7 +32,6 @@ LeaderboardsListTrialsBadRequestResponse = Union[
 ]
 # TypeAdapter for runtime validation of LeaderboardsListTrialsBadRequestResponse
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 LeaderboardsListTrialsBadRequestResponse_adapter = TypeAdapter(
     LeaderboardsListTrialsBadRequestResponse

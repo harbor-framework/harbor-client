@@ -36,14 +36,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       python: 6.17.0
-current_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
+  - commit_sha: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
+    tree_hash: 7fec6a94e8d8d744aa668d228ec90ed91337dfc1
+    timestamp: 2026-11-13T00:22:15.680Z
+    cli_version: 5.199.0
+    generator_versions:
+      python: 6.17.0
+current_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:c6e614f9fa41dfb09c54a3a1269b06eb8d9a408a1c41ec837ef41f7cdb9b0975
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
+    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -16827,7 +16833,7 @@ patches:
     original_commit: 61a37708c2a4e72346405c1176c431715170524c
     original_message: Use native Fern generation PRs and persistent Replay history
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
+    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
     files:
       - build_support.py
     patch_content: |
@@ -16906,8 +16912,6 @@ patches:
     files:
       - examples/sample.py
       - src/harbor_client/rollouts/client.py
-      - src/harbor_client/types/job_detail.py
-      - src/harbor_client/types/job_summary.py
       - src/harbor_client/types/jobs_submit_response.py
       - src/harbor_client/types/rollouts_list_bad_request_response.py
       - src/harbor_client/types/trial_detail.py
@@ -18556,6 +18560,7 @@ patches:
             result: None = Field(
                 description="Full result.json is available in the archived artifacts and is not reconstructed from partial database fields."
             )
+    status: unresolved
   - id: patch-7c950c27
     content_hash: sha256:ed546c9a6047cd81b922d80f5b2332001da81878afd51bbf7113c0660ff108ef
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
@@ -18810,12 +18815,13 @@ patches:
             rewards: Optional[Dict[str, Optional[float]]]
             usage: Usage
             error_type: Optional[str]
+    status: unresolved
   - id: patch-081259ba
     content_hash: sha256:b90a665b4916b159c296d8179d93a7dcdb6ff275561e8c8361f6b65e6284b551
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: fd2c34e5eaa2094f48efbe34ff4361e6aa754602
+    base_generation: 43ad7429b15fe2a24c9a4e4fa59b92bc2650552f
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |

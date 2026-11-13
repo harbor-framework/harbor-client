@@ -47,7 +47,6 @@ HostedVerifierConfigOverrideTimeoutSecOne = typing.Union[
 HostedVerifierConfigOverrideTimeoutSec = Union[float, str]
 # TypeAdapter for runtime validation of HostedVerifierConfigOverrideTimeoutSec
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 HostedVerifierConfigOverrideTimeoutSec_adapter = TypeAdapter(
     HostedVerifierConfigOverrideTimeoutSec
