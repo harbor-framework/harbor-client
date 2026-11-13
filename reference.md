@@ -127,7 +127,7 @@
 - `page_size`
 - `page_token`
 - `offset`
-- `organization_name`
+- `organization_id`
 - `include_yanked`
 
 ### `client.packages.get`
@@ -197,6 +197,22 @@
 
 - `job_id` (required)
 
+### `client.jobs.get`
+
+`GET /v1/jobs/{job_id}`
+
+**Parameters:**
+
+- `job_id` (required)
+
+### `client.jobs.rename`
+
+`PATCH /v1/jobs/{job_id}`
+
+**Parameters:**
+
+- `job_id` (required)
+
 ### `client.jobs.get_artifact_download`
 
 `GET /v1/jobs/{job_id}/artifacts`
@@ -213,22 +229,6 @@
 **Parameters:**
 
 - `idempotency_key` (required)
-
-### `client.jobs.get`
-
-`GET /v1/jobs/{job_id}`
-
-**Parameters:**
-
-- `job_id` (required)
-
-### `client.jobs.rename`
-
-`PATCH /v1/jobs/{job_id}`
-
-**Parameters:**
-
-- `job_id` (required)
 
 ### `client.jobs.delete`
 
@@ -250,9 +250,32 @@
 
 - `source_job_id` (required)
 
+### `client.jobs.pause`
+
+`POST /v1/jobs/{job_id}/pause`
+
+**Parameters:**
+
+- `job_id` (required)
+- `idempotency_key` (required)
+
+### `client.jobs.resume`
+
+`POST /v1/jobs/{job_id}/resume`
+
+**Parameters:**
+
+- `job_id` (required)
+- `idempotency_key` (required)
+
 ### `client.jobs.cancel`
 
-`POST /v1/jobs/cancel`
+`POST /v1/jobs/{job_id}/cancel`
+
+**Parameters:**
+
+- `job_id` (required)
+- `idempotency_key` (required)
 
 ### `client.jobs.list`
 
@@ -260,24 +283,42 @@
 
 **Parameters:**
 
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
 - `page_size`
 - `page_token`
-- `offset`
-- `search`
-- `agents`
-- `providers`
-- `models`
-- `date_`
-- `scope`
-- `shared_with_organization_id`
-- `datasets`
-- `access`
-- `owner_organization_id`
-- `date_from`
-- `date_to`
-- `created_by`
-- `archive`
 - `sort`
+
+### `client.jobs.get_filters`
+
+`GET /v1/jobs/filters`
+
+**Parameters:**
+
+- `field` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `limit`
 
 ### `client.jobs.list_tasks`
 
@@ -328,6 +369,99 @@
 
 - `trial_id` (required)
 
+### `client.trials.list`
+
+`GET /v1/trials`
+
+**Parameters:**
+
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `page_size`
+- `page_token`
+- `sort`
+
+### `client.trials.create`
+
+`POST /v1/trials`
+
+### `client.trials.get_filters`
+
+`GET /v1/trials/filters`
+
+**Parameters:**
+
+- `field` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `limit`
+
+### `client.trials.pause`
+
+`POST /v1/trials/{trial_id}/pause`
+
+Pause this physical trial. Reusing the same Idempotency-Key does not reapply the command.
+
+**Parameters:**
+
+- `trial_id` (required)
+- `idempotency_key` (required)
+
+### `client.trials.resume`
+
+`POST /v1/trials/{trial_id}/resume`
+
+Resume this physical trial. Reusing the same Idempotency-Key does not reapply the command.
+
+**Parameters:**
+
+- `trial_id` (required)
+- `idempotency_key` (required)
+
+### `client.trials.cancel`
+
+`POST /v1/trials/{trial_id}/cancel`
+
+Cancel this physical trial. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+**Parameters:**
+
+- `trial_id` (required)
+- `idempotency_key` (required)
+
+### `client.trials.retry`
+
+`POST /v1/trials/{trial_id}/retry`
+
+Retry this physical trial. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+**Parameters:**
+
+- `trial_id` (required)
+- `idempotency_key` (required)
+
 ### `client.trials.get_artifact_download`
 
 `GET /v1/trials/{trial_id}/artifacts`
@@ -337,18 +471,6 @@
 - `trial_id` (required)
 - `artifact_type` (required)
 
-### `client.trials.cancel`
-
-`POST /v1/trials/cancel`
-
-Cancel the latest active attempts. Send {job_id: null, trial_ids: [...], soft: false} for IDs across jobs, or select a job with explicit filters or all: true.
-
-### `client.trials.retry`
-
-`POST /v1/trials/retry`
-
-Retry the latest terminal attempts. Send {job_id: null, trial_ids: [...]} for IDs across jobs, or select a job with explicit filters or all: true.
-
 ### `client.trials.copy`
 
 `POST /v1/trials/{source_trial_id}/copy`
@@ -357,32 +479,104 @@ Retry the latest terminal attempts. Send {job_id: null, trial_ids: [...]} for ID
 
 - `source_trial_id` (required)
 
-### `client.trials.list`
+## RolloutsClient
 
-`GET /v1/trials`
+### `client.rollouts.get`
+
+`GET /v1/rollouts/{rollout_id}`
 
 **Parameters:**
 
-- `job_ids` (required)
+- `rollout_id` (required)
+
+### `client.rollouts.list`
+
+`GET /v1/rollouts`
+
+**Parameters:**
+
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
+- `agent_version`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
 - `page_size`
 - `page_token`
-- `offset`
-- `search`
-- `agents`
-- `providers`
-- `models`
-- `tasks`
-- `exceptions`
-- `failed_only`
-- `config_filters`
+- `sort`
+
+### `client.rollouts.get_filters`
+
+`GET /v1/rollouts/filters`
+
+**Parameters:**
+
+- `field` (required)
+- `task`
+- `state`
+- `name`
+- `q`
+- `agent_name`
 - `agent_version`
-- `attempts`
-- `sort_by`
-- `sort_order`
+- `model_name`
+- `model_provider`
+- `reasoning_effort`
+- `source`
+- `created_after`
+- `created_before`
+- `job_id`
+- `limit`
 
-### `client.trials.create`
+### `client.rollouts.pause`
 
-`POST /v1/trials`
+`POST /v1/rollouts/{rollout_id}/pause`
+
+Pause this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
+
+**Parameters:**
+
+- `rollout_id` (required)
+- `idempotency_key` (required)
+
+### `client.rollouts.resume`
+
+`POST /v1/rollouts/{rollout_id}/resume`
+
+Resume this physical rollout. Reusing the same Idempotency-Key does not reapply the command.
+
+**Parameters:**
+
+- `rollout_id` (required)
+- `idempotency_key` (required)
+
+### `client.rollouts.cancel`
+
+`POST /v1/rollouts/{rollout_id}/cancel`
+
+Cancel this physical rollout. Reusing the same Idempotency-Key does not reapply the command. force defaults to true; false lets a running attempt finish.
+
+**Parameters:**
+
+- `rollout_id` (required)
+- `idempotency_key` (required)
+
+### `client.rollouts.retry`
+
+`POST /v1/rollouts/{rollout_id}/retry`
+
+Retry this physical rollout. Reusing the same Idempotency-Key does not reapply the command. The latest terminal attempt is required; replays return the originally created attempt ID.
+
+**Parameters:**
+
+- `rollout_id` (required)
+- `idempotency_key` (required)
 
 ## AccountClient
 
@@ -421,9 +615,17 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 
 ## AgentsClient
 
-### `client.agents.get_catalog`
+### `client.agents.list`
 
 `GET /v1/agents`
+
+### `client.agents.get_options`
+
+`GET /v1/agents/{name}/options`
+
+**Parameters:**
+
+- `name` (required)
 
 ## LeaderboardsClient
 

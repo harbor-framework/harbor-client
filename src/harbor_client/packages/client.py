@@ -943,7 +943,7 @@ class PackagesClient(BaseService):
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         offset: str = SENTINEL,
-        organization_name: str = SENTINEL,
+        organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[PackageVersionSummary]:
@@ -957,8 +957,8 @@ class PackagesClient(BaseService):
         :type page_token: str, optional
         :param offset: offset, defaults to None
         :type offset: str, optional
-        :param organization_name: organization_name, defaults to None
-        :type organization_name: str, optional
+        :param organization_id: organization_id, defaults to None
+        :type organization_id: str, optional
         :param include_yanked: include_yanked, defaults to None
         :type include_yanked: PackagesListVersionCatalogRequestIncludeYanked, optional
         ...
@@ -973,7 +973,7 @@ class PackagesClient(BaseService):
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
         Validator(str).is_optional().validate(offset, "offset")
-        Validator(str).is_optional().validate(organization_name, "organization_name")
+        Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(
             PackagesListVersionCatalogRequestIncludeYanked
         ).is_optional().validate(include_yanked, "include_yanked")
@@ -999,7 +999,7 @@ class PackagesClient(BaseService):
                     .add_query("page_token", page_token)
                     .add_query("offset", offset)
                     .add_query("type", type)
-                    .add_query("organization_name", organization_name)
+                    .add_query("organization_id", organization_id)
                     .add_query("include_yanked", include_yanked)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
@@ -1516,7 +1516,7 @@ class RawPackagesClient:
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         offset: str = SENTINEL,
-        organization_name: str = SENTINEL,
+        organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[PackageVersionSummary]]:
@@ -1530,7 +1530,7 @@ class RawPackagesClient:
                         "page_size": page_size,
                         "page_token": page_token,
                         "offset": offset,
-                        "organization_name": organization_name,
+                        "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
                     if v is not SENTINEL
@@ -1845,7 +1845,7 @@ class AsyncPackagesClient(PackagesClient):
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         offset: str = SENTINEL,
-        organization_name: str = SENTINEL,
+        organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[PackageVersionSummary]:  # type: ignore[override]
@@ -1858,7 +1858,7 @@ class AsyncPackagesClient(PackagesClient):
                         "page_size": page_size,
                         "page_token": page_token,
                         "offset": offset,
-                        "organization_name": organization_name,
+                        "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
                     if v is not SENTINEL
@@ -2185,7 +2185,7 @@ class AsyncRawPackagesClient:
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
         offset: str = SENTINEL,
-        organization_name: str = SENTINEL,
+        organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[PackageVersionSummary]]:
@@ -2199,7 +2199,7 @@ class AsyncRawPackagesClient:
                         "page_size": page_size,
                         "page_token": page_token,
                         "offset": offset,
-                        "organization_name": organization_name,
+                        "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
                     if v is not SENTINEL

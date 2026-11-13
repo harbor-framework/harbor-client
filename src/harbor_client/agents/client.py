@@ -4,9 +4,9 @@ from ..services.utils.base_service import BaseService
 from ..types.utils.cast_models import cast_models
 from ..types.utils.base_model import construct_lenient
 from ..types import (
+    AgentsResponse,
     BadRequestEncoded,
     ForbiddenEncoded,
-    HostedAgentCatalog,
     InternalServerErrorEncoded,
     NotFoundEncoded,
     UnauthorizedEncoded,
@@ -33,16 +33,27 @@ class AgentsClient(BaseService):
         """Initialize the resource client, its child clients and method-level configs."""
         super().__init__(*args, **kwargs)
         self._raw_client = self.with_raw_response
-        self._get_catalog_config: SdkConfig = {}
+        self._list_config: SdkConfig = {}
+        self._get_options_config: SdkConfig = {}
 
-    def set_get_catalog_config(self, config: SdkConfig):
+    def set_list_config(self, config: SdkConfig):
         """
-        Sets method-level configuration for get_catalog.
+        Sets method-level configuration for list.
 
         :param SdkConfig config: Configuration dictionary to override service-level defaults.
         :return: The service instance for method chaining.
         """
-        self._get_catalog_config = config
+        self._list_config = config
+        return self
+
+    def set_get_options_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for get_options.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._get_options_config = config
         return self
 
     @property
@@ -55,21 +66,19 @@ class AgentsClient(BaseService):
         return RawAgentsClient(self)
 
     @cast_models
-    def get_catalog(
+    def list(
         self, *, request_options: Optional[RequestOptions] = None
-    ) -> HostedAgentCatalog:
-        """get_catalog
+    ) -> AgentsResponse:
+        """list
 
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: HostedAgentCatalog
+        :rtype: AgentsResponse
         """
 
-        resolved_config = self._get_resolved_config(
-            self._get_catalog_config, request_options
-        )
+        resolved_config = self._get_resolved_config(self._list_config, request_options)
 
         serialized_request = (
             Serializer(
@@ -93,11 +102,53 @@ class AgentsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                HostedAgentCatalog.model_validate(response)
+                AgentsResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(HostedAgentCatalog, response)
+                else construct_lenient(AgentsResponse, response)
             )
         )
+
+    @cast_models
+    def get_options(
+        self, name: str, *, request_options: Optional[RequestOptions] = None
+    ) -> dict:
+        """get_options
+
+        :param name: name
+        :type name: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: dict
+        """
+
+        Validator(str).validate(name, "name")
+
+        resolved_config = self._get_resolved_config(
+            self._get_options_config, request_options
+        )
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/agents/{{name}}/options",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_path("name", name)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("GET")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return response
 
 
 class RawAgentsClient:
@@ -113,10 +164,18 @@ class RawAgentsClient:
         self._client = client
         self._client_wrapper = client._client_wrapper
 
-    def get_catalog(
+    def list(
         self, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[HostedAgentCatalog]:
-        data = AgentsClient.get_catalog(self._client, request_options=request_options)
+    ) -> HttpResponse[AgentsResponse]:
+        data = AgentsClient.list(self._client, request_options=request_options)
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def get_options(
+        self, name: str, *, request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[dict]:
+        data = AgentsClient.get_options(
+            self._client, name, request_options=request_options
+        )
         return HttpResponse(data=data, response=self._client._last_response)
 
 
@@ -134,10 +193,15 @@ class AsyncAgentsClient(AgentsClient):
         """
         return AsyncRawAgentsClient(self)
 
-    def get_catalog(
+    def list(
         self, *, request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[HostedAgentCatalog]:  # type: ignore[override]
-        return to_async(super().get_catalog)(request_options=request_options)
+    ) -> Awaitable[AgentsResponse]:  # type: ignore[override]
+        return to_async(super().list)(request_options=request_options)
+
+    def get_options(
+        self, name: str, *, request_options: Optional[RequestOptions] = None
+    ) -> Awaitable[dict]:  # type: ignore[override]
+        return to_async(super().get_options)(name, request_options=request_options)
 
 
 class AsyncRawAgentsClient:
@@ -149,10 +213,18 @@ class AsyncRawAgentsClient:
         self._client = client
         self._client_wrapper = client._client_wrapper
 
-    async def get_catalog(
+    async def list(
         self, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[HostedAgentCatalog]:
-        data = await AsyncAgentsClient.get_catalog(
+    ) -> HttpResponse[AgentsResponse]:
+        data = await AsyncAgentsClient.list(
             self._client, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def get_options(
+        self, name: str, *, request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[dict]:
+        data = await AsyncAgentsClient.get_options(
+            self._client, name, request_options=request_options
         )
         return HttpResponse(data=data, response=self._client._last_response)
