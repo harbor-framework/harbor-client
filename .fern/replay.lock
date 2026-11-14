@@ -78,14 +78,26 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-python-sdk: 6.17.0
-current_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+  - commit_sha: b41be936aa2968c0a8f3e59c42f3bedd4e2ff735
+    tree_hash: 6ece42da59ccd3ddb42d1f6141b7ae149799496d
+    timestamp: 2026-11-13T22:48:53.317Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+  - commit_sha: eae3b17d9288e04e6c3bc83fead74f63255c240c
+    tree_hash: fe25730bb1b3df297baf09146a449c1ce208c254
+    timestamp: 2026-11-14T02:49:58.167Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: eae3b17d9288e04e6c3bc83fead74f63255c240c
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:2211ed92a2dfea85feb54277b3e6d4b36b33413161d12f34f5557d5380bd69de
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+    base_generation: eae3b17d9288e04e6c3bc83fead74f63255c240c
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -13967,7 +13979,7 @@ patches:
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+    base_generation: eae3b17d9288e04e6c3bc83fead74f63255c240c
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -15580,7 +15592,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+    base_generation: eae3b17d9288e04e6c3bc83fead74f63255c240c
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -15823,7 +15835,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+    base_generation: eae3b17d9288e04e6c3bc83fead74f63255c240c
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -15847,7 +15859,7 @@ patches:
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+    base_generation: eae3b17d9288e04e6c3bc83fead74f63255c240c
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
@@ -22307,7 +22319,7 @@ patches:
     original_commit: ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e
     original_message: Keep the native generated example aligned with execution filters
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 27751cfcf05c5a08a072600f407af4f0bb6c2a40
+    base_generation: eae3b17d9288e04e6c3bc83fead74f63255c240c
     files:
       - examples/sample.py
     patch_content: |+
