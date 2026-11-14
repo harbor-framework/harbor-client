@@ -11,6 +11,5 @@ from .dry_run_response import DryRunResponse
 JobsSubmitResponse = Union[SubmitJobResponse, DryRunResponse]
 # TypeAdapter for runtime validation of JobsSubmitResponse
 # This allows validation of Union types which are not directly instantiable
-from pydantic import TypeAdapter
 
 JobsSubmitResponse_adapter = TypeAdapter(JobsSubmitResponse)
