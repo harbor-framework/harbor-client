@@ -14,7 +14,7 @@ from .base_client import AsyncBaseHarborAPIClient, BaseHarborAPIClient
 from .core.httpx_session import HttpxSession
 from .net.environment import HarborAPIClientEnvironment
 from .net.sdk_config import RetryConfig
-from .validation import API_VERSION, DEFAULT_BASE_URL, _http
+from .validation import API_VERSION, DEFAULT_BASE_URL, _CheckedClient, _http
 
 
 class _SessionTransport(httpx.BaseTransport):
@@ -72,7 +72,7 @@ class HarborAPIClient(BaseHarborAPIClient):
         timeout: float | None = None,
         timeout_ms: int | None = None,
         http_client: requests.Session | None = None,
-        httpx_client: httpx.Client | httpx.AsyncClient | None = None,
+        httpx_client: httpx.Client | None = None,
         follow_redirects: bool = True,
         logger: logging.Logger | None = None,
         retry: RetryConfig | None = None,
@@ -85,6 +85,13 @@ class HarborAPIClient(BaseHarborAPIClient):
             > 1
         ):
             raise ValueError("Choose one HTTP client or transport")
+        if isinstance(httpx_client, httpx.AsyncClient):
+            # Fern runs requests in worker threads, so an AsyncClient's connections
+            # would bind to a private event loop and break on the caller's loop.
+            raise TypeError(
+                "httpx_client must be a synchronous httpx.Client; "
+                "pass transport= to customize the async client's pool"
+            )
         selected = base_url if base_url is not None else environment
         url = (
             selected.value
@@ -103,7 +110,7 @@ class HarborAPIClient(BaseHarborAPIClient):
             if isinstance(transport, _SessionTransport):
                 transport.close()
             raise
-        self._contract_http: httpx.Client | None = http
+        self._contract_http: _CheckedClient | None = http
         try:
             super().__init__(
                 token=token,
@@ -128,6 +135,19 @@ class HarborAPIClient(BaseHarborAPIClient):
     def __enter__(self) -> Self:
         return self
 
+    def set_base_url(self, base_url: HarborAPIClientEnvironment | str) -> Self:
+        """Point generated resources and the checked pool at another API URL."""
+        http = getattr(self, "_contract_http", None)
+        if http is not None:
+            url = (
+                base_url.value
+                if isinstance(base_url, HarborAPIClientEnvironment)
+                else base_url
+            )
+            http.contract.set_base_url(url)
+        super().set_base_url(base_url)
+        return self
+
     def close(self) -> None:
         http, self._contract_http = self._contract_http, None
         if http is not None:
@@ -149,7 +169,7 @@ class AsyncHarborAPIClient(AsyncBaseHarborAPIClient, HarborAPIClient):
         timeout: float | None = None,
         timeout_ms: int | None = None,
         http_client: requests.Session | None = None,
-        httpx_client: httpx.Client | httpx.AsyncClient | None = None,
+        httpx_client: httpx.Client | None = None,
         follow_redirects: bool = True,
         logger: logging.Logger | None = None,
         retry: RetryConfig | None = None,

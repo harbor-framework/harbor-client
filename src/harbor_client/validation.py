@@ -109,11 +109,17 @@ class ContractTransport(httpx.BaseTransport):
         self, transport: httpx.BaseTransport, base_url: str = DEFAULT_BASE_URL
     ) -> None:
         self._transport = transport
-        self._base = httpx.URL(base_url)
-        self._prefix = self._base.raw_path.rstrip(b"/")
         self._condition = Condition()
         self._active = 0
         self._closed = False
+        self.set_base_url(base_url)
+
+    def set_base_url(self, base_url: str) -> None:
+        """Move the checked origin and base path; later requests must match it."""
+        base = httpx.URL(_checked_base_url(base_url))
+        with self._condition:
+            self._base = base
+            self._prefix = base.raw_path.rstrip(b"/")
 
     @override
     def handle_request(self, request: httpx.Request) -> httpx.Response:
@@ -129,18 +135,19 @@ class ContractTransport(httpx.BaseTransport):
                 self._condition.notify_all()
 
     def _handle_request(self, request: httpx.Request) -> httpx.Response:
+        base, prefix = self._base, self._prefix
         if (request.url.scheme, request.url.host, request.url.port) != (
-            self._base.scheme,
-            self._base.host,
-            self._base.port,
+            base.scheme,
+            base.host,
+            base.port,
         ):
             raise ValueError(
                 "The checked client only sends requests to its configured API origin"
             )
         raw_path = request.url.raw_path.split(b"?", 1)[0]
-        if not raw_path.startswith(self._prefix + b"/"):
+        if not raw_path.startswith(prefix + b"/"):
             raise ValueError("The request does not match the configured API base path")
-        relative = raw_path.removeprefix(self._prefix).decode("ascii")
+        relative = raw_path.removeprefix(prefix).decode("ascii")
         method = request.method.lower()
         path_values = {}
         path = relative
@@ -208,6 +215,10 @@ class ContractTransport(httpx.BaseTransport):
             else:
                 raise ValueError("The request body content type is not documented")
         response = self._transport.handle_request(request)
+        if response.is_error:
+            # Proxies and gateways answer with HTML or plain text. Leave error bodies
+            # to Fern, which raises a typed ApiError and applies the retry policy.
+            return response
         try:
             responses = operation.get("responses", {})
             code = str(response.status_code)
@@ -251,7 +262,7 @@ class ContractTransport(httpx.BaseTransport):
         self._transport.close()
 
 
-def _http(base_url: str, transport: httpx.BaseTransport | None) -> httpx.Client:
+def _checked_base_url(base_url: str) -> str:
     parsed = urlsplit(base_url)
     if parsed.scheme != "https" and not (
         parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
@@ -259,9 +270,28 @@ def _http(base_url: str, transport: httpx.BaseTransport | None) -> httpx.Client:
         raise ValueError(
             "The Harbor API requires HTTPS except for loopback development"
         )
-    return httpx.Client(
-        transport=ContractTransport(transport or httpx.HTTPTransport(), base_url),
-        timeout=60,
+    return base_url
+
+
+class _CheckedClient(httpx.Client):
+    """Reject dot path segments before HTTPX resolves them into another route."""
+
+    def __init__(self, contract: ContractTransport) -> None:
+        super().__init__(transport=contract, timeout=60)
+        self.contract = contract
+
+    @override
+    def build_request(self, method: str, url: Any, **kwargs: Any) -> httpx.Request:
+        path = urlsplit(str(url)).path
+        if any(segment in {".", ".."} for segment in path.split("/")):
+            raise ValueError("Path parameters cannot be '.' or '..'")
+        return super().build_request(method, url, **kwargs)
+
+
+def _http(base_url: str, transport: httpx.BaseTransport | None) -> _CheckedClient:
+    _checked_base_url(base_url)
+    return _CheckedClient(
+        ContractTransport(transport or httpx.HTTPTransport(), base_url)
     )
 
 
