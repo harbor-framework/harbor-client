@@ -125,3 +125,61 @@ def test_root_exports_include_support_types_and_established_environment_name():
         transport=httpx.MockTransport(lambda _: pytest.fail("No request expected")),
     ):
         pass
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_borrowed_requests_session_retains_caller_ownership(asynchronous):
+    import requests
+
+    seen = []
+
+    class Session(requests.Session):
+        closed = False
+
+        def request(self, method, url, **kwargs):
+            seen.append((method, url, kwargs))
+            response = requests.Response()
+            response.status_code = 200
+            response.headers["Content-Type"] = "application/json"
+            response._content = b'{"items": [], "total": 0, "next_page_token": ""}'
+            return response
+
+        def close(self):
+            self.closed = True
+            super().close()
+
+    session = Session()
+    client = (AsyncHarborAPIClient if asynchronous else HarborAPIClient)(
+        token="key", http_client=session
+    )
+    try:
+        if asynchronous:
+            assert [item async for item in client.jobs.list()] == []
+            await client.aclose()
+        else:
+            assert list(client.jobs.list()) == []
+            client.close()
+        assert not session.closed
+        assert seen[0][2]["headers"]["authorization"] == "Bearer key"
+    finally:
+        client.close()
+        session.close()
+
+
+async def test_async_token_provider_works_through_the_public_constructor():
+    async def token():
+        return "async-token"
+
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(
+            200, json={"items": [], "total": 0, "next_page_token": ""}
+        )
+
+    async with AsyncHarborAPIClient(
+        async_token=token, transport=httpx.MockTransport(handler)
+    ) as client:
+        assert [item async for item in client.jobs.list()] == []
+    assert seen[0].headers["Authorization"] == "Bearer async-token"
