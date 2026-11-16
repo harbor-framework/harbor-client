@@ -91,11 +91,18 @@ class HarborAPIClient(BaseHarborAPIClient):
             if isinstance(selected, HarborAPIClientEnvironment)
             else selected
         )
-        if http_client is not None:
-            transport = _SessionTransport(http_client)
-        elif httpx_client is not None:
-            transport = _SessionTransport(HttpxSession(httpx_client), owns_adapter=True)
-        http = _http(url or DEFAULT_BASE_URL, transport)
+        try:
+            if http_client is not None:
+                transport = _SessionTransport(http_client)
+            elif httpx_client is not None:
+                transport = _SessionTransport(
+                    HttpxSession(httpx_client), owns_adapter=True
+                )
+            http = _http(url or DEFAULT_BASE_URL, transport)
+        except BaseException:
+            if isinstance(transport, _SessionTransport):
+                transport.close()
+            raise
         self._contract_http: httpx.Client | None = http
         try:
             super().__init__(
