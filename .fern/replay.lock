@@ -102,14 +102,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       fern-python-sdk: 6.17.0
-current_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+  - commit_sha: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    tree_hash: 5abcdbe17271a2b62e5a9ecc4cf1742e774831f7
+    timestamp: 2026-11-16T18:45:40.689Z
+    cli_version: 5.199.0
+    generator_versions:
+      fern-python-sdk: 6.17.0
+current_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:84dbeabf978b855240f34d22c4dd465718bd17bad315cd1e51908ed5cd507edf
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -13002,7 +13008,7 @@ patches:
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -14615,7 +14621,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -14858,7 +14864,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -14882,7 +14888,7 @@ patches:
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
@@ -21342,7 +21348,7 @@ patches:
     original_commit: ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e
     original_message: Keep the native generated example aligned with execution filters
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
     files:
       - examples/sample.py
     patch_content: |+
@@ -21447,7 +21453,7 @@ patches:
     original_commit: d332059a9eac2c02fb2fc3b50005cdea1c8b04ad
     original_message: Use one checked public client over Fern generated bases
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
     files:
       - src/harbor_client/base_client.py
     patch_content: |
@@ -22532,7 +22538,7 @@ patches:
     original_commit: aff4821ec02f05f786650e9cb1c1594b8cb29cb0
     original_message: Preserve public exports and verify both client entry paths
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
     files:
       - src/harbor_client/__init__.py
       - src/harbor_client/environment.py
