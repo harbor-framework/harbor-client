@@ -108,14 +108,19 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       fern-python-sdk: 6.17.0
-current_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+  - commit_sha: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    tree_hash: 5019b4c30492395468771e89d8ae7b52bdec8c22
+    timestamp: 2026-11-16T23:45:14.873Z
+    cli_version: unknown
+    generator_versions: {}
+current_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:84dbeabf978b855240f34d22c4dd465718bd17bad315cd1e51908ed5cd507edf
+    content_hash: sha256:ba352a78153dfa7b8da2492bc91f4467fe0eb3dbaa17db0d0e76c45ba1acff3e
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -230,7 +235,7 @@ patches:
            additional_headers: typing.Dict[str, typing.Any]
            additional_query_parameters: typing.Dict[str, typing.Any]
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 4692283..0d4f419 100644
+      index 3da1eb0..7743d2e 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
       @@ -1176,6 +1176,7 @@ class JobsClient(BaseService):
@@ -251,7 +256,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1424,6 +1422,7 @@ class JobsClient(BaseService):
+      @@ -1421,6 +1419,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobTaskSummary]
                """
@@ -259,7 +264,7 @@ patches:
        
                Validator(str).validate(job_id, "job_id")
                Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -1482,9 +1481,6 @@ class JobsClient(BaseService):
+      @@ -1477,9 +1476,6 @@ class JobsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -269,7 +274,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -2400,7 +2396,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2393,7 +2389,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -282,7 +287,7 @@ patches:
                        yield page
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2490,7 +2490,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2481,7 +2481,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -406,10 +411,10 @@ patches:
                    return str(data).lower()
                if isinstance(data, (int, float)):
       diff --git a/src/harbor_client/packages/client.py b/src/harbor_client/packages/client.py
-      index 867679d..962a05d 100644
+      index 9264ce2..822fd0d 100644
       --- a/src/harbor_client/packages/client.py
       +++ b/src/harbor_client/packages/client.py
-      @@ -631,6 +631,7 @@ class PackagesClient(BaseService):
+      @@ -628,6 +628,7 @@ class PackagesClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[RegistryVersionFile]
                """
@@ -417,7 +422,7 @@ patches:
        
                Validator(str).validate(organization_name, "organization_name")
                Validator(str).validate(name, "name")
-      @@ -677,9 +678,6 @@ class PackagesClient(BaseService):
+      @@ -672,9 +673,6 @@ class PackagesClient(BaseService):
                        )
                        current_page = parsed_response.files
        
@@ -427,7 +432,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -969,6 +967,7 @@ class PackagesClient(BaseService):
+      @@ -961,6 +959,7 @@ class PackagesClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[PackageVersionSummary]
                """
@@ -435,7 +440,7 @@ patches:
        
                Validator(PackagesListVersionCatalogRequestType).validate(type, "type")
                Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -1017,9 +1016,6 @@ class PackagesClient(BaseService):
+      @@ -1007,9 +1006,6 @@ class PackagesClient(BaseService):
                        )
                        current_page = parsed_response.versions
        
@@ -445,7 +450,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1115,6 +1111,7 @@ class PackagesClient(BaseService):
+      @@ -1105,6 +1101,7 @@ class PackagesClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[RegistryPackageVersion]
                """
@@ -453,7 +458,7 @@ patches:
        
                Validator(str).validate(organization_name, "organization_name")
                Validator(str).validate(name, "name")
-      @@ -1161,9 +1158,6 @@ class PackagesClient(BaseService):
+      @@ -1151,9 +1148,6 @@ class PackagesClient(BaseService):
                        )
                        current_page = parsed_response.versions
        
@@ -463,7 +468,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1771,7 +1765,11 @@ class AsyncPackagesClient(PackagesClient):
+      @@ -1755,7 +1749,11 @@ class AsyncPackagesClient(PackagesClient):
                )
        
                async def _paginate():
@@ -476,7 +481,7 @@ patches:
                        yield page
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -1870,7 +1868,11 @@ class AsyncPackagesClient(PackagesClient):
+      @@ -1852,7 +1850,11 @@ class AsyncPackagesClient(PackagesClient):
                )
        
                async def _paginate():
@@ -489,7 +494,7 @@ patches:
                        yield page
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -1914,7 +1916,11 @@ class AsyncPackagesClient(PackagesClient):
+      @@ -1896,7 +1898,11 @@ class AsyncPackagesClient(PackagesClient):
                )
        
                async def _paginate():
@@ -503,10 +508,10 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/secrets/client.py b/src/harbor_client/secrets/client.py
-      index b8087a0..baccbd8 100644
+      index 6f917bd..36cc3d7 100644
       --- a/src/harbor_client/secrets/client.py
       +++ b/src/harbor_client/secrets/client.py
-      @@ -188,6 +188,7 @@ class SecretsClient(BaseService):
+      @@ -185,6 +185,7 @@ class SecretsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[SecretMetadata]
                """
@@ -514,7 +519,7 @@ patches:
        
                Validator(str).is_optional().validate(organization_id, "organization_id")
                Validator(str).is_optional().validate(job_id, "job_id")
-      @@ -234,9 +235,6 @@ class SecretsClient(BaseService):
+      @@ -229,9 +230,6 @@ class SecretsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -524,7 +529,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -935,7 +933,11 @@ class AsyncSecretsClient(SecretsClient):
+      @@ -926,7 +924,11 @@ class AsyncSecretsClient(SecretsClient):
                )
        
                async def _paginate():
@@ -2631,7 +2636,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -2649,8 +2653,6 @@ patches:
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
                 :type page_token: str, optional
-                :param offset: offset, defaults to None
-                :type offset: str, optional
                 :param search: search, defaults to None
                 :type search: str, optional
                 :param agents: agents, defaults to None
@@ -2676,7 +2678,6 @@ patches:
                 Validator(str).validate(job_id, "job_id")
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
-                Validator(str).is_optional().validate(offset, "offset")
                 Validator(str).is_optional().validate(search, "search")
                 Validator(str).is_optional().validate(agents, "agents")
                 Validator(str).is_optional().validate(providers, "providers")
@@ -2707,7 +2708,6 @@ patches:
                             .add_path("job_id", job_id)
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
-                            .add_query("offset", offset)
                             .add_query("search", search)
                             .add_query("agents", agents)
                             .add_query("providers", providers)
@@ -3278,7 +3278,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -3297,7 +3296,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -3705,7 +3703,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -3723,7 +3720,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -4156,7 +4152,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -4175,7 +4170,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -6709,7 +6703,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> SyncPager[RegistryVersionFile]:
                 """list_version_files
@@ -6724,8 +6717,6 @@ patches:
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
                 :type page_token: str, optional
-                :param offset: offset, defaults to None
-                :type offset: str, optional
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
@@ -6739,7 +6730,6 @@ patches:
                 Validator(str).validate(ref, "ref")
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
-                Validator(str).is_optional().validate(offset, "offset")
 
                 resolved_config = self._get_resolved_config(
                     self._list_version_files_config, request_options
@@ -6763,7 +6753,6 @@ patches:
                             .add_path("ref", ref)
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
-                            .add_query("offset", offset)
                             .add_error(401, UnauthorizedEncoded)
                             .add_error(403, ForbiddenEncoded)
                             .add_error(404, NotFoundEncoded)
@@ -7043,7 +7032,6 @@ patches:
                 type: PackagesListVersionCatalogRequestType,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 organization_id: str = SENTINEL,
                 include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
@@ -7056,8 +7044,6 @@ patches:
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
                 :type page_token: str, optional
-                :param offset: offset, defaults to None
-                :type offset: str, optional
                 :param organization_id: organization_id, defaults to None
                 :type organization_id: str, optional
                 :param include_yanked: include_yanked, defaults to None
@@ -7073,7 +7059,6 @@ patches:
                 Validator(PackagesListVersionCatalogRequestType).validate(type, "type")
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
-                Validator(str).is_optional().validate(offset, "offset")
                 Validator(str).is_optional().validate(organization_id, "organization_id")
                 Validator(
                     PackagesListVersionCatalogRequestIncludeYanked
@@ -7098,7 +7083,6 @@ patches:
                             )
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
-                            .add_query("offset", offset)
                             .add_query("type", type)
                             .add_query("organization_id", organization_id)
                             .add_query("include_yanked", include_yanked)
@@ -7517,7 +7501,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[SyncPager[RegistryVersionFile]]:
                 data = PackagesClient.list_version_files(
@@ -7531,7 +7514,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -7616,7 +7598,6 @@ patches:
                 type: PackagesListVersionCatalogRequestType,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 organization_id: str = SENTINEL,
                 include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
@@ -7630,7 +7611,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "organization_id": organization_id,
                                 "include_yanked": include_yanked,
                             }.items()
@@ -7844,7 +7824,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> AsyncPager[RegistryVersionFile]:  # type: ignore[override]
                 sync_pager = super().list_version_files(
@@ -7857,7 +7836,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -7945,7 +7923,6 @@ patches:
                 type: PackagesListVersionCatalogRequestType,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 organization_id: str = SENTINEL,
                 include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
@@ -7958,7 +7935,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "organization_id": organization_id,
                                 "include_yanked": include_yanked,
                             }.items()
@@ -8186,7 +8162,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[AsyncPager[RegistryVersionFile]]:
                 data = AsyncPackagesClient.list_version_files(
@@ -8200,7 +8175,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -8285,7 +8259,6 @@ patches:
                 type: PackagesListVersionCatalogRequestType,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 organization_id: str = SENTINEL,
                 include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
@@ -8299,7 +8272,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "organization_id": organization_id,
                                 "include_yanked": include_yanked,
                             }.items()
@@ -8566,7 +8538,6 @@ patches:
                 status_filter: SecretsListRequestStatusFilter = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> SyncPager[SecretMetadata]:
                 """list
@@ -8581,8 +8552,6 @@ patches:
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
                 :type page_token: str, optional
-                :param offset: offset, defaults to None
-                :type offset: str, optional
                 ...
                 :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
                 ...
@@ -8598,7 +8567,6 @@ patches:
                 )
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
-                Validator(str).is_optional().validate(offset, "offset")
 
                 resolved_config = self._get_resolved_config(self._list_config, request_options)
 
@@ -8620,7 +8588,6 @@ patches:
                             .add_query("status", status_filter)
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
-                            .add_query("offset", offset)
                             .add_error(401, UnauthorizedEncoded)
                             .add_error(403, ForbiddenEncoded)
                             .add_error(404, NotFoundEncoded)
@@ -9092,7 +9059,6 @@ patches:
                 status_filter: SecretsListRequestStatusFilter = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[SyncPager[SecretMetadata]]:
                 data = SecretsClient.list(
@@ -9106,7 +9072,6 @@ patches:
                                 "status_filter": status_filter,
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -9312,7 +9277,6 @@ patches:
                 status_filter: SecretsListRequestStatusFilter = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> AsyncPager[SecretMetadata]:  # type: ignore[override]
                 sync_pager = super().list(
@@ -9325,7 +9289,6 @@ patches:
                                 "status_filter": status_filter,
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -9523,7 +9486,6 @@ patches:
                 status_filter: SecretsListRequestStatusFilter = SENTINEL,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[AsyncPager[SecretMetadata]]:
                 data = AsyncSecretsClient.list(
@@ -9537,7 +9499,6 @@ patches:
                                 "status_filter": status_filter,
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                             }.items()
                             if v is not SENTINEL
                         }
@@ -13008,7 +12969,7 @@ patches:
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -14621,7 +14582,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -14864,7 +14825,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -14884,18 +14845,18 @@ patches:
         RewardValue = Optional[float]
     user_owned: true
   - id: patch-bcfdf292
-    content_hash: sha256:777d276459c1772d347887a72a3dab37d5bdf597bffc9622135e1e1859dcc3ba
+    content_hash: sha256:6b0ddeedf9394e654e6ad9e0105dddf0e3b0e3401bbe29579fed6704f00027c4
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/trials/client.py
     patch_content: |
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 4692283..0d4f419 100644
+      index 3da1eb0..7743d2e 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
       @@ -1176,6 +1176,7 @@ class JobsClient(BaseService):
@@ -14916,7 +14877,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -1424,6 +1422,7 @@ class JobsClient(BaseService):
+      @@ -1421,6 +1419,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobTaskSummary]
                """
@@ -14924,7 +14885,7 @@ patches:
        
                Validator(str).validate(job_id, "job_id")
                Validator(str).is_optional().validate(page_size, "page_size")
-      @@ -1482,9 +1481,6 @@ class JobsClient(BaseService):
+      @@ -1477,9 +1476,6 @@ class JobsClient(BaseService):
                        )
                        current_page = parsed_response.items
        
@@ -14934,7 +14895,7 @@ patches:
                        yield current_page
        
                        next_cursor = parsed_response.next_page_token
-      @@ -2400,7 +2396,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2393,7 +2389,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -14947,7 +14908,7 @@ patches:
                        yield page
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
-      @@ -2490,7 +2490,11 @@ class AsyncJobsClient(JobsClient):
+      @@ -2481,7 +2481,11 @@ class AsyncJobsClient(JobsClient):
                )
        
                async def _paginate():
@@ -16416,7 +16377,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -16434,8 +16394,6 @@ patches:
                 :type page_size: str, optional
                 :param page_token: page_token, defaults to None
                 :type page_token: str, optional
-                :param offset: offset, defaults to None
-                :type offset: str, optional
                 :param search: search, defaults to None
                 :type search: str, optional
                 :param agents: agents, defaults to None
@@ -16461,7 +16419,6 @@ patches:
                 Validator(str).validate(job_id, "job_id")
                 Validator(str).is_optional().validate(page_size, "page_size")
                 Validator(str).is_optional().validate(page_token, "page_token")
-                Validator(str).is_optional().validate(offset, "offset")
                 Validator(str).is_optional().validate(search, "search")
                 Validator(str).is_optional().validate(agents, "agents")
                 Validator(str).is_optional().validate(providers, "providers")
@@ -16492,7 +16449,6 @@ patches:
                             .add_path("job_id", job_id)
                             .add_query("page_size", page_size)
                             .add_query("page_token", page_token)
-                            .add_query("offset", offset)
                             .add_query("search", search)
                             .add_query("agents", agents)
                             .add_query("providers", providers)
@@ -17063,7 +17019,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -17082,7 +17037,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -17490,7 +17444,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -17508,7 +17461,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -17941,7 +17893,6 @@ patches:
                 *,
                 page_size: str = SENTINEL,
                 page_token: str = SENTINEL,
-                offset: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -17960,7 +17911,6 @@ patches:
                             for k, v in {
                                 "page_size": page_size,
                                 "page_token": page_token,
-                                "offset": offset,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -21348,7 +21298,7 @@ patches:
     original_commit: ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e
     original_message: Keep the native generated example aligned with execution filters
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
     files:
       - examples/sample.py
     patch_content: |+
@@ -21453,7 +21403,7 @@ patches:
     original_commit: d332059a9eac2c02fb2fc3b50005cdea1c8b04ad
     original_message: Use one checked public client over Fern generated bases
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
     files:
       - src/harbor_client/base_client.py
     patch_content: |
@@ -22538,7 +22488,7 @@ patches:
     original_commit: aff4821ec02f05f786650e9cb1c1594b8cb29cb0
     original_message: Preserve public exports and verify both client entry paths
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: ba675e43f3ddfa36edf7862f1ee71d38e6279cc0
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
     files:
       - src/harbor_client/__init__.py
       - src/harbor_client/environment.py
@@ -22679,6 +22629,998 @@ patches:
 
         # Preserve the established environment import across generator naming changes.
         HarborAPIClientEnvironment = HarborApiClientEnvironment
+  - id: patch-0aef99d6
+    content_hash: sha256:b7f875ea5b2795fce1af17f90f7c33da40f3be57bccc1ca649827910803e631c
+    original_commit: 0aef99d6d3a1dfae76a69853bea5de3c5c30b72b
+    original_message: Keep response headers out of ApiError strings
+    original_author: Amp <amp@ampcode.com>
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    files:
+      - src/harbor_client/net/transport/api_error.py
+    patch_content: |
+      diff --git a/src/harbor_client/net/transport/api_error.py b/src/harbor_client/net/transport/api_error.py
+      index 2ed2f56..e694118 100644
+      --- a/src/harbor_client/net/transport/api_error.py
+      +++ b/src/harbor_client/net/transport/api_error.py
+      @@ -44,7 +44,9 @@ class ApiError(Exception):
+       
+           def __str__(self) -> str:
+               if self.status_code is not None or self.body is not None:
+      -            summary = f"headers: {self.headers}, status_code: {self.status_code}, body: {self.body}"
+      +            # Headers stay on `self.headers` but out of the string: logs and tracebacks
+      +            # must not carry Set-Cookie or other credentials.
+      +            summary = f"status_code: {self.status_code}, body: {self.body}"
+                   # Keep an explanatory message (e.g. the unmapped-status fallback) when one is set.
+                   return f"{summary}: {self.message}" if self.message else summary
+               parts = []
+    theirs_snapshot:
+      src/harbor_client/net/transport/api_error.py: |
+        from .response import Response
+        from typing import Any, Dict, Optional
+
+
+        class ApiError(Exception):
+            """
+            Class representing an API Error.
+
+            fernMode exposes Fern's error contract as the public surface — ``status_code`` / ``headers`` /
+            ``body`` — so ``except ApiError as e: e.status_code`` / ``e.body`` line up with Fern's SDK.
+            ``message`` / ``status`` / ``response`` are retained for internal transport use.
+
+            :ivar Optional[int] status_code: The HTTP status code of the error.
+            :ivar Optional[Dict[str, str]] headers: The response headers.
+            :ivar Any body: The (typed, when the endpoint declares one) error body.
+            """
+
+            headers: Optional[Dict[str, str]]
+            status_code: Optional[int]
+            body: Any
+
+            def __init__(
+                self,
+                message: Optional[str] = None,
+                status: Optional[int] = None,
+                response: Optional[Response] = None,
+                *,
+                status_code: Optional[int] = None,
+                headers: Optional[Dict[str, str]] = None,
+                body: Any = None,
+            ):
+                """
+                Initialize a new instance of API Error.
+                """
+                self.message = message
+                self.status = status
+                self.response = response
+                # Fern-parity surface. status_code falls back to the transport status so a plain
+                # ApiError(message, status=...) raise (e.g. timeouts) still exposes status_code.
+                self.status_code = status_code if status_code is not None else status
+                self.headers = headers
+                self.body = body
+                super().__init__(message)
+
+            def __str__(self) -> str:
+                if self.status_code is not None or self.body is not None:
+                    # Headers stay on `self.headers` but out of the string: logs and tracebacks
+                    # must not carry Set-Cookie or other credentials.
+                    summary = f"status_code: {self.status_code}, body: {self.body}"
+                    # Keep an explanatory message (e.g. the unmapped-status fallback) when one is set.
+                    return f"{summary}: {self.message}" if self.message else summary
+                parts = []
+                if self.status is not None:
+                    parts.append(f"status={self.status}")
+                if self.message:
+                    parts.append(self.message)
+                return ": ".join(parts)
+
+
+        class ApiTimeoutError(ApiError):
+            """
+            Raised when a request does not complete within its timeout.
+
+            A timeout used to be reported as ``ApiError("Request timed out", status=408)``, which no
+            endpoint maps and no error class is named for, so it was indistinguishable by type from any
+            other unmapped-status failure — a caller had to string-match the message to tell "the server
+            answered 408" apart from "we never got an answer" (FSDK-1585).
+
+            NO status code is carried. The 408 was synthetic: nothing on the wire said 408, and inventing
+            one is what made the failure look like a response. ``status`` and ``status_code`` are therefore
+            ``None``, and code that branches on them must handle that.
+
+            Subclasses ApiError, so an existing broad ``except ApiError`` still catches it.
+
+            :ivar Optional[Exception] cause: The underlying transport exception, when one was available.
+            """
+
+            def __init__(
+                self, message: str = "Request timed out", cause: Optional[Exception] = None
+            ):
+                """
+                Initialize a new instance of ApiTimeoutError.
+
+                :param str message: A description of the failure.
+                :param Optional[Exception] cause: The transport exception this wraps.
+                """
+                self.cause = cause
+                super().__init__(message=message)
+
+
+        class ApiConnectionError(ApiError):
+            """
+            Raised when a request never reaches the server: connection refused, DNS failure, TLS failure.
+
+            The transport's own ``requests.ConnectionError`` used to escape the handler chain unwrapped, so
+            catching it meant importing ``requests`` in the caller's own code — the SDK leaked its HTTP
+            library to everyone who wanted to handle an unreachable server (FSDK-1573).
+
+            NO status code is carried, for the same reason as ApiTimeoutError: there was no response, so
+            there is no status to report and inventing one would make the failure look like an answer.
+
+            Subclasses ApiError, so an existing broad ``except ApiError`` catches it. That is a deliberate
+            widening: ApiError previously implied a response had been received.
+
+            :ivar Optional[Exception] cause: The underlying transport exception, when one was available.
+            """
+
+            def __init__(
+                self, message: str = "Connection failed", cause: Optional[Exception] = None
+            ):
+                """
+                Initialize a new instance of ApiConnectionError.
+
+                :param str message: A description of the failure.
+                :param Optional[Exception] cause: The transport exception this wraps.
+                """
+                self.cause = cause
+                super().__init__(message=message)
+  - id: patch-554b6f7e
+    content_hash: sha256:7022b6694e89626e4867b920b9cbe9ea9c062570bc515d66c6c853a868ba168f
+    original_commit: 554b6f7e83a0b97433dd5adf9e834ba71bd37e4a
+    original_message: Keep credentials out of Request and Response strings
+    original_author: Amp <amp@ampcode.com>
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    files:
+      - src/harbor_client/net/transport/request.py
+      - src/harbor_client/net/transport/response.py
+    patch_content: |
+      diff --git a/src/harbor_client/net/transport/request.py b/src/harbor_client/net/transport/request.py
+      index 01a7d4f..faabe52 100644
+      --- a/src/harbor_client/net/transport/request.py
+      +++ b/src/harbor_client/net/transport/request.py
+      @@ -185,4 +185,6 @@ class Request:
+               :return: A string representation of the Request object.
+               :rtype: str
+               """
+      -        return f"Request(url={self.url}, method={self.method}, headers={self.headers}, body={self.body})"
+      +        # Headers carry Authorization and bodies can carry secret values; neither
+      +        # belongs in logs or tracebacks.
+      +        return f"Request(url={self.url}, method={self.method})"
+      diff --git a/src/harbor_client/net/transport/response.py b/src/harbor_client/net/transport/response.py
+      index 42804fd..59b6348 100644
+      --- a/src/harbor_client/net/transport/response.py
+      +++ b/src/harbor_client/net/transport/response.py
+      @@ -214,9 +214,8 @@ class Response:
+               :return: A string representation of the Response object.
+               :rtype: str
+               """
+      -        return (
+      -            f"Response(status={self.status}, headers={self.headers}, body={self.body})"
+      -        )
+      +        # Headers carry Set-Cookie and bodies can carry credentials, such as a new API key.
+      +        return f"Response(status={self.status})"
+       
+           @property
+           def raw(self) -> RequestsResponse:
+    theirs_snapshot:
+      src/harbor_client/net/transport/request.py: |
+        from typing import Any, Optional, Set, TYPE_CHECKING
+        from .utils import extract_original_data
+
+        if TYPE_CHECKING:
+            from ..sdk_config import SdkConfig
+
+
+        class Request:
+            """
+            A simple HTTP request builder class using the requests library.
+
+            Example Usage:
+            ```python
+            # Create a Request object
+            request = Request()
+
+            # Set request parameters
+            request.set_url('https://yourendpoint.com/') \
+                   .set_method('GET') \
+                   .set_headers({'Content-Type': 'application/json'}) \
+                   .set_body(None)  # For GET requests, the body should be None
+
+            # Send the HTTP request
+            response = request.send()
+            ```
+
+            :ivar str url: The URL of the API endpoint.
+            :ivar str method: The HTTP method for the request.
+            :ivar dict headers: Dictionary of headers to include in the request.
+            :ivar Any body: Request body.
+            :ivar Set[str] scopes: List of scopes to include in the request.
+            :ivar bool bearer_wins_over_oauth: Whether a supplied bearer token skips OAuth token acquisition.
+            :ivar dict errors: Dictionary of HTTP status codes to error models.
+            :ivar SdkConfig config: Configuration dictionary for the request.
+            :ivar Optional[str] sse_terminator: The terminal SSE ``data`` value this operation declared.
+            :ivar bool sse_resumable: Whether this operation declared itself resumable.
+            :ivar bool binary_download: Whether the response is a file download read as raw bytes.
+            """
+
+            def __init__(self):
+                self.url = None
+                self.method = None
+                self.headers = None
+                self.body = None
+                self.scopes = None
+                self.bearer_wins_over_oauth = False
+                self.errors = None
+                self.config: Optional["SdkConfig"] = None
+                # Left None unless the operation declared a terminator, because "no terminator" is a
+                # meaningful state: a stream with none ends when the server closes it, not on a sentinel.
+                self.sse_terminator: Optional[str] = None
+                # Reconnection is opt-in per operation. A stream that did not declare itself resumable must
+                # surface a mid-stream drop rather than silently reissue the request.
+                self.sse_resumable: bool = False
+                # A download is handed over as the bytes received. Without this the body is parsed by the
+                # content type the server sent, which decodes a textual one and returns a str.
+                self.binary_download: bool = False
+
+            def set_url(self, url: str) -> "Request":
+                """
+                Set the URL of the API endpoint.
+
+                :param str url: The URL of the API endpoint.
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.url = url
+                return self
+
+            def set_headers(self, headers: dict) -> "Request":
+                """
+                Set the headers for the HTTP request.
+
+                :param dict headers: Dictionary of headers to include in the request.
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.headers = headers
+                return self
+
+            def set_method(self, method: str) -> "Request":
+                """
+                Set the HTTP method for the request.
+
+                :param str method: The HTTP method (e.g., 'GET', 'POST', 'PUT', 'DELETE', etc.).
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.method = method
+                return self
+
+            def set_body(self, body: Any, content_type: str = "application/json") -> "Request":
+                """
+                Set the request body (e.g., JSON payload).
+
+                :param Any body: Request body.
+                :param str content_type: The content type of the request body. Default is "application/json".
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.body = extract_original_data(body)
+                self.headers["Content-Type"] = content_type
+                return self
+
+            def set_scopes(self, scopes: Set[str]) -> "Request":
+                """
+                Set the scopes for the request.
+
+                :param list scopes: List of scopes to include in the request.
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.scopes = scopes
+                return self
+
+            def set_bearer_wins_over_oauth(self, bearer_wins: bool) -> "Request":
+                """
+                Mark that a bearer token already on the request takes precedence over a minted OAuth token.
+
+                :param bool bearer_wins: Whether a supplied bearer token replaces OAuth token acquisition.
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.bearer_wins_over_oauth = bearer_wins
+                return self
+
+            def set_errors(self, errors: dict) -> "Request":
+                """
+                Set the errors for the request.
+
+                :param dict errors: Dictionary of HTTP status codes to error models.
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.errors = errors
+                return self
+
+            def set_sse_resumable(self, resumable: bool) -> "Request":
+                """
+                Mark this operation as resumable, enabling mid-stream reconnection.
+
+                :param bool resumable: Whether the spec declared the stream resumable.
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.sse_resumable = resumable
+                return self
+
+            def set_binary_download(self) -> "Request":
+                """
+                Mark this operation's response as a file download, streamed and read as raw bytes.
+
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.binary_download = True
+                return self
+
+            def set_sse_terminator(self, terminator: str) -> "Request":
+                """
+                Set the terminal SSE ``data`` value declared for this operation.
+
+                :param str terminator: The declared terminal data value.
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.sse_terminator = terminator
+                return self
+
+            def set_config(self, config: Optional["SdkConfig"]) -> "Request":
+                """
+                Set the configuration for the request.
+
+                :param SdkConfig config: Configuration dictionary for the request.
+                :return: The updated Request object.
+                :rtype: Request
+                """
+                self.config = config
+                return self
+
+            def __str__(self) -> str:
+                """
+                Return a string representation of the Request object.
+
+                :return: A string representation of the Request object.
+                :rtype: str
+                """
+                # Headers carry Authorization and bodies can carry secret values; neither
+                # belongs in logs or tracebacks.
+                return f"Request(url={self.url}, method={self.method})"
+      src/harbor_client/net/transport/response.py: |
+        import json
+        import re
+        from typing import Any, Callable, Generator, Optional, Tuple, TypeVar, Union
+        from requests import Response as RequestsResponse
+        from urllib.parse import parse_qs
+        from pydantic import ValidationError
+
+        T = TypeVar("T")
+
+        # A frame ends at a blank line, and SSE allows CR, LF or CRLF as the line terminator -- so the
+        # boundary is any two consecutive terminators. Splitting on LF pairs alone means a CRLF stream
+        # never frames at all, because "\r\n\r\n" holds no adjacent LF.
+        #
+        # All EIGHT of them are listed. The three terminators give nine ordered pairs, but CR-followed-by-LF
+        # is not two of them -- those two bytes ARE one CRLF -- so "\r\n" is absent on purpose and the other
+        # eight are exhaustive. A partial list is worse than it looks: it does not merely miss a rare stream,
+        # it frames inconsistently across equally legal ones.
+        #
+        # Enumerated, longest-first within each prefix, rather than written as `(?:\r\n|\r|\n){2}`: that
+        # form backtracks and matches "\r" then "\n" INSIDE a single CRLF, splitting `data: a\r\ndata: b`
+        # into two frames instead of joining the two data lines into one event. Order is load-bearing for
+        # the same reason -- "\r\n\r\n" has to be tried before "\r\n\r", and "\r\r\n" before "\r\r",
+        # or a longer boundary is consumed as a shorter one and the next frame opens a byte early.
+        #
+        # Compiled once for both the byte-level framing the handler does and the text-level split below,
+        # which have to agree on the boundary.
+        _SSE_FRAME_BOUNDARY_SOURCE = r"(?:\r\n\r\n|\r\n\r|\r\n\n|\r\r\n|\r\r|\n\r\n|\n\r|\n\n)"
+        _SSE_FRAME_BOUNDARY = re.compile(_SSE_FRAME_BOUNDARY_SOURCE.encode())
+        _SSE_FRAME_BOUNDARY_TEXT = re.compile(_SSE_FRAME_BOUNDARY_SOURCE)
+
+
+        def deserialize_sse_event(
+            validate: Callable[[Any], T], event: dict, discriminator: Optional[str] = None
+        ) -> T:
+            """
+            Validate a parsed SSE event frame against its typed event model.
+
+            Under ``format: sse`` the declared response schema describes the event's
+            ``data`` payload rather than the frame around it, so the JSON-parsed payload
+            is what the model is validated against. Validating the frame instead can
+            never succeed for such a schema -- the model has no ``data`` field to match
+            -- so every event raised ValidationError.
+
+            The frame forms are kept as fallbacks: a schema may model the envelope itself
+            (declaring its own ``data`` field), and ``data`` is legitimately a plain
+            string for some union variants.
+
+            ``discriminator`` names the payload field a protocol-discriminated stream keys its
+            union on -- the variant is chosen by the frame's ``event:`` name, which lives on the
+            envelope and so is absent from the payload the model validates. When set, the event
+            name is written into the payload under that field before validation. Resolved at
+            codegen time from the spec, because the runtime cannot know which field carries it.
+            """
+            raw = event.get("data")
+            # A separate flag rather than `payload is not None`, so a literal `data: null` is still offered
+            # to the model as a candidate instead of being mistaken for an unparseable frame.
+            has_payload = False
+            payload = None
+            if isinstance(raw, str) and raw:
+                try:
+                    payload = json.loads(raw)
+                    has_payload = True
+                except json.JSONDecodeError:
+                    has_payload = False
+
+            # Written before the attempt list is built so every payload-shaped candidate carries it.
+            # Only onto a dict: a union variant that types `data` as a plain string has no field to
+            # hold it, and a spec-declared `event:` name does not make the payload an object.
+            #
+            # The payload's own value WINS when it already carries the field. Filling a gap is the whole
+            # job here; overwriting is not. A server that sends both -- `event: message-end` alongside
+            # `{"type": "message-end"}` -- is the normal case for some APIs, and one that sends them
+            # disagreeing has a bug the caller should see as a validation error rather than have quietly
+            # rewritten into a successfully parsed wrong variant. Also makes this idempotent.
+            if discriminator is not None and has_payload and isinstance(payload, dict):
+                event_name = event.get("event")
+                if isinstance(event_name, str) and discriminator not in payload:
+                    payload = {**payload, discriminator: event_name}
+
+            attempts: list = []
+            if has_payload:
+                attempts.append(payload)
+            attempts.append(event)
+            if has_payload:
+                attempts.append({**event, "data": payload})
+
+            # The FIRST failure is the one reported. For a `format: sse` schema the payload is the intended
+            # shape, so its error names the field the caller actually got wrong; the frame attempts that
+            # follow would otherwise mask it with a complaint about the envelope.
+            first_error: Optional[ValidationError] = None
+            for attempt in attempts:
+                try:
+                    return validate(attempt)
+                except ValidationError as error:
+                    if first_error is None:
+                        first_error = error
+            # `attempts` always holds at least the frame, so this is never None.
+            raise first_error  # type: ignore[misc]
+
+
+        class Response:
+            """
+            A simple HTTP response wrapper class using the requests library.
+
+            :ivar int status: The status code of the HTTP response.
+            :ivar dict headers: The headers of the HTTP response.
+            :ivar str body: The body of the HTTP response.
+            :var str chunk: The chunk of the HTTP response.
+            :property Response raw: The original requests.Response object.
+            """
+
+            def __init__(
+                self,
+                response: RequestsResponse,
+                chunk: Optional[str] = None,
+                raw_chunk: Optional[bytes] = None,
+            ) -> None:
+                """
+                Initializes a Response object.
+
+                :param Response response: The Response object.
+                """
+                self._raw_response = response
+                self.status = response.status_code
+                self.headers = response.headers
+                self.raw_chunk = raw_chunk
+
+                # `media_type`, so the PARSE decision is made on the same normalised value as the generated
+                # branch SELECTION (FSDK-1571). With the raw header here and a normalised one there, an
+                # `application/xml; charset=utf-8` response would match its branch and then arrive as raw
+                # bytes, because the equality tests below never saw past the parameter -- a silently wrong
+                # type in place of the error it used to raise.
+                # A streamed chunk is identified by `raw_chunk`, not by a truthy `chunk`: a BINARY chunk has
+                # no text form at all (see `_chunk_text`), and falling back to `response.text` for it would
+                # re-read a body whose stream has already been consumed.
+                if raw_chunk is not None:
+                    response_body = chunk or ""
+                    response_raw_body = raw_chunk
+                else:
+                    response_body = response.text
+                    response_raw_body = response.content
+
+                self.body = self._parse_response_body(
+                    content_type=self.media_type,
+                    body=response_body,
+                    raw_body=response_raw_body,
+                )
+
+            @staticmethod
+            def from_chunk(
+                response: RequestsResponse, raw_chunk: bytes
+            ) -> Generator["Response", None, None]:
+                """
+                Create a Response object from a chunk of data.
+
+                :param Response response: The Response object.
+                :param bytes chunk: The chunk of data.
+                :return: A Response object.
+                :rtype: Response
+                """
+                content_type = response.headers.get("Content-Type", "").lower()
+                if "text/event-stream" not in content_type:
+                    yield Response(
+                        response,
+                        chunk=Response._chunk_text(content_type, raw_chunk),
+                        raw_chunk=raw_chunk,
+                    )
+                else:
+                    chunk_str = raw_chunk.decode()
+                    for event_block in _SSE_FRAME_BOUNDARY_TEXT.split(chunk_str):
+                        # The SSE spec's dispatch step: a frame whose data buffer is empty is NOT
+                        # dispatched. A comment-only keepalive (`: ping`) parses to an empty field dict,
+                        # which would otherwise reach the caller's event model and fail validation.
+                        if Response._has_sse_data(event_block):
+                            yield Response(response, chunk=event_block, raw_chunk=raw_chunk)
+
+            @staticmethod
+            def _chunk_text(content_type: str, raw_chunk: bytes) -> str:
+                """
+                The text form of one streamed chunk, or ``""`` when the body is not textual.
+
+                Every chunk used to be UTF-8 decoded unconditionally, which raised ``UnicodeDecodeError``
+                on the first MP3 frame of an ``audio/mpeg`` stream (``ff fb 90 00``) -- so a binary stream
+                could not be read at all, while an ASCII test payload passed. ``_parse_response_body``
+                returns the RAW bytes for exactly the content types excluded here, so for those the text
+                form is never read; it was only ever computed, eagerly.
+
+                The classification mirrors ``_parse_response_body``'s own branches, which are the authority
+                on whether the text form is the body.
+
+                :param str content_type: The response's ``Content-Type`` header, lowercased.
+                :param bytes raw_chunk: The chunk of data.
+                :return: The decoded chunk, or an empty string for a binary body.
+                :rtype: str
+                """
+                media_type = content_type.split(";", 1)[0].strip()
+                is_textual = (
+                    media_type.startswith("text/")
+                    or (
+                        media_type.startswith("application/")
+                        and ("json" in media_type or "xml" in media_type)
+                    )
+                    or media_type
+                    in ("application/javascript", "application/x-www-form-urlencoded")
+                )
+                if not is_textual:
+                    return ""
+                return raw_chunk.decode()
+
+            def __str__(self) -> str:
+                """
+                Return a string representation of the Response object.
+
+                :return: A string representation of the Response object.
+                :rtype: str
+                """
+                # Headers carry Set-Cookie and bodies can carry credentials, such as a new API key.
+                return f"Response(status={self.status})"
+
+            @property
+            def raw(self) -> RequestsResponse:
+                """
+                Get the underlying requests.Response object.
+
+                :return: The original requests.Response object.
+                :rtype: Response
+                """
+                return self._raw_response
+
+            @property
+            def media_type(self) -> str:
+                """
+                The response's media type, lowercased and WITHOUT its parameters.
+
+                ``Content-Type: text/json; charset=utf-8`` is the same media type as ``text/json``, but an
+                endpoint declaring more than one success media type selects its branch by comparing this
+                against the exact media type the spec declared. Leaving the parameters attached made every
+                charset-annotated response miss its branch and fall through to
+                ``raise ApiError("Error on deserializing the response.")`` — the SDK rejecting a response
+                that matched its own spec (FSDK-1571). Only multi-media-type endpoints emit that
+                comparison, which is why it went unnoticed.
+
+                Kept separate from ``headers`` so a caller that wants the header verbatim, parameters and
+                all, still has it.
+
+                :return: The media type, e.g. ``text/json``.
+                :rtype: str
+                """
+                return self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+
+            def _parse_response_body(
+                self, content_type: str, body: str, raw_body: bytes
+            ) -> Union[str, dict, bytes]:
+                """
+                Extracts the response body from a given HTTP response.
+
+                This method attempts to parse the response body based on its content type.
+                If the content type is JSON, it tries to parse the body as JSON.
+                If the content type is text or XML, it returns the raw text.
+                If the content type is 'application/x-www-form-urlencoded', it parses the body as a query string.
+                For all other content types, it returns the raw binary content.
+
+                :param str content_type: The response's MEDIA TYPE -- lowercased, parameters already
+                    stripped (see ``media_type``). Several branches below test it for equality, so a
+                    ``; charset=utf-8`` suffix would make them miss.
+                :param str body: The text body of the response.
+                :param bytes raw_body: The raw binary body of the response.
+                :return: The parsed response body.
+                :rtype: str or dict or bytes
+                """
+                try:
+                    # JSON IS CHECKED BEFORE TEXT, and the JSON family includes `text/json`.
+                    #
+                    # The old pattern was `application/.*json`, which matched only the `application/`
+                    # family — so a declared `text/json` response fell through to the `text/` branch below
+                    # and came back as a `str`, and the generated `Model.model_validate(response)` then
+                    # raised ValidationError inside the SDK (FSDK-1571). Ordering matters for the same
+                    # reason: `text/json` satisfies the `text/` test too, so a text-first check would keep
+                    # returning the unparsed string.
+                    #
+                    # This mirrors `isApplicationJson` in `src/generate/common/content-types.ts`, which is
+                    # the generation-time authority on the same question (and already correct); the runtime
+                    # has to make the decision again because it sees the media type the SERVER actually
+                    # sent, so the two have to agree.
+                    if (
+                        content_type.startswith(("application/", "text/"))
+                        and "json" in content_type
+                    ):
+                        return json.loads(body)
+
+                    if "text/event-stream" in content_type:
+                        return self._parse_sse_event(body)
+
+                    # The whole `application/*xml*` family, not just `application/xml`: an
+                    # `application/soap+xml` or `application/atom+xml` body is textual for the same reason,
+                    # and the generated type for it is `str` (see `getContentTypeDefinition`), so an
+                    # equality test returned raw bytes under a `str` annotation.
+                    if (
+                        "text/" in content_type
+                        or (content_type.startswith("application/") and "xml" in content_type)
+                        or content_type == "application/javascript"
+                    ):
+                        return body
+
+                    if content_type == "application/x-www-form-urlencoded":
+                        parsed_response = parse_qs(body)
+                        return {k: v[0] for k, v in parsed_response.items()}
+
+                    return raw_body
+
+                except json.JSONDecodeError:
+                    return raw_body
+
+            @staticmethod
+            def next_sse_frame(buffer: bytes) -> Optional[Tuple[bytes, bytes]]:
+                """
+                Split the first complete SSE frame off a buffer of received bytes.
+
+                :param bytes buffer: The bytes received so far, beginning at a frame boundary.
+                :return: The frame and the remaining buffer, or None while no frame is complete yet.
+                :rtype: Optional[Tuple[bytes, bytes]]
+                """
+                match = _SSE_FRAME_BOUNDARY.search(buffer)
+                if match is None:
+                    return None
+                # A boundary whose final terminator is a bare CR sitting at the very end of the buffer may
+                # be the first half of a CRLF still in flight. Splitting there would cut the frame a byte
+                # early and leave a stray LF to open the next one, so wait for more bytes instead. If the
+                # server closes right there the frame is not lost: the caller's read loop falls through to
+                # its trailing-buffer branch, which dispatches whatever is left.
+                if match.end() == len(buffer) and buffer.endswith(b"\r"):
+                    return None
+                return buffer[: match.start()], buffer[match.end() :]
+
+            @staticmethod
+            def sse_frame_metadata(
+                raw_event_block: bytes,
+            ) -> Tuple[Optional[str], Optional[int]]:
+                """
+                The ``id`` and ``retry`` fields of an SSE frame, for reconnection bookkeeping.
+
+                ``id`` becomes the ``Last-Event-ID`` a resumed request sends, and ``retry`` is the server's
+                own reconnection interval in milliseconds. Read from the frame rather than tracked in the
+                decoder because the caller already has the frame in hand.
+
+                The id is only reported for a frame that carries data, because only a DISPATCHED event
+                advances the last-event-id per the SSE spec -- resuming from the id of a comment or a bare
+                ``id:`` line would skip events the server still considers unsent. ``retry`` is reported for
+                any frame, data or not: per the SSE spec it sets the reconnection time as soon as it is
+                parsed. A malformed ``retry`` is ignored rather than raised on: it is the server's hint, not
+                the caller's request.
+
+                :param bytes raw_event_block: A single SSE event frame, as received.
+                :return: The frame's event id and retry interval, either of which may be absent.
+                :rtype: Tuple[Optional[str], Optional[int]]
+                """
+                event_block = raw_event_block.decode(errors="replace")
+                fields = Response._parse_sse_event(event_block)
+                event_id = fields.get("id") if Response._has_sse_data(event_block) else None
+                raw_retry = fields.get("retry")
+                retry: Optional[int] = None
+                # `isascii()` as well as `isdigit()`: `isdigit()` is True for characters like U+00B3 and
+                # U+0663, and `int()` accepts some of those and raises ValueError on others -- so a server
+                # sending `retry: <superscript three>` would raise inside the reader, which is exactly what
+                # the promise above says does not happen.
+                candidate = raw_retry.strip() if isinstance(raw_retry, str) else ""
+                if candidate.isascii() and candidate.isdigit():
+                    retry = int(candidate)
+                return (event_id if isinstance(event_id, str) and event_id else None), retry
+
+            @staticmethod
+            def is_sse_terminal(raw_event_block: bytes, terminator: Optional[str]) -> bool:
+                """
+                Whether an SSE frame is the terminal sentinel this operation declared.
+
+                The sentinel comes from the operation rather than the runtime. ``data: [DONE]`` is an
+                LLM convention rather than part of the SSE spec, so applying it to every stream ends a
+                long-lived one the moment a payload happens to equal it. An operation that declares no
+                terminator gets no sentinel check at all: iteration ends when the server closes the stream.
+
+                Delegates to :meth:`_parse_sse_event` rather than matching the raw text, so the sentinel is
+                read out of the frame the same way any other ``data`` value is -- multi-line joins and the
+                leading-space strip included.
+
+                :param bytes raw_event_block: A single SSE event frame, as received.
+                :param Optional[str] terminator: The declared terminal ``data`` value, if the spec set one.
+                :return: True when the frame's data field is that sentinel.
+                :rtype: bool
+                """
+                if terminator is None:
+                    return False
+                # The SSE spec decodes the stream as UTF-8 with replacement, so a malformed byte yields
+                # U+FFFD rather than raising. Strict decoding here meant an unrelated bad byte anywhere in
+                # the frame made the sentinel unrecognisable, which is inconsistent with how the frame is
+                # decoded for dispatch a few lines below.
+                event_block = raw_event_block.decode(errors="replace")
+                data = Response._parse_sse_event(event_block).get("data")
+                # `.strip()` covers a CRLF stream, where the value carries a trailing carriage return.
+                return isinstance(data, str) and data.strip() == terminator
+
+            @staticmethod
+            def _has_sse_data(event_block: str) -> bool:
+                """
+                Whether an SSE frame carries at least one ``data`` field.
+
+                Mirrors the line handling in :meth:`_parse_sse_event`: blank lines and comments are not
+                fields, so a frame made only of those carries no payload to dispatch. Frames holding only
+                ``event``/``id``/``retry`` are likewise not dispatched, per the SSE spec.
+
+                :param str event_block: A single SSE event frame.
+                :return: True when the frame has a data field.
+                :rtype: bool
+                """
+                for line in event_block.split("\n"):
+                    # SSE frames are CRLF-delimited on the wire, so strip the carriage return before
+                    # anything else: a bare `data\r` line carries no colon, and `partition(":")` would
+                    # otherwise yield the name `data\r` and miss it.
+                    line = line.rstrip("\r")
+                    if not line or line.startswith(":"):
+                        continue
+                    name, _, _ = line.partition(":")
+                    if name == "data":
+                        return True
+                return False
+
+            @staticmethod
+            def _parse_sse_event(event_block: str) -> dict:
+                """
+                Parse a Server-Sent Events frame into a field-keyed dict.
+
+                Each ``field: value`` line becomes a key; multiple ``data`` lines are
+                joined with newlines per the SSE spec. The resulting dict is validated
+                against the endpoint's named event union by the caller.
+
+                :param str event_block: A single SSE event frame.
+                :return: The parsed event fields.
+                :rtype: dict
+                """
+                fields: dict = {}
+                data_lines = []
+                for line in event_block.split("\n"):
+                    # Same CRLF strip as `_has_sse_data`: the two must agree on what a field line is, and a
+                    # trailing carriage return would otherwise land in the last data value.
+                    line = line.rstrip("\r")
+                    if not line or line.startswith(":"):
+                        continue
+                    name, _, value = line.partition(":")
+                    if value.startswith(" "):
+                        value = value[1:]
+                    if name == "data":
+                        data_lines.append(value)
+                    else:
+                        fields[name] = value
+                if data_lines:
+                    fields["data"] = "\n".join(data_lines)
+                return fields
+  - id: patch-a8e5d1c2
+    content_hash: sha256:440a5447e55212733095c38d9daca8d7f1c47007269e8942803024a69f205939
+    original_commit: a8e5d1c2ba71ee2b477ffd7ff0568a31840cb2ac
+    original_message: Show problem detail in typed API error strings
+    original_author: Amp <amp@ampcode.com>
+    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    files:
+      - src/harbor_client/types/utils/base_error.py
+    patch_content: |
+      diff --git a/src/harbor_client/types/utils/base_error.py b/src/harbor_client/types/utils/base_error.py
+      index 7d241b4..1b7dca7 100644
+      --- a/src/harbor_client/types/utils/base_error.py
+      +++ b/src/harbor_client/types/utils/base_error.py
+      @@ -107,8 +107,17 @@ class BaseError(Exception):
+       
+           def __str__(self) -> str:
+               """String representation of the error."""
+      -        message = getattr(self, "message", None)
+      +        # Problem bodies (RFC 9457) carry their message in `detail`, falling back to `title`.
+      +        message = (
+      +            getattr(self, "message", None)
+      +            or getattr(self, "detail", None)
+      +            or getattr(self, "title", None)
+      +        )
+               status = getattr(self, "status", None)
+      +        # Problem-body statuses are float enums; print 404, not 404.0.
+      +        status = getattr(status, "value", status)
+      +        if isinstance(status, float) and status.is_integer():
+      +            status = int(status)
+               if message and status:
+                   return f"{status}: {message}"
+               elif message:
+    theirs_snapshot:
+      src/harbor_client/types/utils/base_error.py: |
+        from typing import Any, Dict, Optional, Type, Union
+        from pydantic import BaseModel as PydanticBaseModel, ValidationError
+
+
+        class BaseError(Exception):
+            """
+            Base exception class for SDK error models.
+
+            Combines Exception behavior with Pydantic validation:
+            - Can be raised as an exception
+            - Validates input data using Pydantic
+            - Provides attribute access to error fields
+            - Includes status and response for HTTP errors
+            """
+
+            # Pydantic model class for validation (overridden by subclasses)
+            _model_class: Optional[Type[PydanticBaseModel]] = None
+
+            def __init__(self, **data: Any):
+                """
+                Initialize error with validated data.
+
+                :param data: Error data to validate
+                """
+                self._data: Union[PydanticBaseModel, Dict[str, Any]]
+
+                # If _model_class is set, use it for validation
+                if self._model_class is not None:
+                    try:
+                        # Validate data using Pydantic model
+                        validated_data = self._model_class(**data)
+                        # Store validated fields as instance attributes
+                        for field_name in self._model_class.model_fields:
+                            setattr(self, field_name, getattr(validated_data, field_name))
+                        # Store the validated model for serialization
+                        self._data = validated_data
+                    except ValidationError:
+                        # If validation fails, store raw data
+                        for key, value in data.items():
+                            setattr(self, key, value)
+                        self._data = data
+                else:
+                    # No validation - just store attributes
+                    for key, value in data.items():
+                        setattr(self, key, value)
+                    self._data = data
+
+                # Add standard error attributes
+                self.status: Optional[int] = getattr(self, "status", None)
+                self.response: Optional[Any] = getattr(self, "response", None)
+
+                # Call Exception.__init__ with message if available
+                message = getattr(self, "message", str(data))
+                super().__init__(message)
+
+            def model_dump_original(self, **kwargs: Any) -> Dict[str, Any]:
+                """
+                Serialize error using original field names.
+
+                :param kwargs: Additional arguments for serialization
+                :return: Dictionary with original API field names
+                :rtype: Dict[str, Any]
+                """
+                if isinstance(self._data, PydanticBaseModel):
+                    # Set exclude_unset=True by default
+                    if "exclude_unset" not in kwargs:
+                        kwargs["exclude_unset"] = True
+                    return self._data.model_dump(by_alias=True, **kwargs)
+                else:
+                    # Raw data
+                    return self._data if isinstance(self._data, dict) else {}
+
+            def _map(self, **kwargs: Any) -> Dict[str, Any]:
+                """
+                Legacy alias for model_dump_original().
+
+                :param kwargs: Additional arguments
+                :return: Dictionary with original field names
+                :rtype: Dict[str, Any]
+                """
+                return self.model_dump_original(**kwargs)
+
+            @classmethod
+            def _unmap(cls, obj: Any) -> "BaseError":
+                """
+                Create error instance from dictionary.
+
+                :param obj: Dictionary or object to convert
+                :return: Error instance
+                :rtype: BaseError
+                """
+                if isinstance(obj, dict):
+                    return cls(**obj)
+                return obj
+
+            @property
+            def _kwargs(self) -> Dict[str, Any]:
+                """
+                Access extra fields not in schema.
+
+                :return: Dictionary of extra fields
+                :rtype: Dict[str, Any]
+                """
+                if isinstance(self._data, PydanticBaseModel):
+                    return getattr(self._data, "__pydantic_extra__", {})
+                return {}
+
+            def __str__(self) -> str:
+                """String representation of the error."""
+                # Problem bodies (RFC 9457) carry their message in `detail`, falling back to `title`.
+                message = (
+                    getattr(self, "message", None)
+                    or getattr(self, "detail", None)
+                    or getattr(self, "title", None)
+                )
+                status = getattr(self, "status", None)
+                # Problem-body statuses are float enums; print 404, not 404.0.
+                status = getattr(status, "value", status)
+                if isinstance(status, float) and status.is_integer():
+                    status = int(status)
+                if message and status:
+                    return f"{status}: {message}"
+                elif message:
+                    return str(message)
+                elif status:
+                    return f"Error {status}"
+                return super().__str__()
 dismissals:
   - patch_id: patch-1ca0ca5e
     original_commit: 1ca0ca5efc2d21a821fc189acd0fad4c40c5d374
