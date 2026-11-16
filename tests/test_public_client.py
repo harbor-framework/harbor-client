@@ -359,3 +359,48 @@ def test_api_error_string_omits_response_headers(status, body):
     for text in (str(error), repr(error)):
         assert "SECRET" not in text
     assert str(status) in str(error)
+
+
+def test_request_and_response_strings_omit_credentials(monkeypatch):
+    from harbor_client.net.transport.request import Request
+    from harbor_client.services.utils.base_service import BaseService
+
+    sent = []
+    original = BaseService.send_request
+
+    def capture(self, request):
+        result = original(self, request)
+        sent.append((request, self._last_response))
+        return result
+
+    monkeypatch.setattr(BaseService, "send_request", capture)
+    with HarborAPIClient(
+        token="AUTH-SECRET",
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(
+                200,
+                json={
+                    "items": [],
+                    "total": 0,
+                    "next_page_token": "",
+                    "secret": "BODY-SECRET",
+                },
+                headers={"Set-Cookie": "session=COOKIE-SECRET"},
+            )
+        ),
+    ) as client:
+        list(client.jobs.list())
+    request, response = sent[0]
+    assert "AUTH-SECRET" in request.headers["Authorization"]
+    assert "COOKIE-SECRET" in response.headers["Set-Cookie"]
+    assert "BODY-SECRET" == response.body["secret"]
+    assert "/v1/jobs" in str(request) and "GET" in str(request)
+    assert "200" in str(response)
+    for text in (str(request), str(response)):
+        assert "SECRET" not in text
+
+    upsert = Request()
+    upsert.method, upsert.url = "PUT", "https://api.invalid/v1/secrets"
+    upsert.headers = {"Authorization": "Bearer AUTH-SECRET"}
+    upsert.body = {"value": "BODY-SECRET"}
+    assert "SECRET" not in str(upsert)
