@@ -62,7 +62,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -324,7 +324,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -402,7 +402,7 @@ class JobsClient(BaseService):
         Validator(UpdateJobSharingRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -453,7 +453,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/trial-status",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/trial-status",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -503,7 +503,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -561,7 +561,7 @@ class JobsClient(BaseService):
         Validator(JobsRenameRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -619,7 +619,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/artifacts",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/artifacts",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -703,7 +703,7 @@ class JobsClient(BaseService):
         Validator(SubmitJobRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/submit",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/submit",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -763,7 +763,7 @@ class JobsClient(BaseService):
         Validator(DeleteJobsRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/delete",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/delete",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -835,7 +835,7 @@ class JobsClient(BaseService):
         Validator(JobsTransferRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/transfer",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/transfer",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -906,7 +906,7 @@ class JobsClient(BaseService):
         Validator(JobsCopyRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{source_job_id}}/copy",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{source_job_id}}/copy",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -963,7 +963,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1021,7 +1021,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1088,7 +1088,7 @@ class JobsClient(BaseService):
         Validator(CancelJobRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1176,7 +1176,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -1205,7 +1204,7 @@ class JobsClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1242,6 +1241,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1335,7 +1337,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/filters",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/filters",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1422,7 +1424,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobTaskSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -1447,7 +1448,7 @@ class JobsClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/tasks",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/tasks",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1480,6 +1481,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobTaskPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1539,7 +1543,7 @@ class JobsClient(BaseService):
         Validator(ResultJobCreate).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/import",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/import",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1598,7 +1602,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/overview",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/overview",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1649,7 +1653,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/comparisons",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/comparisons",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -2396,11 +2400,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2490,11 +2490,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)

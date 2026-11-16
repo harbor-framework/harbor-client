@@ -1,1 +1,1 @@
-from .environment import HarborAPIClientEnvironment
+from .environment import HarborApiClientEnvironment

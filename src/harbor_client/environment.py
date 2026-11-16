@@ -1,1 +1,1 @@
-from .net.environment import HarborAPIClientEnvironment
+from .net.environment import HarborApiClientEnvironment

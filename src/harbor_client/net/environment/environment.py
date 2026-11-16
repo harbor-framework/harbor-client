@@ -6,7 +6,7 @@ from enum import Enum
 from urllib.parse import urlparse
 
 
-class HarborAPIClientEnvironment(Enum):
+class HarborApiClientEnvironment(Enum):
     """The environments available for the SDK"""
 
     DEFAULT = "https://api.harborframework.com/functions/v1/api"

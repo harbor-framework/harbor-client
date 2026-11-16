@@ -36,7 +36,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -164,7 +164,7 @@ class RolloutsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -268,7 +268,6 @@ class RolloutsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[TrialSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -309,7 +308,7 @@ class RolloutsClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/rollouts",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -352,6 +351,9 @@ class RolloutsClient(BaseService):
                     else construct_lenient(TrialPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -475,7 +477,7 @@ class RolloutsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/filters",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/rollouts/filters",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -549,7 +551,7 @@ class RolloutsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/pause",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/pause",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -607,7 +609,7 @@ class RolloutsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/resume",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/resume",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -674,7 +676,7 @@ class RolloutsClient(BaseService):
         Validator(CancelTrialRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/cancel",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/cancel",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -731,7 +733,7 @@ class RolloutsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/retry",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/rollouts/{{rollout_id}}/retry",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1045,11 +1047,7 @@ class AsyncRolloutsClient(RolloutsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)

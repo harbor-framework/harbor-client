@@ -45,7 +45,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -206,7 +206,7 @@ class TrialsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -310,7 +310,6 @@ class TrialsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[TrialSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -351,7 +350,7 @@ class TrialsClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -394,6 +393,9 @@ class TrialsClient(BaseService):
                     else construct_lenient(TrialPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -481,7 +483,7 @@ class TrialsClient(BaseService):
         Validator(ResultTrialCreate).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -620,7 +622,7 @@ class TrialsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/filters",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/filters",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -694,7 +696,7 @@ class TrialsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/pause",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/pause",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -752,7 +754,7 @@ class TrialsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/resume",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/resume",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -819,7 +821,7 @@ class TrialsClient(BaseService):
         Validator(CancelTrialRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/cancel",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/cancel",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -876,7 +878,7 @@ class TrialsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/retry",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/retry",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -934,7 +936,7 @@ class TrialsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/artifacts",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/artifacts",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1006,7 +1008,7 @@ class TrialsClient(BaseService):
         Validator(TrialsCopyRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{source_trial_id}}/copy",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{source_trial_id}}/copy",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1422,11 +1424,7 @@ class AsyncTrialsClient(TrialsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)

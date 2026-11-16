@@ -56,13 +56,51 @@
     "package": {
       "packageName": "harbor-framework-client",
       "moduleName": "harbor_client",
-      "repository": "https://github.com/harbor-framework/harbor-client"
+      "description": "Typed synchronous and asynchronous clients for the Harbor API.",
+      "extraDependencies": [
+        {
+          "name": "httpx",
+          "version": ">=0.27.0"
+        },
+        {
+          "name": "jsonschema",
+          "version": ">=4.23.0"
+        },
+        {
+          "name": "tuspy",
+          "version": ">=1.1.0,<2",
+          "optional": true
+        }
+      ]
     },
     "output": {
       "delivery": "zip",
       "credentialResolution": "refs-only"
     },
-    "docs": {},
+    "docs": {
+      "readme": {
+        "apiName": "Harbor API",
+        "introduction": "Typed synchronous and asynchronous clients for the Harbor API.\n\n```python\nfrom harbor_client import HarborAPIClient\n\nwith HarborAPIClient(token=\"your-api-key\") as client:\n    for job in client.jobs.list():\n        print(job.id, job.name)\n```\n\n```python\nfrom harbor_client import AsyncHarborAPIClient\n\nasync with AsyncHarborAPIClient(token=\"your-api-key\") as client:\n    async for job in client.jobs.list():\n        print(job.id, job.name)\n```\n",
+        "customSections": [
+          {
+            "title": "Client lifecycle and validation",
+            "content": "Use `HarborAPIClient` or `AsyncHarborAPIClient` from `harbor_client`.\nBoth use one reusable connection pool and enforce the selected OpenAPI\ncontract. The API version defaults to the contract used to generate this SDK.\nUse a context manager, or call `close()` / `aclose()` when finished.\n\nThe older `harbor_client.validation.sync_client` and `async_client`\nimports remain compatibility shims for existing integrations.\n"
+          },
+          {
+            "title": "Pagination",
+            "content": "Iterate list results directly to follow opaque cursors automatically.\nUse `iter_pages()` for one page at a time. A pager is single-use;\ncall the resource method again to start a new iteration.\n"
+          },
+          {
+            "title": "Signed storage transfers",
+            "content": "Install `harbor-framework-client[tus]` for resumable uploads. Use\n`client.transfers` for signed upload, download and copy workflows.\nStorage transfers do not forward Harbor credentials to signed URLs.\n"
+          }
+        ],
+        "defaultEndpoint": {
+          "method": "GET",
+          "path": "/v1/jobs"
+        }
+      }
+    },
     "generation": {
       "includeWatermark": false,
       "ai": false,
@@ -74,14 +112,34 @@
       "devContainer": false,
       "allowMockClient": false,
       "naming": {
-        "clientName": "HarborAPIClient"
+        "clientName": "BaseHarborAPIClient",
+        "exportedClientName": "HarborAPIClient",
+        "environmentTypeName": "HarborAPIClientEnvironment"
       },
       "serialization": {
         "additionalProperties": "language-default"
       },
       "language": {
         "python": {
-          "pydanticVersion": ">=2.14.0,<3"
+          "pythonVersion": ">=3.12",
+          "pydanticVersion": ">=2.14.0,<3",
+          "client": {
+            "fileName": "base_client.py",
+            "exportedFileName": "client.py"
+          },
+          "extras": {
+            "tus": ["tuspy"]
+          },
+          "additionalInitExports": [
+            {
+              "from": "validation",
+              "imports": ["ContractError"]
+            },
+            {
+              "from": "transfers",
+              "imports": ["StorageTransferError", "UploadFile"]
+            }
+          ]
         }
       }
     }
@@ -239,6 +297,7 @@
     "src/harbor_client/secrets/types/secrets_upsert_registry_credential_conflict_response.py",
     "src/harbor_client/secrets/types/secrets_revoke_registry_credential_request_purge.py",
     "src/harbor_client/secrets/types/__init__.py",
+    "src/harbor_client/base_client.py",
     "src/harbor_client/client.py",
     "src/harbor_client/organizations/__init__.py",
     "src/harbor_client/packages/__init__.py",

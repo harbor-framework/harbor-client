@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Any, Dict, Optional
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 
 if TYPE_CHECKING:
     from ..services.utils.base_service import BaseService
@@ -19,9 +19,9 @@ class BaseClientWrapper:
             ``SyncClientWrapper(api_key=..., base_url=...)``); the wrapper builds that client.
         """
         if service is None:
-            from ..client import HarborAPIClient
+            from ..base_client import BaseHarborAPIClient
 
-            service = HarborAPIClient(
+            service = BaseHarborAPIClient(
                 **{
                     key: value
                     for key, value in client_kwargs.items()
@@ -32,7 +32,7 @@ class BaseClientWrapper:
 
     def get_base_url(self) -> str:
         base_url = (
-            self._service._resolve_base_url() or HarborAPIClientEnvironment.DEFAULT.url
+            self._service._resolve_base_url() or HarborApiClientEnvironment.DEFAULT.url
         )
         given = getattr(self._service, "_given_base_url", None)
         # The only difference reconciled is a trailing slash: the client stores the URL without one,

@@ -57,7 +57,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -301,7 +301,7 @@ class PackagesClient(BaseService):
         Validator(PackagesSetVisibilityRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/visibility",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/visibility",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -385,7 +385,7 @@ class PackagesClient(BaseService):
         )
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access/organizations/{{target_organization_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access/organizations/{{target_organization_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -445,7 +445,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -507,7 +507,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -570,7 +570,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/manifest",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/manifest",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -631,7 +631,6 @@ class PackagesClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[RegistryVersionFile]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(organization_name, "organization_name")
         Validator(str).validate(name, "name")
@@ -649,7 +648,7 @@ class PackagesClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/files",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/files",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -677,6 +676,9 @@ class PackagesClient(BaseService):
                     else construct_lenient(PackageVersionFilePage, response)
                 )
                 current_page = parsed_response.files
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -718,7 +720,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -786,7 +788,7 @@ class PackagesClient(BaseService):
         Validator(TagPackageVersionRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags/{{tag}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags/{{tag}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -858,7 +860,7 @@ class PackagesClient(BaseService):
         Validator(ReserveTemporaryPackageRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/reserve-temporary",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/reserve-temporary",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -915,7 +917,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/private-task-count",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/private-task-count",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -967,7 +969,6 @@ class PackagesClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[PackageVersionSummary]
         """
-        self = self._for_one_call()
 
         Validator(PackagesListVersionCatalogRequestType).validate(type, "type")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -987,7 +988,7 @@ class PackagesClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1015,6 +1016,9 @@ class PackagesClient(BaseService):
                     else construct_lenient(PackageVersionCatalogPage, response)
                 )
                 current_page = parsed_response.versions
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1054,7 +1058,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1111,7 +1115,6 @@ class PackagesClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[RegistryPackageVersion]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(organization_name, "organization_name")
         Validator(str).validate(name, "name")
@@ -1130,7 +1133,7 @@ class PackagesClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1157,6 +1160,9 @@ class PackagesClient(BaseService):
                     else construct_lenient(RegistryPackageVersionPage, response)
                 )
                 current_page = parsed_response.versions
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1202,7 +1208,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/archive",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/archive",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1266,7 +1272,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/files/{{file}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/files/{{file}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1765,11 +1771,7 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1868,11 +1870,7 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1916,11 +1914,7 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)

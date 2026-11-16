@@ -49,7 +49,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -188,7 +188,6 @@ class SecretsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[SecretMetadata]
         """
-        self = self._for_one_call()
 
         Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(str).is_optional().validate(job_id, "job_id")
@@ -206,7 +205,7 @@ class SecretsClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -234,6 +233,9 @@ class SecretsClient(BaseService):
                     else construct_lenient(SecretMetadataPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -297,7 +299,7 @@ class SecretsClient(BaseService):
         Validator(SecretsUpsertRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -370,7 +372,7 @@ class SecretsClient(BaseService):
         Validator(SecretsRevokeRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/revoke",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/revoke",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -439,7 +441,7 @@ class SecretsClient(BaseService):
         Validator(SecretsPreflightRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/preflight",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/preflight",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -498,7 +500,7 @@ class SecretsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -582,7 +584,7 @@ class SecretsClient(BaseService):
         )
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -641,7 +643,7 @@ class SecretsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials/{{credential_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials/{{credential_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -933,11 +935,7 @@ class AsyncSecretsClient(SecretsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
