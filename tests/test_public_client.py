@@ -404,3 +404,41 @@ def test_request_and_response_strings_omit_credentials(monkeypatch):
     upsert.headers = {"Authorization": "Bearer AUTH-SECRET"}
     upsert.body = {"value": "BODY-SECRET"}
     assert "SECRET" not in str(upsert)
+
+
+@pytest.mark.parametrize(
+    ("status", "tag", "title"),
+    [
+        (400, "BadRequest", "Bad Request"),
+        (401, "Unauthorized", "Unauthorized"),
+        (403, "Forbidden", "Forbidden"),
+        (404, "NotFound", "Not Found"),
+        (409, "Conflict", "Conflict"),
+    ],
+)
+def test_api_error_string_shows_problem_detail(status, tag, title):
+    from harbor_client.core.api_error import ApiError
+
+    problem = {
+        "_tag": tag,
+        "type": "about:blank",
+        "title": title,
+        "status": status,
+        "detail": "Job not found here",
+    }
+    with HarborAPIClient(
+        retry={"attempts": 0},
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(
+                status,
+                json=problem,
+                headers={"Content-Type": "application/problem+json"},
+            )
+        ),
+    ) as client:
+        with pytest.raises(ApiError) as caught:
+            list(client.secrets.list())
+    text = str(caught.value)
+    # Typed (401/403/404) and untyped (400/409) problem bodies both show the detail.
+    assert "Job not found here" in text
+    assert f"{status}.0" not in text
