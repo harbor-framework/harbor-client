@@ -83,7 +83,6 @@
 - `ref` (required)
 - `page_size`
 - `page_token`
-- `offset`
 
 ### `client.packages.list_tags`
 
@@ -126,7 +125,6 @@
 - `type` (required)
 - `page_size`
 - `page_token`
-- `offset`
 - `organization_id`
 - `include_yanked`
 
@@ -329,7 +327,6 @@
 - `job_id` (required)
 - `page_size`
 - `page_token`
-- `offset`
 - `search`
 - `agents`
 - `providers`
@@ -733,7 +730,6 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 - `status_filter`
 - `page_size`
 - `page_token`
-- `offset`
 
 ### `client.secrets.upsert`
 

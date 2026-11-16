@@ -1176,7 +1176,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -1242,6 +1241,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1382,7 +1384,6 @@ class JobsClient(BaseService):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -1400,8 +1401,6 @@ class JobsClient(BaseService):
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
         :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
         :param search: search, defaults to None
         :type search: str, optional
         :param agents: agents, defaults to None
@@ -1422,12 +1421,10 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobTaskSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
         Validator(str).is_optional().validate(search, "search")
         Validator(str).is_optional().validate(agents, "agents")
         Validator(str).is_optional().validate(providers, "providers")
@@ -1458,7 +1455,6 @@ class JobsClient(BaseService):
                     .add_path("job_id", job_id)
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
-                    .add_query("offset", offset)
                     .add_query("search", search)
                     .add_query("agents", agents)
                     .add_query("providers", providers)
@@ -1480,6 +1476,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobTaskPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -2029,7 +2028,6 @@ class RawJobsClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2048,7 +2046,6 @@ class RawJobsClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2396,11 +2393,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2456,7 +2449,6 @@ class AsyncJobsClient(JobsClient):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2474,7 +2466,6 @@ class AsyncJobsClient(JobsClient):
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2490,11 +2481,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2907,7 +2894,6 @@ class AsyncRawJobsClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2926,7 +2912,6 @@ class AsyncRawJobsClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
