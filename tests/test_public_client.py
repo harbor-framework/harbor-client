@@ -290,3 +290,31 @@ def test_dot_path_parameters_never_reach_another_route(segment):
         with pytest.raises(ValueError, match="cannot be"):
             client.packages.get(organization_name=segment, name="jobs")
     assert sent == []
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_token_provider_returning_none_sends_no_authorization(asynchronous):
+    sent = []
+
+    def handler(request):
+        sent.append(request)
+        return httpx.Response(
+            200, json={"items": [], "total": 0, "next_page_token": ""}
+        )
+
+    tokens = iter(["first", None])
+    transport = httpx.MockTransport(handler)
+    if asynchronous:
+
+        async def provider() -> str | None:
+            return next(tokens)
+
+        async with AsyncHarborAPIClient(async_token=provider, transport=transport) as c:
+            for _ in range(2):
+                _ = [item async for item in c.jobs.list()]
+    else:
+        with HarborAPIClient(token=lambda: next(tokens), transport=transport) as c:
+            for _ in range(2):
+                list(c.jobs.list())
+    assert sent[0].headers["Authorization"] == "Bearer first"
+    assert "Authorization" not in sent[1].headers

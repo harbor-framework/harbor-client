@@ -64,7 +64,7 @@ class HarborAPIClient(BaseHarborAPIClient):
     def __init__(
         self,
         *,
-        token: str | Callable[[], str] | None = None,
+        token: str | Callable[[], str | None] | None = None,
         harbor_api_version: str = API_VERSION,
         base_url: HarborAPIClientEnvironment | str | None = None,
         environment: HarborAPIClientEnvironment | None = None,
@@ -113,7 +113,8 @@ class HarborAPIClient(BaseHarborAPIClient):
         self._contract_http: _CheckedClient | None = http
         try:
             super().__init__(
-                token=token,
+                # A provider returning None sends no Authorization header.
+                token=cast(Callable[[], str] | str | None, token),
                 harbor_api_version=harbor_api_version,
                 base_url=base_url,
                 environment=environment,
@@ -161,7 +162,7 @@ class AsyncHarborAPIClient(AsyncBaseHarborAPIClient, HarborAPIClient):
     def __init__(
         self,
         *,
-        token: str | Callable[[], str] | None = None,
+        token: str | Callable[[], str | None] | None = None,
         harbor_api_version: str = API_VERSION,
         base_url: HarborAPIClientEnvironment | str | None = None,
         environment: HarborAPIClientEnvironment | None = None,
@@ -175,11 +176,11 @@ class AsyncHarborAPIClient(AsyncBaseHarborAPIClient, HarborAPIClient):
         retry: RetryConfig | None = None,
         stream_reconnection_enabled: bool | None = None,
         max_stream_reconnection_attempts: int | None = None,
-        async_token: Callable[[], Awaitable[str]] | None = None,
+        async_token: Callable[[], Awaitable[str | None]] | None = None,
         transport: httpx.BaseTransport | None = None,
     ):
         if token is None and async_token is not None:
-            token = cast(Callable[[], str], async_token)
+            token = cast(Callable[[], str | None], async_token)
         HarborAPIClient.__init__(
             self,
             token=token,
