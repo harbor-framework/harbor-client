@@ -318,3 +318,44 @@ async def test_token_provider_returning_none_sends_no_authorization(asynchronous
                 list(c.jobs.list())
     assert sent[0].headers["Authorization"] == "Bearer first"
     assert "Authorization" not in sent[1].headers
+
+
+@pytest.mark.parametrize(
+    ("status", "body"),
+    [
+        (
+            404,
+            {
+                "_tag": "NotFound",
+                "type": "about:blank",
+                "title": "Not Found",
+                "status": 404,
+                "detail": "missing",
+            },
+        ),
+        (418, {"undocumented": True}),
+    ],
+)
+def test_api_error_string_omits_response_headers(status, body):
+    from harbor_client.core.api_error import ApiError
+
+    secrets = {
+        "Set-Cookie": "session=COOKIE-SECRET",
+        "Authorization": "Bearer AUTH-SECRET",
+        "Content-Type": "application/problem+json",
+    }
+    with HarborAPIClient(
+        token="key",
+        retry={"attempts": 0},
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(status, json=body, headers=secrets)
+        ),
+    ) as client:
+        with pytest.raises(ApiError) as caught:
+            client.packages.get(organization_name="a", name="b")
+    error = caught.value
+    assert error.status_code == status
+    assert error.headers is not None and error.headers["set-cookie"]
+    for text in (str(error), repr(error)):
+        assert "SECRET" not in text
+    assert str(status) in str(error)
