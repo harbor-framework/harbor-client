@@ -99,11 +99,11 @@ generations:
 current_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:701db4749cae505934c6f6b998e9f4eec756eb2109cca9746f10a075766192d5
+    content_hash: sha256:200eba1c077f4b1a92106c35e9b0887378924f219eded35e80dbf717211d760b
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: eae3b17d9288e04e6c3bc83fead74f63255c240c
+    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -124,40 +124,8 @@ patches:
       - src/harbor_client/types/utils/base_model.py
       - src/harbor_client/types/utils/cast_models.py
     patch_content: |
-      diff --git a/pyproject.toml b/pyproject.toml
-      index ace1658..7ae02b9 100644
-      --- a/pyproject.toml
-      +++ b/pyproject.toml
-      @@ -1,3 +1,9 @@
-      +[project.optional-dependencies]
-      +tus = ["tuspy>=1.1.0,<2"]
-      +
-      +[tool.setuptools.package-data]
-      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
-      +
-       [build-system]
-       requires = ["setuptools>=61.0"]
-       build-backend = "setuptools.build_meta"
-      @@ -7,12 +13,15 @@ name = "harbor-framework-client"
-       version = "0.1.0"
-       description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
-       readme = "PyPI_README.md"
-      -requires-python = ">=3.9"
-      +requires-python = ">=3.12"
-       dependencies = [
-           "requests>=2.31.0",
-           "pydantic>=2.14.0,<3",
-      -    "httpx>=0.21.2"
-      +    "httpx>=0.27.0",
-      +    "jsonschema>=4.23.0"
-       ]
-       
-      +
-       [project.urls]
-       Repository = "https://github.com/harbor-framework/harbor-client"
-      +
       diff --git a/src/harbor_client/api_keys/client.py b/src/harbor_client/api_keys/client.py
-      index cd20bb2..d641f1f 100644
+      index 3ed7ed9..f4ddc73 100644
       --- a/src/harbor_client/api_keys/client.py
       +++ b/src/harbor_client/api_keys/client.py
       @@ -108,6 +108,7 @@ class ApiKeysClient(BaseService):
@@ -214,7 +182,7 @@ patches:
            additional_headers: typing.Dict[str, typing.Any]
            additional_query_parameters: typing.Dict[str, typing.Any]
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 9064f4c..1b8a524 100644
+      index 4692283..0d4f419 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
       @@ -1176,6 +1176,7 @@ class JobsClient(BaseService):
@@ -280,7 +248,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/leaderboards/client.py b/src/harbor_client/leaderboards/client.py
-      index 3f02570..1ba8e14 100644
+      index 91fbbd1..c14b241 100644
       --- a/src/harbor_client/leaderboards/client.py
       +++ b/src/harbor_client/leaderboards/client.py
       @@ -437,6 +437,7 @@ class LeaderboardsClient(BaseService):
@@ -390,7 +358,7 @@ patches:
                    return str(data).lower()
                if isinstance(data, (int, float)):
       diff --git a/src/harbor_client/packages/client.py b/src/harbor_client/packages/client.py
-      index d975e0d..0e87ef7 100644
+      index 867679d..962a05d 100644
       --- a/src/harbor_client/packages/client.py
       +++ b/src/harbor_client/packages/client.py
       @@ -631,6 +631,7 @@ class PackagesClient(BaseService):
@@ -487,7 +455,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/secrets/client.py b/src/harbor_client/secrets/client.py
-      index 82aa742..05b93a3 100644
+      index b8087a0..baccbd8 100644
       --- a/src/harbor_client/secrets/client.py
       +++ b/src/harbor_client/secrets/client.py
       @@ -188,6 +188,7 @@ class SecretsClient(BaseService):
@@ -522,7 +490,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index d14ec44..8a80d14 100644
+      index 08fa433..164c351 100644
       --- a/src/harbor_client/trials/client.py
       +++ b/src/harbor_client/trials/client.py
       @@ -310,6 +310,7 @@ class TrialsClient(BaseService):
@@ -695,6 +663,42 @@ patches:
                    # Pydantic models: use model_validate() for each item. Validated one at a time so the
                    # failing element's index reaches the error message.
                    if hasattr(element_type, "model_validate"):
+      diff --git a/pyproject.toml b/pyproject.toml
+      index 86a338d..e5f3445 100644
+      --- a/pyproject.toml
+      +++ b/pyproject.toml
+      @@ -1,3 +1,9 @@
+      +[project.optional-dependencies]
+      +tus = ["tuspy>=1.1.0,<2"]
+      +
+      +[tool.setuptools.package-data]
+      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
+      +
+       [build-system]
+       requires = ["setuptools>=61.0"]
+       build-backend = "setuptools.build_meta"
+      @@ -5,11 +11,17 @@ build-backend = "setuptools.build_meta"
+       [project]
+       name = "harbor-framework-client"
+       version = "0.1.0"
+      -description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
+      -readme = "PyPI_README.md"
+      -requires-python = ">=3.9"
+      +description = "Typed synchronous and asynchronous clients for the Harbor API."
+      +readme = "README.md"
+      +requires-python = ">=3.12"
+       dependencies = [
+           "requests>=2.31.0",
+           "pydantic>=2.14.0,<3",
+      -    "httpx>=0.21.2"
+      +    "httpx>=0.27.0",
+      +    "jsonschema>=4.23.0"
+       ]
+      +
+      +
+      +[project.urls]
+      +Repository = "https://github.com/harbor-framework/harbor-client"
+      +
     theirs_snapshot:
       pyproject.toml: |+
         [project.optional-dependencies]
@@ -710,8 +714,8 @@ patches:
         [project]
         name = "harbor-framework-client"
         version = "0.1.0"
-        description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
-        readme = "PyPI_README.md"
+        description = "Typed synchronous and asynchronous clients for the Harbor API."
+        readme = "README.md"
         requires-python = ">=3.12"
         dependencies = [
             "requests>=2.31.0",
@@ -752,7 +756,7 @@ patches:
         from ..net.transport.http_response import HttpResponse
         from ..net.sdk_config import should_validate_response
         from ..net.sdk_config import SdkConfig
-        from ..net.environment.environment import HarborAPIClientEnvironment
+        from ..net.environment.environment import HarborApiClientEnvironment
         from ..core.request_options import RequestOptions
         from ..services.async_.utils.to_async import to_async
         from typing import Awaitable
@@ -847,7 +851,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/api-keys",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/api-keys",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -918,7 +922,7 @@ patches:
                 Validator(ApiKeyCreate).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/api-keys",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/api-keys",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -966,7 +970,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/api-keys/{{key_id}}/revoke",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/api-keys/{{key_id}}/revoke",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1295,7 +1299,7 @@ patches:
         from ..net.transport.http_response import HttpResponse
         from ..net.sdk_config import should_validate_response
         from ..net.sdk_config import SdkConfig
-        from ..net.environment.environment import HarborAPIClientEnvironment
+        from ..net.environment.environment import HarborApiClientEnvironment
         from ..core.request_options import RequestOptions
         from ..services.async_.utils.to_async import to_async
         from typing import Awaitable
@@ -1557,7 +1561,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1635,7 +1639,7 @@ patches:
                 Validator(UpdateJobSharingRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1686,7 +1690,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/trial-status",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/trial-status",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1736,7 +1740,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1794,7 +1798,7 @@ patches:
                 Validator(JobsRenameRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1852,7 +1856,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/artifacts",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/artifacts",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1936,7 +1940,7 @@ patches:
                 Validator(SubmitJobRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/submit",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/submit",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1996,7 +2000,7 @@ patches:
                 Validator(DeleteJobsRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/delete",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/delete",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2068,7 +2072,7 @@ patches:
                 Validator(JobsTransferRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/transfer",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/transfer",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2139,7 +2143,7 @@ patches:
                 Validator(JobsCopyRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{source_job_id}}/copy",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{source_job_id}}/copy",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2196,7 +2200,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2254,7 +2258,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2321,7 +2325,7 @@ patches:
                 Validator(CancelJobRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2438,7 +2442,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -2568,7 +2572,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/filters",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/filters",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2680,7 +2684,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/tasks",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/tasks",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -2772,7 +2776,7 @@ patches:
                 Validator(ResultJobCreate).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/import",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/import",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2831,7 +2835,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/overview",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/overview",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -2882,7 +2886,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/comparisons",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/comparisons",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -4289,7 +4293,7 @@ patches:
         from ..net.transport.http_response import HttpResponse
         from ..net.sdk_config import should_validate_response
         from ..net.sdk_config import SdkConfig
-        from ..net.environment.environment import HarborAPIClientEnvironment
+        from ..net.environment.environment import HarborApiClientEnvironment
         from ..core.request_options import RequestOptions
         from ..services.async_.utils.to_async import to_async
         from typing import Awaitable
@@ -4428,7 +4432,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/{{leaderboard_id}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/{{leaderboard_id}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -4508,7 +4512,7 @@ patches:
                 Validator(LeaderboardsUpdateRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/{{leaderboard_id}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/{{leaderboard_id}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -4566,7 +4570,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/resolve",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/resolve",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -4617,7 +4621,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/rows/{{row_id}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/rows/{{row_id}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -4696,7 +4700,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/rows",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/rows",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -4777,7 +4781,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -4872,7 +4876,7 @@ patches:
                 Validator(LeaderboardsCreateRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -4937,7 +4941,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/rows/{{row_id}}/trials",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/rows/{{row_id}}/trials",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -6142,7 +6146,7 @@ patches:
         from ..net.transport.http_response import HttpResponse
         from ..net.sdk_config import should_validate_response
         from ..net.sdk_config import SdkConfig
-        from ..net.environment.environment import HarborAPIClientEnvironment
+        from ..net.environment.environment import HarborApiClientEnvironment
         from ..core.request_options import RequestOptions
         from ..services.async_.utils.to_async import to_async
         from typing import Awaitable
@@ -6386,7 +6390,7 @@ patches:
                 Validator(PackagesSetVisibilityRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/visibility",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/visibility",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -6470,7 +6474,7 @@ patches:
                 )
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access/organizations/{{target_organization_id}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access/organizations/{{target_organization_id}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -6530,7 +6534,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -6592,7 +6596,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -6655,7 +6659,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/manifest",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/manifest",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -6734,7 +6738,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/files",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/files",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -6803,7 +6807,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -6871,7 +6875,7 @@ patches:
                 Validator(TagPackageVersionRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags/{{tag}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags/{{tag}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -6943,7 +6947,7 @@ patches:
                 Validator(ReserveTemporaryPackageRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/reserve-temporary",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/reserve-temporary",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -7000,7 +7004,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/private-task-count",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/private-task-count",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -7072,7 +7076,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -7139,7 +7143,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -7215,7 +7219,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -7287,7 +7291,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/archive",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/archive",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -7351,7 +7355,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/files/{{file}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/files/{{file}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -8434,7 +8438,7 @@ patches:
         from ..net.transport.http_response import HttpResponse
         from ..net.sdk_config import should_validate_response
         from ..net.sdk_config import SdkConfig
-        from ..net.environment.environment import HarborAPIClientEnvironment
+        from ..net.environment.environment import HarborApiClientEnvironment
         from ..core.request_options import RequestOptions
         from ..services.async_.utils.to_async import to_async
         from typing import Awaitable
@@ -8591,7 +8595,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -8682,7 +8686,7 @@ patches:
                 Validator(SecretsUpsertRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -8755,7 +8759,7 @@ patches:
                 Validator(SecretsRevokeRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/revoke",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/revoke",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -8824,7 +8828,7 @@ patches:
                 Validator(SecretsPreflightRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/preflight",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/preflight",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -8883,7 +8887,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -8967,7 +8971,7 @@ patches:
                 )
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -9026,7 +9030,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials/{{credential_id}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials/{{credential_id}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -9751,7 +9755,7 @@ patches:
         from ..net.transport.http_response import HttpResponse
         from ..net.sdk_config import should_validate_response
         from ..net.sdk_config import SdkConfig
-        from ..net.environment.environment import HarborAPIClientEnvironment
+        from ..net.environment.environment import HarborApiClientEnvironment
         from ..core.request_options import RequestOptions
         from ..services.async_.utils.to_async import to_async
         from typing import Awaitable
@@ -9912,7 +9916,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -10057,7 +10061,7 @@ patches:
                     while True:
                         serialized_request = (
                             Serializer(
-                                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+                                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials",
                                 [self.get_access_token(resolved_config)],
                                 resolved_config,
                             )
@@ -10187,7 +10191,7 @@ patches:
                 Validator(ResultTrialCreate).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -10326,7 +10330,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/filters",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/filters",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -10400,7 +10404,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/pause",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/pause",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -10458,7 +10462,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/resume",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/resume",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -10525,7 +10529,7 @@ patches:
                 Validator(CancelTrialRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/cancel",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/cancel",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -10582,7 +10586,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/retry",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/retry",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -10640,7 +10644,7 @@ patches:
 
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/artifacts",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{trial_id}}/artifacts",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -10712,7 +10716,7 @@ patches:
                 Validator(TrialsCopyRequest).validate(request_body, "request_body")
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/trials/{{source_trial_id}}/copy",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/trials/{{source_trial_id}}/copy",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -12987,7 +12991,6 @@ patches:
 
             return cast(F, wrapper)
     user_owned: true
-    status: unresolved
   - id: patch-54e30fcc
     content_hash: sha256:8c4e08ac0b179a1c8b5cdfe261bcdce3f71420b8c012f248498a022e3a10a191
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
@@ -21434,141 +21437,60 @@ patches:
             print(page)
     user_owned: true
   - id: patch-d332059a
-    content_hash: sha256:f7c60f438c359649f5f30cf27d9101d2942b72f10dfa710e99cefcb65630668b
+    content_hash: sha256:c337770e7bacd2c34d3c456b48ba21ca7eb29f5122b68be705feedef2ebede93
     original_commit: d332059a9eac2c02fb2fc3b50005cdea1c8b04ad
     original_message: Use one checked public client over Fern generated bases
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 01d251240f9b5eef205fe35f95615283a49cd788
+    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
     files:
       - src/harbor_client/base_client.py
     patch_content: |
       diff --git a/src/harbor_client/base_client.py b/src/harbor_client/base_client.py
-      new file mode 100644
-      index 0000000..10c7c5a
-      --- /dev/null
+      index 4dcba22..10c7c5a 100644
+      --- a/src/harbor_client/base_client.py
       +++ b/src/harbor_client/base_client.py
-      @@ -0,0 +1,912 @@
-      +import warnings
-      +import requests
-      +import logging
+      @@ -1,13 +1,15 @@
+       import warnings
+       import requests
+       import logging
       +import asyncio
-      +from typing import Any, Callable, Dict, Optional, TYPE_CHECKING, Union
+       from typing import Any, Callable, Dict, Optional, TYPE_CHECKING, Union
+      -from .net.environment import HarborApiClientEnvironment
       +from .net.environment import HarborAPIClientEnvironment
-      +from .services.utils.base_service import BaseService
-      +from .net.sdk_config import SdkConfig, RetryConfig
-      +from typing import Awaitable
-      +
-      +if TYPE_CHECKING:
+       from .services.utils.base_service import BaseService
+       from .net.sdk_config import SdkConfig, RetryConfig
+       from typing import Awaitable
+       
+       if TYPE_CHECKING:
       +    from .transfers import AsyncStorageTransfers, StorageTransfers
-      +    from .organizations.client import OrganizationsClient, AsyncOrganizationsClient
-      +    from .packages.client import PackagesClient, AsyncPackagesClient
-      +    from .jobs.client import JobsClient, AsyncJobsClient
-      +    from .trials.client import TrialsClient, AsyncTrialsClient
-      +    from .rollouts.client import RolloutsClient, AsyncRolloutsClient
-      +    from .account.client import AccountClient, AsyncAccountClient
-      +    from .api_keys.client import ApiKeysClient, AsyncApiKeysClient
-      +    from .agents.client import AgentsClient, AsyncAgentsClient
-      +    from .leaderboards.client import LeaderboardsClient, AsyncLeaderboardsClient
-      +    from .secrets.client import SecretsClient, AsyncSecretsClient
-      +    from .storage.client import StorageClient, AsyncStorageClient
-      +
-      +
-      +class BaseHarborAPIClient(BaseService):
-      +    """
-      +    Main SDK client for BaseHarborAPIClient (Fern nested resource layout).
-      +    Exposes each top-level resource as a lazy accessor (`client.<resource>.method(...)`),
-      +    threads a single configured transport down to every nested resource client, and binds
-      +    any ungrouped (root) endpoints directly.
-      +    """
-      +
-      +    def __init__(
-      +        self,
-      +        *,
-      +        token: Optional[Union[str, Callable[[], str]]] = None,
-      +        harbor_api_version: str,
+           from .organizations.client import OrganizationsClient, AsyncOrganizationsClient
+           from .packages.client import PackagesClient, AsyncPackagesClient
+           from .jobs.client import JobsClient, AsyncJobsClient
+      @@ -34,8 +36,8 @@ class BaseHarborAPIClient(BaseService):
+               *,
+               token: Optional[Union[str, Callable[[], str]]] = None,
+               harbor_api_version: str,
+      -        base_url: Union[HarborApiClientEnvironment, str, None] = None,
+      -        environment: Optional[HarborApiClientEnvironment] = None,
       +        base_url: Union[HarborAPIClientEnvironment, str, None] = None,
       +        environment: Optional[HarborAPIClientEnvironment] = None,
-      +        headers: Optional[Dict[str, str]] = None,
-      +        timeout: Optional[float] = None,
-      +        timeout_ms: Optional[int] = None,
-      +        http_client: Optional[requests.Session] = None,
-      +        httpx_client: Optional[Any] = None,
-      +        follow_redirects: bool = True,
-      +        logger: Optional[logging.Logger] = None,
-      +        retry: Optional["RetryConfig"] = None,
-      +        stream_reconnection_enabled: Optional[bool] = None,
-      +        max_stream_reconnection_attempts: Optional[int] = None,
-      +    ):
-      +        """Initializes the BaseHarborAPIClient SDK client."""
-      +        if environment is not None and base_url is None:
-      +            base_url = environment
-      +        _resolved_url = (
-      +            base_url.value
+               headers: Optional[Dict[str, str]] = None,
+               timeout: Optional[float] = None,
+               timeout_ms: Optional[int] = None,
+      @@ -52,7 +54,7 @@ class BaseHarborAPIClient(BaseService):
+                   base_url = environment
+               _resolved_url = (
+                   base_url.value
+      -            if isinstance(base_url, HarborApiClientEnvironment)
       +            if isinstance(base_url, HarborAPIClientEnvironment)
-      +            else base_url
-      +        )
-      +        super().__init__(
-      +            base_url=_resolved_url,
-      +            http_client=http_client,
-      +            follow_redirects=follow_redirects,
-      +            logger=logger,
-      +        )
-      +        self._organizations: Any = None
-      +        self._packages: Any = None
-      +        self._jobs: Any = None
-      +        self._trials: Any = None
-      +        self._rollouts: Any = None
-      +        self._account: Any = None
-      +        self._api_keys: Any = None
-      +        self._agents: Any = None
-      +        self._leaderboards: Any = None
-      +        self._secrets: Any = None
-      +        self._storage: Any = None
-      +        self.set_access_token(token)
-      +        self._global_headers["Harbor-API-Version"] = harbor_api_version
-      +        if httpx_client is not None:
-      +            from .core.httpx_session import HttpxSession
-      +
-      +            self.set_http_client(HttpxSession(httpx_client))
-      +        self._custom_headers = headers
-      +        self._given_base_url = base_url if isinstance(base_url, str) else None
-      +        if headers:
-      +            self.set_config(
-      +                {
-      +                    **self._service_config,
-      +                    "additional_headers": {
-      +                        **(self._service_config.get("additional_headers") or {}),
-      +                        **headers,
-      +                    },
-      +                }
-      +            )
-      +        if timeout_ms is not None:
-      +            warnings.warn(
-      +                "`timeout_ms` is deprecated; use `timeout` (in seconds) instead.",
-      +                DeprecationWarning,
-      +                stacklevel=2,
-      +            )
-      +            timeout = timeout_ms / 1000 if timeout is None else timeout
-      +        if timeout is None:
-      +            timeout = 60
-      +        self.set_timeout(timeout)
-      +        if retry is not None:
-      +            self.set_retry(retry)
-      +        if stream_reconnection_enabled is not None:
-      +            self.set_config(
-      +                {
-      +                    **self._service_config,
-      +                    "stream_reconnection_enabled": stream_reconnection_enabled,
-      +                }
-      +            )
-      +        if max_stream_reconnection_attempts is not None:
-      +            self.set_config(
-      +                {
-      +                    **self._service_config,
-      +                    "max_stream_reconnection_attempts": max_stream_reconnection_attempts,
-      +                }
-      +            )
-      +
+                   else base_url
+               )
+               super().__init__(
+      @@ -117,7 +119,33 @@ class BaseHarborAPIClient(BaseService):
+                       }
+                   )
+       
+      -    def set_base_url(self, base_url: Union[HarborApiClientEnvironment, str]):
       +        self._owned_http_client: Optional[requests.Session] = None
       +        if http_client is None and httpx_client is None:
       +            self._owned_http_client = requests.Session()
@@ -21596,537 +21518,53 @@ patches:
       +        return self._storage_transfers
       +
       +    def set_base_url(self, base_url: Union[HarborAPIClientEnvironment, str]):
-      +        """
-      +        Sets the base URL for the whole SDK, including every resource client already built.
-      +
-      +        Resource clients are built lazily and cached holding a COPY of the root's base URL, so the
-      +        inherited setter -- which only rebinds the receiver -- left an already-materialised child
-      +        routing to the old host. Switching environment after one call had built a child kept
-      +        sending that child's requests to the previous server, silently and with no error. Each
-      +        child forwards to its own sub-resources in turn.
-      +
+               """
+               Sets the base URL for the whole SDK, including every resource client already built.
+       
+      @@ -127,7 +155,7 @@ class BaseHarborAPIClient(BaseService):
+               sending that child's requests to the previous server, silently and with no error. Each
+               child forwards to its own sub-resources in turn.
+       
+      -        :param base_url: The base URL to be set, as a string or an HarborApiClientEnvironment enum member.
       +        :param base_url: The base URL to be set, as a string or an HarborAPIClientEnvironment enum member.
-      +        :return: The SDK instance.
-      +        """
-      +        super().set_base_url(base_url)
-      +        if self._organizations is not None:
-      +            self._organizations.set_base_url(base_url)
-      +        if self._packages is not None:
-      +            self._packages.set_base_url(base_url)
-      +        if self._jobs is not None:
-      +            self._jobs.set_base_url(base_url)
-      +        if self._trials is not None:
-      +            self._trials.set_base_url(base_url)
-      +        if self._rollouts is not None:
-      +            self._rollouts.set_base_url(base_url)
-      +        if self._account is not None:
-      +            self._account.set_base_url(base_url)
-      +        if self._api_keys is not None:
-      +            self._api_keys.set_base_url(base_url)
-      +        if self._agents is not None:
-      +            self._agents.set_base_url(base_url)
-      +        if self._leaderboards is not None:
-      +            self._leaderboards.set_base_url(base_url)
-      +        if self._secrets is not None:
-      +            self._secrets.set_base_url(base_url)
-      +        if self._storage is not None:
-      +            self._storage.set_base_url(base_url)
-      +
-      +        return self
-      +
-      +    def set_config(self, config: SdkConfig):
-      +        """
-      +        Sets service-level configuration for the whole SDK, including every resource client
-      +        already built.
-      +
-      +        Resource clients are built lazily and cached holding a reference to the root's config, and
-      +        both this setter and `set_retry` REBIND `_service_config` rather than mutating it -- so a
-      +        caller who touched a resource before reconfiguring the root got a silently stale child.
-      +        The root wins: last writer overwrites, the same rule `set_base_url` and `set_timeout`
-      +        follow, which keeps the root and its resources in exact agreement. Narrower scopes are
-      +        untouched, because method-level config (`set_<method>_config`) and per-call
-      +        `request_options` live in their own attributes and are never overwritten by this. Each
-      +        child forwards to its own sub-resources in turn.
-      +
-      +        :param SdkConfig config: Configuration dictionary to override SDK-level defaults.
-      +        :return: The SDK instance.
-      +        """
-      +        super().set_config(config)
-      +        if self._organizations is not None:
-      +            self._organizations.set_config(config)
-      +        if self._packages is not None:
-      +            self._packages.set_config(config)
-      +        if self._jobs is not None:
-      +            self._jobs.set_config(config)
-      +        if self._trials is not None:
-      +            self._trials.set_config(config)
-      +        if self._rollouts is not None:
-      +            self._rollouts.set_config(config)
-      +        if self._account is not None:
-      +            self._account.set_config(config)
-      +        if self._api_keys is not None:
-      +            self._api_keys.set_config(config)
-      +        if self._agents is not None:
-      +            self._agents.set_config(config)
-      +        if self._leaderboards is not None:
-      +            self._leaderboards.set_config(config)
-      +        if self._secrets is not None:
-      +            self._secrets.set_config(config)
-      +        if self._storage is not None:
-      +            self._storage.set_config(config)
-      +
-      +        return self
-      +
-      +    def set_timeout(self, timeout: float):
-      +        """
-      +        Sets the timeout for the whole SDK, including every resource client already built.
-      +
-      +        Resource clients are built lazily and cached with a COPY of the root's timeout baked into
-      +        their request handler, so the inherited setter -- which only rebinds the receiver and
-      +        rebuilds the receiver's handler -- left an already-materialised child on the old timeout.
-      +
-      +        :param float timeout: The timeout (in seconds) to be set.
-      +        :return: The SDK instance.
-      +        """
-      +        super().set_timeout(timeout)
-      +        if self._organizations is not None:
-      +            self._organizations.set_timeout(timeout)
-      +        if self._packages is not None:
-      +            self._packages.set_timeout(timeout)
-      +        if self._jobs is not None:
-      +            self._jobs.set_timeout(timeout)
-      +        if self._trials is not None:
-      +            self._trials.set_timeout(timeout)
-      +        if self._rollouts is not None:
-      +            self._rollouts.set_timeout(timeout)
-      +        if self._account is not None:
-      +            self._account.set_timeout(timeout)
-      +        if self._api_keys is not None:
-      +            self._api_keys.set_timeout(timeout)
-      +        if self._agents is not None:
-      +            self._agents.set_timeout(timeout)
-      +        if self._leaderboards is not None:
-      +            self._leaderboards.set_timeout(timeout)
-      +        if self._secrets is not None:
-      +            self._secrets.set_timeout(timeout)
-      +        if self._storage is not None:
-      +            self._storage.set_timeout(timeout)
-      +
-      +        return self
-      +
-      +    def set_http_client(self, http_client: Optional[requests.Session]):
-      +        """
-      +        Sets a custom HTTP client for the whole SDK, including every resource client already
-      +        built.
-      +
-      +        Resource clients are built lazily and cached with a COPY of the root's http_client baked
-      +        into their request handler, so the inherited setter -- which only rebinds the receiver and
-      +        rebuilds the receiver's handler -- left an already-materialised child on the old client.
-      +
-      +        :param http_client: A requests.Session-compatible client, used as-is. Pass None to fall
-      +            back to the module-level requests API.
-      +        :return: The SDK instance.
-      +        """
-      +        super().set_http_client(http_client)
-      +        if self._organizations is not None:
-      +            self._organizations.set_http_client(http_client)
-      +        if self._packages is not None:
-      +            self._packages.set_http_client(http_client)
-      +        if self._jobs is not None:
-      +            self._jobs.set_http_client(http_client)
-      +        if self._trials is not None:
-      +            self._trials.set_http_client(http_client)
-      +        if self._rollouts is not None:
-      +            self._rollouts.set_http_client(http_client)
-      +        if self._account is not None:
-      +            self._account.set_http_client(http_client)
-      +        if self._api_keys is not None:
-      +            self._api_keys.set_http_client(http_client)
-      +        if self._agents is not None:
-      +            self._agents.set_http_client(http_client)
-      +        if self._leaderboards is not None:
-      +            self._leaderboards.set_http_client(http_client)
-      +        if self._secrets is not None:
-      +            self._secrets.set_http_client(http_client)
-      +        if self._storage is not None:
-      +            self._storage.set_http_client(http_client)
-      +
-      +        return self
-      +
-      +    def set_follow_redirects(self, follow_redirects: bool):
-      +        """
-      +        Sets whether HTTP redirects (3xx responses) are followed automatically, for the whole
-      +        SDK, including every resource client already built.
-      +
-      +        :param bool follow_redirects: False to return a 3xx response as-is instead of following it.
-      +        :return: The SDK instance.
-      +        """
-      +        super().set_follow_redirects(follow_redirects)
-      +        if self._organizations is not None:
-      +            self._organizations.set_follow_redirects(follow_redirects)
-      +        if self._packages is not None:
-      +            self._packages.set_follow_redirects(follow_redirects)
-      +        if self._jobs is not None:
-      +            self._jobs.set_follow_redirects(follow_redirects)
-      +        if self._trials is not None:
-      +            self._trials.set_follow_redirects(follow_redirects)
-      +        if self._rollouts is not None:
-      +            self._rollouts.set_follow_redirects(follow_redirects)
-      +        if self._account is not None:
-      +            self._account.set_follow_redirects(follow_redirects)
-      +        if self._api_keys is not None:
-      +            self._api_keys.set_follow_redirects(follow_redirects)
-      +        if self._agents is not None:
-      +            self._agents.set_follow_redirects(follow_redirects)
-      +        if self._leaderboards is not None:
-      +            self._leaderboards.set_follow_redirects(follow_redirects)
-      +        if self._secrets is not None:
-      +            self._secrets.set_follow_redirects(follow_redirects)
-      +        if self._storage is not None:
-      +            self._storage.set_follow_redirects(follow_redirects)
-      +
-      +        return self
-      +
-      +    def set_logging(self, logger: Optional[logging.Logger]):
-      +        """
-      +        Sets the logger requests/responses are written to, for the whole SDK, including every
-      +        resource client already built.
-      +
-      +        :param logger: A standard library logger. Pass None (the default) to disable logging.
-      +            Authorization and Cookie header values are always redacted from logged output.
-      +        :return: The SDK instance.
-      +        """
-      +        super().set_logging(logger)
-      +        if self._organizations is not None:
-      +            self._organizations.set_logging(logger)
-      +        if self._packages is not None:
-      +            self._packages.set_logging(logger)
-      +        if self._jobs is not None:
-      +            self._jobs.set_logging(logger)
-      +        if self._trials is not None:
-      +            self._trials.set_logging(logger)
-      +        if self._rollouts is not None:
-      +            self._rollouts.set_logging(logger)
-      +        if self._account is not None:
-      +            self._account.set_logging(logger)
-      +        if self._api_keys is not None:
-      +            self._api_keys.set_logging(logger)
-      +        if self._agents is not None:
-      +            self._agents.set_logging(logger)
-      +        if self._leaderboards is not None:
-      +            self._leaderboards.set_logging(logger)
-      +        if self._secrets is not None:
-      +            self._secrets.set_logging(logger)
-      +        if self._storage is not None:
-      +            self._storage.set_logging(logger)
-      +
-      +        return self
-      +
-      +    def set_access_token(self, access_token: Optional[Union[str, Callable[[], str]]]):
-      +        """
-      +        Sets the access token for the whole SDK, including every resource client already built.
-      +
-      +        A child is constructed with a COPY of the root's default headers and is then cached, so
-      +        the inherited setter -- which only mutates the receiver's own headers -- left an
-      +        already-materialised child on the old token. Each child forwards to its own sub-resources
-      +        in turn.
-      +
-      +        :param access_token: The access token to be set.
-      +        :return: The SDK instance.
-      +        """
-      +        super().set_access_token(access_token)
-      +        if self._organizations is not None:
-      +            self._organizations.set_access_token(access_token)
-      +        if self._packages is not None:
-      +            self._packages.set_access_token(access_token)
-      +        if self._jobs is not None:
-      +            self._jobs.set_access_token(access_token)
-      +        if self._trials is not None:
-      +            self._trials.set_access_token(access_token)
-      +        if self._rollouts is not None:
-      +            self._rollouts.set_access_token(access_token)
-      +        if self._account is not None:
-      +            self._account.set_access_token(access_token)
-      +        if self._api_keys is not None:
-      +            self._api_keys.set_access_token(access_token)
-      +        if self._agents is not None:
-      +            self._agents.set_access_token(access_token)
-      +        if self._leaderboards is not None:
-      +            self._leaderboards.set_access_token(access_token)
-      +        if self._secrets is not None:
-      +            self._secrets.set_access_token(access_token)
-      +        if self._storage is not None:
-      +            self._storage.set_access_token(access_token)
-      +
-      +        return self
-      +
-      +    @property
-      +    def organizations(self) -> "OrganizationsClient":
-      +        """Lazily construct and return the organizations resource client."""
-      +        if self._organizations is None:
-      +            from .organizations.client import OrganizationsClient
-      +
-      +            _child = OrganizationsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._organizations = _child
-      +        return self._organizations
-      +
-      +    @property
-      +    def packages(self) -> "PackagesClient":
-      +        """Lazily construct and return the packages resource client."""
-      +        if self._packages is None:
-      +            from .packages.client import PackagesClient
-      +
-      +            _child = PackagesClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._packages = _child
-      +        return self._packages
-      +
-      +    @property
-      +    def jobs(self) -> "JobsClient":
-      +        """Lazily construct and return the jobs resource client."""
-      +        if self._jobs is None:
-      +            from .jobs.client import JobsClient
-      +
-      +            _child = JobsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._jobs = _child
-      +        return self._jobs
-      +
-      +    @property
-      +    def trials(self) -> "TrialsClient":
-      +        """Lazily construct and return the trials resource client."""
-      +        if self._trials is None:
-      +            from .trials.client import TrialsClient
-      +
-      +            _child = TrialsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._trials = _child
-      +        return self._trials
-      +
-      +    @property
-      +    def rollouts(self) -> "RolloutsClient":
-      +        """Lazily construct and return the rollouts resource client."""
-      +        if self._rollouts is None:
-      +            from .rollouts.client import RolloutsClient
-      +
-      +            _child = RolloutsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._rollouts = _child
-      +        return self._rollouts
-      +
-      +    @property
-      +    def account(self) -> "AccountClient":
-      +        """Lazily construct and return the account resource client."""
-      +        if self._account is None:
-      +            from .account.client import AccountClient
-      +
-      +            _child = AccountClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._account = _child
-      +        return self._account
-      +
-      +    @property
-      +    def api_keys(self) -> "ApiKeysClient":
-      +        """Lazily construct and return the api_keys resource client."""
-      +        if self._api_keys is None:
-      +            from .api_keys.client import ApiKeysClient
-      +
-      +            _child = ApiKeysClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._api_keys = _child
-      +        return self._api_keys
-      +
-      +    @property
-      +    def agents(self) -> "AgentsClient":
-      +        """Lazily construct and return the agents resource client."""
-      +        if self._agents is None:
-      +            from .agents.client import AgentsClient
-      +
-      +            _child = AgentsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._agents = _child
-      +        return self._agents
-      +
-      +    @property
-      +    def leaderboards(self) -> "LeaderboardsClient":
-      +        """Lazily construct and return the leaderboards resource client."""
-      +        if self._leaderboards is None:
-      +            from .leaderboards.client import LeaderboardsClient
-      +
-      +            _child = LeaderboardsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._leaderboards = _child
-      +        return self._leaderboards
-      +
-      +    @property
-      +    def secrets(self) -> "SecretsClient":
-      +        """Lazily construct and return the secrets resource client."""
-      +        if self._secrets is None:
-      +            from .secrets.client import SecretsClient
-      +
-      +            _child = SecretsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._secrets = _child
-      +        return self._secrets
-      +
-      +    @property
-      +    def storage(self) -> "StorageClient":
-      +        """Lazily construct and return the storage resource client."""
-      +        if self._storage is None:
-      +            from .storage.client import StorageClient
-      +
-      +            _child = StorageClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._storage = _child
-      +        return self._storage
-      +
-      +    @property
+               :return: The SDK instance.
+               """
+               super().set_base_url(base_url)
+      @@ -581,16 +609,16 @@ class BaseHarborAPIClient(BaseService):
+               return self._storage
+       
+           @property
+      -    def with_raw_response(self) -> "RawBaseHarborAPIClient":
       +    def with_raw_response(self) -> "RawHarborAPIClient":
-      +        """
-      +        Returns a raw-response client whose methods mirror this client's ROOT endpoints but return
-      +        ``HttpResponse[T]`` (parsed body plus the raw status code and headers) instead of the bare
-      +        deserialized body. Resource clients expose their own `with_raw_response`.
-      +        """
+               """
+               Returns a raw-response client whose methods mirror this client's ROOT endpoints but return
+               ``HttpResponse[T]`` (parsed body plus the raw status code and headers) instead of the bare
+               deserialized body. Resource clients expose their own `with_raw_response`.
+               """
+      -        return RawBaseHarborAPIClient(self)
       +        return RawHarborAPIClient(self)
-      +
-      +
+       
+       
+      -class RawBaseHarborAPIClient:
       +class RawHarborAPIClient:
-      +    """
-      +    Raw-response client for BaseHarborAPIClient's root endpoints.
-      +
-      +    Each method delegates to the matching :class:`BaseHarborAPIClient` method and wraps the result in an
-      +    ``HttpResponse[T]`` so callers can read ``.data`` alongside ``.status_code`` and ``.headers``.
-      +    A fully-grouped spec binds nothing to the root, so this is then a bare shell and the endpoints
-      +    are reached through each resource client's own raw client.
-      +    """
-      +
-      +    def __init__(self, client: BaseHarborAPIClient):
-      +        self._client = client
-      +
-      +
-      +class AsyncBaseHarborAPIClient(BaseHarborAPIClient):
-      +    """
-      +    Async SDK client for BaseHarborAPIClient. Mirrors the sync client with awaitable endpoints and async
-      +    resource accessors.
-      +    """
-      +
-      +    def __init__(
-      +        self,
-      +        *,
-      +        token: Optional[Union[str, Callable[[], str]]] = None,
-      +        harbor_api_version: str,
+           """
+           Raw-response client for BaseHarborAPIClient's root endpoints.
+       
+      @@ -615,8 +643,8 @@ class AsyncBaseHarborAPIClient(BaseHarborAPIClient):
+               *,
+               token: Optional[Union[str, Callable[[], str]]] = None,
+               harbor_api_version: str,
+      -        base_url: Union[HarborApiClientEnvironment, str, None] = None,
+      -        environment: Optional[HarborApiClientEnvironment] = None,
       +        base_url: Union[HarborAPIClientEnvironment, str, None] = None,
       +        environment: Optional[HarborAPIClientEnvironment] = None,
-      +        headers: Optional[Dict[str, str]] = None,
-      +        timeout: Optional[float] = None,
-      +        timeout_ms: Optional[int] = None,
-      +        http_client: Optional[requests.Session] = None,
-      +        httpx_client: Optional[Any] = None,
-      +        follow_redirects: bool = True,
-      +        logger: Optional[logging.Logger] = None,
-      +        retry: Optional["RetryConfig"] = None,
-      +        stream_reconnection_enabled: Optional[bool] = None,
-      +        max_stream_reconnection_attempts: Optional[int] = None,
-      +        async_token: Optional[Callable[[], Awaitable[str]]] = None,
-      +    ):
-      +        """Initializes the async client; ``async_token`` is an async token supplier, used when ``token`` is unset."""
-      +        if async_token is not None and token is None:
-      +            token = async_token
-      +        super().__init__(
-      +            token=token,
-      +            harbor_api_version=harbor_api_version,
-      +            base_url=base_url,
-      +            environment=environment,
-      +            headers=headers,
-      +            timeout=timeout,
-      +            timeout_ms=timeout_ms,
-      +            http_client=http_client,
-      +            httpx_client=httpx_client,
-      +            follow_redirects=follow_redirects,
-      +            logger=logger,
-      +            retry=retry,
-      +            stream_reconnection_enabled=stream_reconnection_enabled,
-      +            max_stream_reconnection_attempts=max_stream_reconnection_attempts,
-      +        )
-      +
+               headers: Optional[Dict[str, str]] = None,
+               timeout: Optional[float] = None,
+               timeout_ms: Optional[int] = None,
+      @@ -649,6 +677,25 @@ class AsyncBaseHarborAPIClient(BaseHarborAPIClient):
+                   max_stream_reconnection_attempts=max_stream_reconnection_attempts,
+               )
+       
       +    async def aclose(self) -> None:
       +        """Release the default pool used by Fern's native asynchronous wrappers."""
       +        await asyncio.to_thread(self.close)
@@ -22146,220 +21584,28 @@ patches:
       +            self._async_storage_transfers = AsyncStorageTransfers(self)
       +        return self._async_storage_transfers
       +
-      +    @property
-      +    def organizations(self) -> "AsyncOrganizationsClient":
-      +        """Lazily construct and return the async organizations resource client."""
-      +        if self._organizations is None:
-      +            from .organizations.client import AsyncOrganizationsClient
-      +
-      +            _child = AsyncOrganizationsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._organizations = _child
-      +        return self._organizations
-      +
-      +    @property
-      +    def packages(self) -> "AsyncPackagesClient":
-      +        """Lazily construct and return the async packages resource client."""
-      +        if self._packages is None:
-      +            from .packages.client import AsyncPackagesClient
-      +
-      +            _child = AsyncPackagesClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._packages = _child
-      +        return self._packages
-      +
-      +    @property
-      +    def jobs(self) -> "AsyncJobsClient":
-      +        """Lazily construct and return the async jobs resource client."""
-      +        if self._jobs is None:
-      +            from .jobs.client import AsyncJobsClient
-      +
-      +            _child = AsyncJobsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._jobs = _child
-      +        return self._jobs
-      +
-      +    @property
-      +    def trials(self) -> "AsyncTrialsClient":
-      +        """Lazily construct and return the async trials resource client."""
-      +        if self._trials is None:
-      +            from .trials.client import AsyncTrialsClient
-      +
-      +            _child = AsyncTrialsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._trials = _child
-      +        return self._trials
-      +
-      +    @property
-      +    def rollouts(self) -> "AsyncRolloutsClient":
-      +        """Lazily construct and return the async rollouts resource client."""
-      +        if self._rollouts is None:
-      +            from .rollouts.client import AsyncRolloutsClient
-      +
-      +            _child = AsyncRolloutsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._rollouts = _child
-      +        return self._rollouts
-      +
-      +    @property
-      +    def account(self) -> "AsyncAccountClient":
-      +        """Lazily construct and return the async account resource client."""
-      +        if self._account is None:
-      +            from .account.client import AsyncAccountClient
-      +
-      +            _child = AsyncAccountClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._account = _child
-      +        return self._account
-      +
-      +    @property
-      +    def api_keys(self) -> "AsyncApiKeysClient":
-      +        """Lazily construct and return the async api_keys resource client."""
-      +        if self._api_keys is None:
-      +            from .api_keys.client import AsyncApiKeysClient
-      +
-      +            _child = AsyncApiKeysClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._api_keys = _child
-      +        return self._api_keys
-      +
-      +    @property
-      +    def agents(self) -> "AsyncAgentsClient":
-      +        """Lazily construct and return the async agents resource client."""
-      +        if self._agents is None:
-      +            from .agents.client import AsyncAgentsClient
-      +
-      +            _child = AsyncAgentsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._agents = _child
-      +        return self._agents
-      +
-      +    @property
-      +    def leaderboards(self) -> "AsyncLeaderboardsClient":
-      +        """Lazily construct and return the async leaderboards resource client."""
-      +        if self._leaderboards is None:
-      +            from .leaderboards.client import AsyncLeaderboardsClient
-      +
-      +            _child = AsyncLeaderboardsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._leaderboards = _child
-      +        return self._leaderboards
-      +
-      +    @property
-      +    def secrets(self) -> "AsyncSecretsClient":
-      +        """Lazily construct and return the async secrets resource client."""
-      +        if self._secrets is None:
-      +            from .secrets.client import AsyncSecretsClient
-      +
-      +            _child = AsyncSecretsClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._secrets = _child
-      +        return self._secrets
-      +
-      +    @property
-      +    def storage(self) -> "AsyncStorageClient":
-      +        """Lazily construct and return the async storage resource client."""
-      +        if self._storage is None:
-      +            from .storage.client import AsyncStorageClient
-      +
-      +            _child = AsyncStorageClient(base_url=self.base_url)
-      +            _child._default_headers = self._default_headers.copy()
-      +            _child._global_headers = self._global_headers
-      +            _child._timeout = self._timeout
-      +            _child._http_client = self._http_client
-      +            _child._follow_redirects = self._follow_redirects
-      +            _child._logger = self._logger
-      +            _child._service_config = self._service_config
-      +            _child._update_request_handler()
-      +            self._storage = _child
-      +        return self._storage
-      +
-      +    @property
+           @property
+           def organizations(self) -> "AsyncOrganizationsClient":
+               """Lazily construct and return the async organizations resource client."""
+      @@ -848,15 +895,15 @@ class AsyncBaseHarborAPIClient(BaseHarborAPIClient):
+               return self._storage
+       
+           @property
+      -    def with_raw_response(self) -> "AsyncRawBaseHarborAPIClient":  # type: ignore[override]
       +    def with_raw_response(self) -> "AsyncRawHarborAPIClient":  # type: ignore[override]
-      +        """
-      +        Returns an async raw-response client whose methods mirror this client's ROOT endpoints but
-      +        return ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
-      +        """
+               """
+               Returns an async raw-response client whose methods mirror this client's ROOT endpoints but
+               return ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
+               """
+      -        return AsyncRawBaseHarborAPIClient(self)
       +        return AsyncRawHarborAPIClient(self)
-      +
-      +
+       
+       
+      -class AsyncRawBaseHarborAPIClient:
       +class AsyncRawHarborAPIClient:
-      +    """
-      +    Async raw-response client for AsyncBaseHarborAPIClient's root endpoints.
-      +    """
-      +
-      +    def __init__(self, client: AsyncBaseHarborAPIClient):
-      +        self._client = client
+           """
+           Async raw-response client for AsyncBaseHarborAPIClient's root endpoints.
+           """
     theirs_snapshot:
       src/harbor_client/base_client.py: |
         import warnings
@@ -23275,7 +22521,6 @@ patches:
             def __init__(self, client: AsyncBaseHarborAPIClient):
                 self._client = client
     user_owned: true
-    status: unresolved
 dismissals:
   - patch_id: patch-1ca0ca5e
     original_commit: 1ca0ca5efc2d21a821fc189acd0fad4c40c5d374
