@@ -80,7 +80,7 @@
     "docs": {
       "readme": {
         "apiName": "Harbor API",
-        "introduction": "Typed synchronous and asynchronous clients for the Harbor API.\n\n```python\nfrom harbor_client import HarborAPIClient\n\nwith HarborAPIClient(token=\"your-api-key\") as client:\n    for job in client.jobs.list():\n        print(job.id, job.name)\n```\n\n```python\nfrom harbor_client import AsyncHarborAPIClient\n\nasync with AsyncHarborAPIClient(token=\"your-api-key\") as client:\n    async for job in client.jobs.list():\n        print(job.id, job.name)\n```\n",
+        "introduction": "Typed synchronous and asynchronous clients for the Harbor API.\n\n```python\nfrom harbor_client import HarborAPIClient\n\nwith HarborAPIClient(token=\"your-api-key\") as client:\n    for job in client.jobs.list():\n        print(job.id, job.name)\n```\n\n```python\nfrom harbor_client import AsyncHarborAPIClient\n\nimport asyncio\n\nasync def main():\n    async with AsyncHarborAPIClient(token=\"your-api-key\") as client:\n        async for job in client.jobs.list():\n            print(job.id, job.name)\n\nasyncio.run(main())\n```\n",
         "customSections": [
           {
             "title": "Client lifecycle and validation",
