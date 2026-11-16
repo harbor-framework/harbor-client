@@ -96,14 +96,20 @@ generations:
     cli_version: 5.199.0
     generator_versions:
       fern-python-sdk: 6.17.0
-current_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
+  - commit_sha: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    tree_hash: c41df8b8d160ec3fc49d14f1f592a57d92afda3a
+    timestamp: 2026-11-16T18:41:22.036Z
+    cli_version: 5.199.0
+    generator_versions:
+      fern-python-sdk: 6.17.0
+current_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:200eba1c077f4b1a92106c35e9b0887378924f219eded35e80dbf717211d760b
+    content_hash: sha256:84dbeabf978b855240f34d22c4dd465718bd17bad315cd1e51908ed5cd507edf
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
+    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -124,6 +130,42 @@ patches:
       - src/harbor_client/types/utils/base_model.py
       - src/harbor_client/types/utils/cast_models.py
     patch_content: |
+      diff --git a/pyproject.toml b/pyproject.toml
+      index 86a338d..e5f3445 100644
+      --- a/pyproject.toml
+      +++ b/pyproject.toml
+      @@ -1,3 +1,9 @@
+      +[project.optional-dependencies]
+      +tus = ["tuspy>=1.1.0,<2"]
+      +
+      +[tool.setuptools.package-data]
+      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
+      +
+       [build-system]
+       requires = ["setuptools>=61.0"]
+       build-backend = "setuptools.build_meta"
+      @@ -5,11 +11,17 @@ build-backend = "setuptools.build_meta"
+       [project]
+       name = "harbor-framework-client"
+       version = "0.1.0"
+      -description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
+      -readme = "PyPI_README.md"
+      -requires-python = ">=3.9"
+      +description = "Typed synchronous and asynchronous clients for the Harbor API."
+      +readme = "README.md"
+      +requires-python = ">=3.12"
+       dependencies = [
+           "requests>=2.31.0",
+           "pydantic>=2.14.0,<3",
+      -    "httpx>=0.21.2"
+      +    "httpx>=0.27.0",
+      +    "jsonschema>=4.23.0"
+       ]
+      +
+      +
+      +[project.urls]
+      +Repository = "https://github.com/harbor-framework/harbor-client"
+      +
       diff --git a/src/harbor_client/api_keys/client.py b/src/harbor_client/api_keys/client.py
       index 3ed7ed9..f4ddc73 100644
       --- a/src/harbor_client/api_keys/client.py
@@ -663,42 +705,6 @@ patches:
                    # Pydantic models: use model_validate() for each item. Validated one at a time so the
                    # failing element's index reaches the error message.
                    if hasattr(element_type, "model_validate"):
-      diff --git a/pyproject.toml b/pyproject.toml
-      index 86a338d..e5f3445 100644
-      --- a/pyproject.toml
-      +++ b/pyproject.toml
-      @@ -1,3 +1,9 @@
-      +[project.optional-dependencies]
-      +tus = ["tuspy>=1.1.0,<2"]
-      +
-      +[tool.setuptools.package-data]
-      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
-      +
-       [build-system]
-       requires = ["setuptools>=61.0"]
-       build-backend = "setuptools.build_meta"
-      @@ -5,11 +11,17 @@ build-backend = "setuptools.build_meta"
-       [project]
-       name = "harbor-framework-client"
-       version = "0.1.0"
-      -description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
-      -readme = "PyPI_README.md"
-      -requires-python = ">=3.9"
-      +description = "Typed synchronous and asynchronous clients for the Harbor API."
-      +readme = "README.md"
-      +requires-python = ">=3.12"
-       dependencies = [
-           "requests>=2.31.0",
-           "pydantic>=2.14.0,<3",
-      -    "httpx>=0.21.2"
-      +    "httpx>=0.27.0",
-      +    "jsonschema>=4.23.0"
-       ]
-      +
-      +
-      +[project.urls]
-      +Repository = "https://github.com/harbor-framework/harbor-client"
-      +
     theirs_snapshot:
       pyproject.toml: |+
         [project.optional-dependencies]
@@ -12996,7 +13002,7 @@ patches:
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
+    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -14609,7 +14615,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
+    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -14852,7 +14858,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
+    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -14876,7 +14882,7 @@ patches:
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
+    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
@@ -21336,7 +21342,7 @@ patches:
     original_commit: ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e
     original_message: Keep the native generated example aligned with execution filters
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
+    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
     files:
       - examples/sample.py
     patch_content: |+
@@ -21441,7 +21447,7 @@ patches:
     original_commit: d332059a9eac2c02fb2fc3b50005cdea1c8b04ad
     original_message: Use one checked public client over Fern generated bases
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: c760bf4c4fb66a89c1fa2f3eb829996c5deea53a
+    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
     files:
       - src/harbor_client/base_client.py
     patch_content: |
@@ -22521,6 +22527,152 @@ patches:
             def __init__(self, client: AsyncBaseHarborAPIClient):
                 self._client = client
     user_owned: true
+  - id: patch-aff4821e
+    content_hash: sha256:d15d612273b9002200dfdbbc5a81cef6b3dcdae606a9336efd265986ab96eec0
+    original_commit: aff4821ec02f05f786650e9cb1c1594b8cb29cb0
+    original_message: Preserve public exports and verify both client entry paths
+    original_author: Sam Vance <samvance243@gmail.com>
+    base_generation: 25fd23a5a91aa720af19422f76137d925d35d8d5
+    files:
+      - src/harbor_client/__init__.py
+      - src/harbor_client/environment.py
+      - src/harbor_client/net/environment/__init__.py
+      - src/harbor_client/net/environment/environment.py
+    patch_content: |
+      diff --git a/src/harbor_client/__init__.py b/src/harbor_client/__init__.py
+      index 3176e0a..07250fb 100644
+      --- a/src/harbor_client/__init__.py
+      +++ b/src/harbor_client/__init__.py
+      @@ -44,3 +44,6 @@ def __getattr__(name):
+       
+       def __dir__():
+           return sorted(set(globals()) | set(dir(_models)) | set(_LAZY_EXPORTS))
+      +
+      +# Preserve the established environment import across generator naming changes.
+      +from .net.environment import HarborAPIClientEnvironment
+      diff --git a/src/harbor_client/environment.py b/src/harbor_client/environment.py
+      index aaa8abc..039d262 100644
+      --- a/src/harbor_client/environment.py
+      +++ b/src/harbor_client/environment.py
+      @@ -1 +1,4 @@
+       from .net.environment import HarborApiClientEnvironment
+      +
+      +# Preserve the established environment import across generator naming changes.
+      +HarborAPIClientEnvironment = HarborApiClientEnvironment
+      diff --git a/src/harbor_client/net/environment/__init__.py b/src/harbor_client/net/environment/__init__.py
+      index a9b173a..d8f5c9b 100644
+      --- a/src/harbor_client/net/environment/__init__.py
+      +++ b/src/harbor_client/net/environment/__init__.py
+      @@ -1 +1,4 @@
+       from .environment import HarborApiClientEnvironment
+      +
+      +# Preserve the established environment import across generator naming changes.
+      +HarborAPIClientEnvironment = HarborApiClientEnvironment
+      diff --git a/src/harbor_client/net/environment/environment.py b/src/harbor_client/net/environment/environment.py
+      index 515f211..51e6869 100644
+      --- a/src/harbor_client/net/environment/environment.py
+      +++ b/src/harbor_client/net/environment/environment.py
+      @@ -27,3 +27,6 @@ class HarborApiClientEnvironment(Enum):
+           def url(self):
+               """Get the base URL for this environment"""
+               return self._url
+      +
+      +# Preserve the established environment import across generator naming changes.
+      +HarborAPIClientEnvironment = HarborApiClientEnvironment
+    theirs_snapshot:
+      src/harbor_client/__init__.py: |
+        from typing import TYPE_CHECKING
+
+        from .client import HarborAPIClient, AsyncHarborAPIClient
+        from .net.environment import HarborApiClientEnvironment
+        from .version import __version__
+        from .errors import (
+            BadRequestError,
+            ConflictError,
+            ForbiddenError,
+            InternalServerError,
+            NotFoundError,
+            ServiceUnavailableError,
+            TooManyRequestsError,
+            UnauthorizedError,
+        )
+
+        if TYPE_CHECKING:
+            from .validation import ContractError
+            from .transfers import StorageTransferError, UploadFile
+
+        from . import types as _models
+
+        import importlib
+
+        _LAZY_EXPORTS = {
+            "ContractError": ".validation",
+            "StorageTransferError": ".transfers",
+            "UploadFile": ".transfers",
+        }
+
+
+        def __getattr__(name):
+            """Falls back to the lazy ``.types`` registry for any name not re-exported above."""
+            module = _LAZY_EXPORTS.get(name)
+            if module is not None:
+                value = getattr(importlib.import_module(module, __name__), name)
+                globals()[name] = value
+                return value
+            try:
+                return getattr(_models, name)
+            except AttributeError:
+                raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from None
+
+
+        def __dir__():
+            return sorted(set(globals()) | set(dir(_models)) | set(_LAZY_EXPORTS))
+
+        # Preserve the established environment import across generator naming changes.
+        from .net.environment import HarborAPIClientEnvironment
+      src/harbor_client/environment.py: |
+        from .net.environment import HarborApiClientEnvironment
+
+        # Preserve the established environment import across generator naming changes.
+        HarborAPIClientEnvironment = HarborApiClientEnvironment
+      src/harbor_client/net/environment/__init__.py: |
+        from .environment import HarborApiClientEnvironment
+
+        # Preserve the established environment import across generator naming changes.
+        HarborAPIClientEnvironment = HarborApiClientEnvironment
+      src/harbor_client/net/environment/environment.py: |
+        """
+        An enum class containing all the possible environments for the SDK
+        """
+
+        from enum import Enum
+        from urllib.parse import urlparse
+
+
+        class HarborApiClientEnvironment(Enum):
+            """The environments available for the SDK"""
+
+            DEFAULT = "https://api.harborframework.com/functions/v1/api"
+
+            def __new__(cls, url):
+                parsed_url = urlparse(url)
+                if not all([parsed_url.scheme, parsed_url.netloc]):
+                    raise ValueError(
+                        f"Environment url [{url}] is not valid. Please use the following format https://api.example.com"
+                    )
+
+                obj = object.__new__(cls)
+                obj._value_ = url
+                obj._url = url
+                return obj
+
+            @property
+            def url(self):
+                """Get the base URL for this environment"""
+                return self._url
+
+        # Preserve the established environment import across generator naming changes.
+        HarborAPIClientEnvironment = HarborApiClientEnvironment
 dismissals:
   - patch_id: patch-1ca0ca5e
     original_commit: 1ca0ca5efc2d21a821fc189acd0fad4c40c5d374
