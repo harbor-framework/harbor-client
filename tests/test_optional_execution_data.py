@@ -6,7 +6,10 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
-from harbor_client import AsyncHarborAPIClient, HarborAPIClient
+from harbor_client.base_client import (
+    AsyncBaseHarborAPIClient as AsyncHarborAPIClient,
+    BaseHarborAPIClient as HarborAPIClient,
+)
 from harbor_client.validation import ContractError, async_client, sync_client
 from test_contract import SPEC, UUID, response_fixture
 

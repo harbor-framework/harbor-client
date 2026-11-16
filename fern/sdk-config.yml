@@ -26,14 +26,71 @@ replay:
   enabled: true
 generation:
   naming:
-    clientName: HarborAPIClient
+    clientName: BaseHarborAPIClient
+    exportedClientName: HarborAPIClient
+    environmentTypeName: HarborAPIClientEnvironment
   serialization:
     additionalProperties: language-default
+docs:
+  readme:
+    apiName: Harbor API
+    introduction: |
+      Typed synchronous and asynchronous clients for the Harbor API.
+
+      ```python
+      from harbor_client import HarborAPIClient
+
+      with HarborAPIClient(token="your-api-key") as client:
+          for job in client.jobs.list():
+              print(job.id, job.name)
+      ```
+
+      ```python
+      from harbor_client import AsyncHarborAPIClient
+
+      async with AsyncHarborAPIClient(token="your-api-key") as client:
+          async for job in client.jobs.list():
+              print(job.id, job.name)
+      ```
+    defaultEndpoint:
+      method: GET
+      path: /v1/jobs
+    customSections:
+      - title: Client lifecycle and validation
+        content: |
+          Use `HarborAPIClient` or `AsyncHarborAPIClient` from `harbor_client`.
+          Both use one reusable connection pool and enforce the selected OpenAPI
+          contract. The API version defaults to the contract used to generate this SDK.
+          Use a context manager, or call `close()` / `aclose()` when finished.
+
+          The older `harbor_client.validation.sync_client` and `async_client`
+          imports remain compatibility shims for existing integrations.
+      - title: Pagination
+        content: |
+          Iterate list results directly to follow opaque cursors automatically.
+          Use `iter_pages()` for one page at a time. A pager is single-use;
+          call the resource method again to start a new iteration.
+      - title: Signed storage transfers
+        content: |
+          Install `harbor-framework-client[tus]` for resumable uploads. Use
+          `client.transfers` for signed upload, download and copy workflows.
+          Storage transfers do not forward Harbor credentials to signed URLs.
 targets:
   - language: python
     generatorVersion: 6.17.0
     generation:
+      pythonVersion: ">=3.12"
       pydanticVersion: ">=2.14.0,<3"
+      client:
+        fileName: base_client.py
+        exportedFileName: client.py
+      extras:
+        tus: [tuspy]
+      additionalInitExports:
+        - from: validation
+          imports: [ContractError]
+        - from: transfers
+          imports: [StorageTransferError, UploadFile]
     output:
       delivery: github
       github:
@@ -44,3 +101,12 @@ targets:
     package:
       packageName: harbor-framework-client
       moduleName: harbor_client
+      description: Typed synchronous and asynchronous clients for the Harbor API.
+      extraDependencies:
+        - name: httpx
+          version: ">=0.27.0"
+        - name: jsonschema
+          version: ">=4.23.0"
+        - name: tuspy
+          version: ">=1.1.0,<2"
+          optional: true

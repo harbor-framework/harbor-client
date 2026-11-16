@@ -3,12 +3,14 @@
 Install the independently versioned `harbor-framework-client` package and use `HarborAPIClient` or `AsyncHarborAPIClient`. A package release has not been published yet; development consumers pin this repository to a commit.
 
 ```python
-from harbor_client.validation import sync_client
+from harbor_client import HarborAPIClient
 
-with sync_client(token="your-api-key") as client:
+with HarborAPIClient(token="your-api-key") as client:
     for job in client.jobs.list():
         print(job.id, job.name)
 ```
+
+Use the same root entry point for async code: `AsyncHarborAPIClient`. Both clients enforce the selected contract and own one reusable pool. The previous `validation.sync_client` and `async_client` factories delegate to these constructors for compatibility.
 
 ## Regeneration
 
@@ -30,7 +32,7 @@ Fern 6.17.0's SDK Config publishing preview emitted compile/test jobs but no pub
 
 ## Ownership of custom code
 
-Fern owns generated resource clients, models, imports and formatting. Project lint and formatting checks cover tests, packaging support and the two handwritten helper modules; they do not rewrite generated source.
+Fern owns generated resource clients, models, imports and formatting. Project lint and formatting checks cover tests, packaging support and the handwritten public client and helper modules; they do not rewrite generated source.
 
 The remaining customizations have behavioral regression tests:
 
@@ -40,3 +42,7 @@ The remaining customizations have behavioral regression tests:
 - `setup.py` derives static export stubs during package builds. Packaging metadata includes these stubs and the validation contract.
 
 Avoid cosmetic edits to generated files. When an upstream fix replaces a customization, verify its regression tests and retire the obsolete patch through Fern's Replay tools.
+
+## Fern configuration support
+
+Packaging requirements and user documentation are declared in `fern/sdk-config.yml`. Python generator 6.17.0 currently ignores `pythonVersion`, `extras`, extra dependencies, and README customization despite accepting them. Verified with CLI 5.199.0 and 5.217.2. Keep the packaging Replay corrections and owned README until a regeneration reproduces those settings and passes the distribution checks. The public/generated client split and additional initializer exports are supported.

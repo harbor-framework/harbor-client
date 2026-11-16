@@ -5,8 +5,9 @@ The checked clients enforce the original wire contract without patching generate
 models, closing free-form objects, or adding operation-specific client methods.
 """
 
+from __future__ import annotations
+
 from collections.abc import AsyncGenerator, Callable, Generator
-import asyncio
 from contextlib import asynccontextmanager, contextmanager
 from functools import cache
 import gzip
@@ -14,14 +15,15 @@ from importlib.resources import files
 import json
 import re
 from threading import Condition
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import unquote, urlsplit
 
 import httpx
 from jsonschema import Draft202012Validator, ValidationError
 from jsonschema.protocols import Validator
 
-from . import AsyncHarborAPIClient, HarborAPIClient
+if TYPE_CHECKING:
+    from .client import AsyncHarborAPIClient, HarborAPIClient
 
 DEFAULT_BASE_URL = "https://api.harborframework.com/functions/v1/api"
 
@@ -271,15 +273,16 @@ def sync_client(
     api_version: str = API_VERSION,
     transport: httpx.BaseTransport | None = None,
 ) -> Generator[HarborAPIClient]:
-    """Own one reusable HTTP pool, enforce the wire schema, and retry only reads."""
-    with _http(base_url, transport) as http:
-        yield HarborAPIClient(
-            token=token,
-            base_url=base_url,
-            harbor_api_version=api_version,
-            httpx_client=http,
-            retry={"http_methods_to_retry": ["GET", "HEAD", "OPTIONS"]},
-        )
+    """Compatibility shim; new integrations construct HarborAPIClient directly."""
+    from .client import HarborAPIClient
+
+    with HarborAPIClient(
+        token=token,
+        base_url=base_url,
+        harbor_api_version=api_version,
+        transport=transport,
+    ) as client:
+        yield client
 
 
 @asynccontextmanager
@@ -290,17 +293,13 @@ async def async_client(
     api_version: str = API_VERSION,
     transport: httpx.BaseTransport | None = None,
 ) -> AsyncGenerator[AsyncHarborAPIClient]:
-    """The same configured pool for Fern's generated async resource wrappers."""
-    http = _http(base_url, transport)
-    try:
-        yield AsyncHarborAPIClient(
-            token=token,
-            base_url=base_url,
-            harbor_api_version=api_version,
-            httpx_client=http,
-            retry={"http_methods_to_retry": ["GET", "HEAD", "OPTIONS"]},
-        )
-    finally:
-        # Fern runs requests in worker threads. Wait for any in-flight request
-        # before closing its pool, without blocking the caller's event loop.
-        await asyncio.to_thread(http.close)
+    """Compatibility shim; new integrations construct AsyncHarborAPIClient directly."""
+    from .client import AsyncHarborAPIClient
+
+    async with AsyncHarborAPIClient(
+        token=token,
+        base_url=base_url,
+        harbor_api_version=api_version,
+        transport=transport,
+    ) as client:
+        yield client
