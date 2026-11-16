@@ -1,3 +1,1 @@
-from typing import Optional
-
-RewardValue = Optional[float]
+RewardValue = float

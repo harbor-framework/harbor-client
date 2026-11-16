@@ -188,7 +188,6 @@ class SecretsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[SecretMetadata]
         """
-        self = self._for_one_call()
 
         Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(str).is_optional().validate(job_id, "job_id")
@@ -234,6 +233,9 @@ class SecretsClient(BaseService):
                     else construct_lenient(SecretMetadataPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -933,11 +935,7 @@ class AsyncSecretsClient(SecretsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)

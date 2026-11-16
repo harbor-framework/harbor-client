@@ -481,7 +481,7 @@ class Serializer:
                 )
 
         if isinstance(data, str) and quote_str_values:
-            return quote(data, safe="")
+            return quote(data)
         if isinstance(data, bool):
             return str(data).lower()
         if isinstance(data, (int, float)):
