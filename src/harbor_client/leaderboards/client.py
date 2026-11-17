@@ -437,7 +437,6 @@ class LeaderboardsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[LeaderboardRankedRow]
         """
-        self = self._for_one_call()
 
         Validator(str).is_optional().validate(leaderboard_id, "leaderboard_id")
         Validator(LeaderboardPackageSelectorEncoded).is_optional().validate(
@@ -486,6 +485,9 @@ class LeaderboardsClient(BaseService):
                 )
                 current_page = parsed_response.rows
 
+                if not current_page:
+                    break
+
                 yield current_page
 
                 next_cursor = parsed_response.next_page_token
@@ -522,7 +524,6 @@ class LeaderboardsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[LeaderboardSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
@@ -564,6 +565,9 @@ class LeaderboardsClient(BaseService):
                     else construct_lenient(LeaderboardSummaryPage, response)
                 )
                 current_page = parsed_response.leaderboards
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -683,7 +687,6 @@ class LeaderboardsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[LeaderboardTrialLink]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(row_id, "row_id")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -723,6 +726,9 @@ class LeaderboardsClient(BaseService):
                     else construct_lenient(LeaderboardTrialLinkPage, response)
                 )
                 current_page = parsed_response.trials
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1036,11 +1042,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1071,11 +1073,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1145,11 +1143,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
