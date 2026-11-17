@@ -123,14 +123,23 @@ jobs:
             echo "::error::Fern did not return a regeneration PR; the contract snapshot has not been updated."
             exit 1
           fi
+          # Fern deduplicates builds by an idempotency key over the inputs, so identical
+          # inputs return the earlier build's PR instead of generating again.
           pr_state=$(gh pr view "$pr_url" --json state --jq .state)
-          if [[ "$pr_state" != OPEN ]]; then
-            echo "::error::Fern reported $pr_url, which is $pr_state, instead of an open regeneration PR; the contract snapshot has not been updated."
-            exit 1
-          fi
-          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          case "$pr_state" in
+            OPEN)
+              echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+              ;;
+            MERGED)
+              echo "::notice::Inputs match an earlier Fern build, already merged in $pr_url; nothing to regenerate."
+              ;;
+            *)
+              echo "::error::Inputs match an earlier Fern build whose PR $pr_url is $pr_state. Reopen it, or change the inputs to regenerate."
+              exit 1
+              ;;
+          esac
       - name: Attach the exact validation contract to Fern's PR
-        if: steps.spec.outputs.changed == 'true'
+        if: steps.spec.outputs.changed == 'true' && steps.fern.outputs.pr_url != ''
         env:
           PR_URL: ${{ steps.fern.outputs.pr_url }}
           SDK_BRANCH: ${{ inputs.sdk_branch || 'main' }}
