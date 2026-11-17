@@ -57,6 +57,7 @@
       "packageName": "harbor-framework-client",
       "moduleName": "harbor_client",
       "description": "Typed synchronous and asynchronous clients for the Harbor API.",
+      "repository": "https://github.com/harbor-framework/harbor-client",
       "extraDependencies": [
         {
           "name": "httpx",
