@@ -109,6 +109,9 @@ targets:
         workflows: false
     package:
       packageName: harbor-framework-client
+      # Emit [project.urls] in every generation mode, not only GitHub delivery,
+      # so preview and published generations agree for Replay's 3-way merge.
+      repository: https://github.com/harbor-framework/harbor-client
       moduleName: harbor_client
       description: Typed synchronous and asynchronous clients for the Harbor API.
       extraDependencies:

@@ -21,7 +21,5 @@ dependencies = [
     "jsonschema>=4.23.0"
 ]
 
-
 [project.urls]
 Repository = "https://github.com/harbor-framework/harbor-client"
-
