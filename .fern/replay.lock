@@ -121,11 +121,11 @@ generations:
 current_generation: 50fde887c246be0a8c13f17482996f56af867029
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:ba352a78153dfa7b8da2492bc91f4467fe0eb3dbaa17db0d0e76c45ba1acff3e
+    content_hash: sha256:f4726d3ac03103375558e220292eebe1b4862a7b31aa9965ce433862993feff8
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: 50fde887c246be0a8c13f17482996f56af867029
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -146,42 +146,6 @@ patches:
       - src/harbor_client/types/utils/base_model.py
       - src/harbor_client/types/utils/cast_models.py
     patch_content: |
-      diff --git a/pyproject.toml b/pyproject.toml
-      index 86a338d..e5f3445 100644
-      --- a/pyproject.toml
-      +++ b/pyproject.toml
-      @@ -1,3 +1,9 @@
-      +[project.optional-dependencies]
-      +tus = ["tuspy>=1.1.0,<2"]
-      +
-      +[tool.setuptools.package-data]
-      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
-      +
-       [build-system]
-       requires = ["setuptools>=61.0"]
-       build-backend = "setuptools.build_meta"
-      @@ -5,11 +11,17 @@ build-backend = "setuptools.build_meta"
-       [project]
-       name = "harbor-framework-client"
-       version = "0.1.0"
-      -description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
-      -readme = "PyPI_README.md"
-      -requires-python = ">=3.9"
-      +description = "Typed synchronous and asynchronous clients for the Harbor API."
-      +readme = "README.md"
-      +requires-python = ">=3.12"
-       dependencies = [
-           "requests>=2.31.0",
-           "pydantic>=2.14.0,<3",
-      -    "httpx>=0.21.2"
-      +    "httpx>=0.27.0",
-      +    "jsonschema>=4.23.0"
-       ]
-      +
-      +
-      +[project.urls]
-      +Repository = "https://github.com/harbor-framework/harbor-client"
-      +
       diff --git a/src/harbor_client/api_keys/client.py b/src/harbor_client/api_keys/client.py
       index 3ed7ed9..f4ddc73 100644
       --- a/src/harbor_client/api_keys/client.py
@@ -721,8 +685,41 @@ patches:
                    # Pydantic models: use model_validate() for each item. Validated one at a time so the
                    # failing element's index reaches the error message.
                    if hasattr(element_type, "model_validate"):
+      diff --git a/pyproject.toml b/pyproject.toml
+      index ace1658..b3996f0 100644
+      --- a/pyproject.toml
+      +++ b/pyproject.toml
+      @@ -1,3 +1,9 @@
+      +[project.optional-dependencies]
+      +tus = ["tuspy>=1.1.0,<2"]
+      +
+      +[tool.setuptools.package-data]
+      +harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
+      +
+       [build-system]
+       requires = ["setuptools>=61.0"]
+       build-backend = "setuptools.build_meta"
+      @@ -5,13 +11,14 @@ build-backend = "setuptools.build_meta"
+       [project]
+       name = "harbor-framework-client"
+       version = "0.1.0"
+      -description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
+      -readme = "PyPI_README.md"
+      -requires-python = ">=3.9"
+      +description = "Typed synchronous and asynchronous clients for the Harbor API."
+      +readme = "README.md"
+      +requires-python = ">=3.12"
+       dependencies = [
+           "requests>=2.31.0",
+           "pydantic>=2.14.0,<3",
+      -    "httpx>=0.21.2"
+      +    "httpx>=0.27.0",
+      +    "jsonschema>=4.23.0"
+       ]
+       
+       [project.urls]
     theirs_snapshot:
-      pyproject.toml: |+
+      pyproject.toml: |
         [project.optional-dependencies]
         tus = ["tuspy>=1.1.0,<2"]
 
@@ -746,10 +743,8 @@ patches:
             "jsonschema>=4.23.0"
         ]
 
-
         [project.urls]
         Repository = "https://github.com/harbor-framework/harbor-client"
-
       src/harbor_client/api_keys/client.py: |
         from typing import Any, Optional, Generator, List, Union
         from ..services.utils.validator import Validator
@@ -12969,7 +12964,6 @@ patches:
 
             return cast(F, wrapper)
     user_owned: true
-    status: unresolved
   - id: patch-54e30fcc
     content_hash: sha256:8c4e08ac0b179a1c8b5cdfe261bcdce3f71420b8c012f248498a022e3a10a191
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
