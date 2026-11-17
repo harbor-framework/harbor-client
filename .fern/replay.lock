@@ -113,7 +113,13 @@ generations:
     timestamp: 2026-11-16T23:45:14.873Z
     cli_version: unknown
     generator_versions: {}
-current_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+  - commit_sha: d0094226578266fb2035fdb0a8797c721b6ff625
+    tree_hash: 5ec43241f5cf7a832b9f773f1e9c87da542d9806
+    timestamp: 2026-11-17T00:18:30.188Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: d0094226578266fb2035fdb0a8797c721b6ff625
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:ba352a78153dfa7b8da2492bc91f4467fe0eb3dbaa17db0d0e76c45ba1acff3e
@@ -12964,12 +12970,13 @@ patches:
 
             return cast(F, wrapper)
     user_owned: true
+    status: unresolved
   - id: patch-54e30fcc
     content_hash: sha256:8c4e08ac0b179a1c8b5cdfe261bcdce3f71420b8c012f248498a022e3a10a191
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -14582,7 +14589,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -14825,7 +14832,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -14849,7 +14856,7 @@ patches:
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
@@ -21298,7 +21305,7 @@ patches:
     original_commit: ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e
     original_message: Keep the native generated example aligned with execution filters
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - examples/sample.py
     patch_content: |+
@@ -21403,7 +21410,7 @@ patches:
     original_commit: d332059a9eac2c02fb2fc3b50005cdea1c8b04ad
     original_message: Use one checked public client over Fern generated bases
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/base_client.py
     patch_content: |
@@ -22488,7 +22495,7 @@ patches:
     original_commit: aff4821ec02f05f786650e9cb1c1594b8cb29cb0
     original_message: Preserve public exports and verify both client entry paths
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/__init__.py
       - src/harbor_client/environment.py
@@ -22634,7 +22641,7 @@ patches:
     original_commit: 0aef99d6d3a1dfae76a69853bea5de3c5c30b72b
     original_message: Keep response headers out of ApiError strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/net/transport/api_error.py
     patch_content: |
@@ -22778,7 +22785,7 @@ patches:
     original_commit: 554b6f7e83a0b97433dd5adf9e834ba71bd37e4a
     original_message: Keep credentials out of Request and Response strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/net/transport/request.py
       - src/harbor_client/net/transport/response.py
@@ -23465,7 +23472,7 @@ patches:
     original_commit: a8e5d1c2ba71ee2b477ffd7ff0568a31840cb2ac
     original_message: Show problem detail in typed API error strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: 247d2abe611b134a216258ce97e3d77de4f5f4de
+    base_generation: d0094226578266fb2035fdb0a8797c721b6ff625
     files:
       - src/harbor_client/types/utils/base_error.py
     patch_content: |

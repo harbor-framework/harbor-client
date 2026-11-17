@@ -185,4 +185,6 @@ class Request:
         :return: A string representation of the Request object.
         :rtype: str
         """
-        return f"Request(url={self.url}, method={self.method}, headers={self.headers}, body={self.body})"
+        # Headers carry Authorization and bodies can carry secret values; neither
+        # belongs in logs or tracebacks.
+        return f"Request(url={self.url}, method={self.method})"
