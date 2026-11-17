@@ -26,6 +26,8 @@ on:
     branches: [main]
     paths:
       - "fern/**"
+      # Merging a regeneration PR updates the document; that must not regenerate again.
+      - "!fern/openapi.json"
       - ".github/workflows/generate.yml"
 permissions:
   contents: read
@@ -81,7 +83,10 @@ jobs:
             echo "::error::Choose spec_ref or spec_url, not both."
             exit 1
           fi
-          if [[ -n "$SPEC_REF" ]]; then
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            # Configuration changes regenerate the committed contract, not the deployed one.
+            cp fern/openapi.json "$RUNNER_TEMP/openapi.json"
+          elif [[ -n "$SPEC_REF" ]]; then
             git fetch --no-tags -- origin "$SPEC_REF"
             git show FETCH_HEAD:fern/openapi.json > "$RUNNER_TEMP/openapi.json"
           else
