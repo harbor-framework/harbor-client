@@ -608,7 +608,6 @@ class PackagesClient(BaseService):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[RegistryVersionFile]:
         """list_version_files
@@ -623,8 +622,6 @@ class PackagesClient(BaseService):
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
         :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
@@ -638,7 +635,6 @@ class PackagesClient(BaseService):
         Validator(str).validate(ref, "ref")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
 
         resolved_config = self._get_resolved_config(
             self._list_version_files_config, request_options
@@ -662,7 +658,6 @@ class PackagesClient(BaseService):
                     .add_path("ref", ref)
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
-                    .add_query("offset", offset)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -942,7 +937,6 @@ class PackagesClient(BaseService):
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -955,8 +949,6 @@ class PackagesClient(BaseService):
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
         :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
         :param organization_id: organization_id, defaults to None
         :type organization_id: str, optional
         :param include_yanked: include_yanked, defaults to None
@@ -972,7 +964,6 @@ class PackagesClient(BaseService):
         Validator(PackagesListVersionCatalogRequestType).validate(type, "type")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
         Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(
             PackagesListVersionCatalogRequestIncludeYanked
@@ -997,7 +988,6 @@ class PackagesClient(BaseService):
                     )
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
-                    .add_query("offset", offset)
                     .add_query("type", type)
                     .add_query("organization_id", organization_id)
                     .add_query("include_yanked", include_yanked)
@@ -1416,7 +1406,6 @@ class RawPackagesClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[RegistryVersionFile]]:
         data = PackagesClient.list_version_files(
@@ -1430,7 +1419,6 @@ class RawPackagesClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1515,7 +1503,6 @@ class RawPackagesClient:
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1529,7 +1516,6 @@ class RawPackagesClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
@@ -1743,7 +1729,6 @@ class AsyncPackagesClient(PackagesClient):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[RegistryVersionFile]:  # type: ignore[override]
         sync_pager = super().list_version_files(
@@ -1756,7 +1741,6 @@ class AsyncPackagesClient(PackagesClient):
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1844,7 +1828,6 @@ class AsyncPackagesClient(PackagesClient):
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1857,7 +1840,6 @@ class AsyncPackagesClient(PackagesClient):
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
@@ -2085,7 +2067,6 @@ class AsyncRawPackagesClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[RegistryVersionFile]]:
         data = AsyncPackagesClient.list_version_files(
@@ -2099,7 +2080,6 @@ class AsyncRawPackagesClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -2184,7 +2164,6 @@ class AsyncRawPackagesClient:
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -2198,7 +2177,6 @@ class AsyncRawPackagesClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()

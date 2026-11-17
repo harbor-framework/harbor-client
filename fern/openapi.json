@@ -865,14 +865,6 @@
             "required": false
           },
           {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -1443,14 +1435,6 @@
           },
           {
             "name": "page_token",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "offset",
             "in": "query",
             "schema": {
               "type": "string"
@@ -8005,14 +7989,6 @@
             "required": false
           },
           {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
             "name": "search",
             "in": "query",
             "schema": {
@@ -9773,14 +9749,6 @@
           },
           {
             "name": "page_token",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "offset",
             "in": "query",
             "schema": {
               "type": "string"

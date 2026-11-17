@@ -9,15 +9,17 @@ TUS upload URLs can be retained in a caller-owned mapping to resume interrupted 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping, MutableMapping, Sequence
+from base64 import b64encode
+from collections.abc import Callable, Generator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 import hashlib
 from pathlib import Path
 import tempfile
 import tarfile
 import shutil
+import time
 from typing import Any, Literal
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 
@@ -232,58 +234,171 @@ def _finish_download(temporary: Path, target: Path, grant: Any) -> None:
         extracted.unlink(missing_ok=True)
 
 
-def _tus_upload(
-    grant: Any, source: Path, key: str, resume_urls: MutableMapping[str, str]
-) -> None:
+_TUS_RETRIES = 3
+_TUS_RETRY_DELAY = 1.0
+# Sends back the response to each request, or None after a retry delay.
+_TusStep = Generator[httpx.Request | float, Any, None]
+
+
+class _TusDone(Exception):
+    """The storage already holds these bytes (409); completion verifies them."""
+
+
+def _tus_offset(response: httpx.Response, current: int, size: int) -> int:
+    if response.status_code == 409:
+        raise _TusDone
     try:
-        from tusclient.client import TusClient
-    except ImportError:
-        raise StorageTransferError(
-            "Install harbor-client[tus] to use resumable uploads"
-        ) from None
+        offset = int(response.headers["Upload-Offset"])
+    except (KeyError, ValueError):
+        offset = -1
+    # A stalled or out-of-range offset would otherwise repeat the same request forever.
+    if not response.is_success or not current <= offset <= size:
+        raise StorageTransferError("Resumable storage transfer failed")
+    return offset
+
+
+def _tus_steps(
+    grant: Any, source: Path, key: str, resume_urls: MutableMapping[str, str]
+) -> _TusStep:
+    """Yield TUS 1.0 requests (or retry delays) over the SDK's isolated HTTP client."""
     url = _value(grant, "url")
     # Apply the same endpoint validation as HTTP without interpreting metadata.
     _request({"protocol": "http", "method": "PUT", "url": url, "headers": {}}, "PUT")
     chunk_size = _value(grant, "chunk_size")
-    # Fern may decode JSON numbers as floats. tuspy needs a whole byte count.
+    # Fern may decode JSON numbers as floats. TUS needs a whole byte count.
     if (
         not isinstance(chunk_size, (int, float))
         or chunk_size <= 0
         or chunk_size % 1 != 0
     ):
         raise StorageTransferError("Invalid resumable upload chunk size")
-    resume = resume_urls.get(key)
-    if resume and urlsplit(resume)[:2] != urlsplit(url)[:2]:
-        raise StorageTransferError(
-            "Resumable upload URL belongs to another storage origin"
-        )
-    try:
-        with source.open("rb") as stream:
-            uploader = TusClient(url, headers=dict(_value(grant, "headers"))).uploader(
-                file_stream=stream,
-                url=resume,
-                chunk_size=int(chunk_size),
-                metadata=dict(_value(grant, "metadata")),
-                retries=3,
-                retry_delay=1,
+
+    def same_origin(location: str) -> str:
+        if urlsplit(location)[:2] != urlsplit(url)[:2]:
+            raise StorageTransferError(
+                "Resumable upload URL belongs to another storage origin"
             )
-            if not uploader.url:
-                created = uploader.create_url()
-                if urlsplit(created)[:2] != urlsplit(url)[:2]:
-                    raise StorageTransferError(
-                        "Resumable upload URL belongs to another storage origin"
-                    )
-                uploader.set_url(created)
-            resume_urls[key] = uploader.url
-            uploader.upload()
+        return location
+
+    headers = {**dict(_value(grant, "headers")), "Tus-Resumable": "1.0.0"}
+    size = source.stat().st_size
+    resume = resume_urls.get(key)
+    offset = 0
+    if resume:
+        same_origin(resume)
+        response = yield httpx.Request("HEAD", resume, headers=headers)
+        if response.status_code in {404, 410}:
+            resume = None  # The session expired; start a new one.
+        else:
+            offset = _tus_offset(response, 0, size)
+    if not resume:
+        metadata = ",".join(
+            f"{name} {b64encode(str(value).encode()).decode('ascii')}"
+            for name, value in dict(_value(grant, "metadata")).items()
+        )
+        response = yield httpx.Request(
+            "POST",
+            url,
+            headers={
+                **headers,
+                "Upload-Length": str(size),
+                "Upload-Metadata": metadata,
+            },
+        )
+        if response.status_code == 409:
+            raise _TusDone
+        location = response.headers.get("Location")
+        if not response.is_success or location is None:
+            raise StorageTransferError("Resumable storage transfer failed")
+        resume = same_origin(urljoin(url, location))
+        resume_urls[key] = resume
+    retries = 0
+    with source.open("rb") as stream:
+        while offset < size:
+            stream.seek(offset)
+            try:
+                response = yield httpx.Request(
+                    "PATCH",
+                    resume,
+                    headers={
+                        **headers,
+                        "Content-Type": "application/offset+octet-stream",
+                        "Upload-Offset": str(offset),
+                    },
+                    content=stream.read(int(chunk_size)),
+                )
+            except httpx.TransportError:
+                response = None
+            if response is not None and (
+                response.is_success or response.status_code == 409
+            ):
+                offset = _tus_offset(response, offset + 1, size)
+                retries = 0
+                continue
+            if retries == _TUS_RETRIES:
+                raise StorageTransferError("Resumable storage transfer failed")
+            retries += 1
+            yield _TUS_RETRY_DELAY
+            response = yield httpx.Request("HEAD", resume, headers=headers)
+            offset = _tus_offset(response, 0, size)
+
+
+def _tus_upload(
+    http: httpx.Client,
+    grant: Any,
+    source: Path,
+    key: str,
+    resume_urls: MutableMapping[str, str],
+) -> None:
+    steps = _tus_steps(grant, source, key, resume_urls)
+    try:
+        step = next(steps)
+        while True:
+            if isinstance(step, float):
+                time.sleep(step)
+                step = steps.send(None)
+                continue
+            try:
+                response = http.send(step, auth=None)
+            except httpx.TransportError as error:
+                step = steps.throw(error)
+            else:
+                step = steps.send(response)
+    except (StopIteration, _TusDone):
+        return
     except StorageTransferError:
         raise
-    except Exception as error:
-        if getattr(error, "status_code", None) == 409:
-            # A racing immutable transfer can already have installed the bytes.
-            # Completion checks the expected hash, length, and object generation.
-            return
-        # tuspy diagnostics may contain signed URLs, metadata or response bodies.
+    except Exception:
+        # Transport diagnostics may contain signed URLs or metadata.
+        raise StorageTransferError("Resumable storage transfer failed") from None
+
+
+async def _async_tus_upload(
+    http: httpx.AsyncClient,
+    grant: Any,
+    source: Path,
+    key: str,
+    resume_urls: MutableMapping[str, str],
+) -> None:
+    steps = _tus_steps(grant, source, key, resume_urls)
+    try:
+        step = next(steps)
+        while True:
+            if isinstance(step, float):
+                await asyncio.sleep(step)
+                step = steps.send(None)
+                continue
+            try:
+                response = await http.send(step, auth=None)
+            except httpx.TransportError as error:
+                step = steps.throw(error)
+            else:
+                step = steps.send(response)
+    except (StopIteration, _TusDone):
+        return
+    except StorageTransferError:
+        raise
+    except Exception:
         raise StorageTransferError("Resumable storage transfer failed") from None
 
 
@@ -343,6 +458,7 @@ class StorageTransfers:
                         grant = _value(file, "upload")
                         if _value(grant, "protocol") == "tus":
                             _tus_upload(
+                                http,
                                 grant,
                                 source,
                                 f"{upload_id}/{_value(file, 'id')}",
@@ -444,7 +560,7 @@ class StorageTransfers:
 
 
 class AsyncStorageTransfers:
-    """Async workflows; TUS uses tuspy in a worker thread like Fern's transport."""
+    """Async workflows over the same isolated, redirect-free signed transfers."""
 
     def __init__(
         self,
@@ -498,8 +614,8 @@ class AsyncStorageTransfers:
                             )
                         grant = _value(file, "upload")
                         if _value(grant, "protocol") == "tus":
-                            await asyncio.to_thread(
-                                _tus_upload,
+                            await _async_tus_upload(
+                                http,
                                 grant,
                                 source,
                                 f"{upload_id}/{_value(file, 'id')}",

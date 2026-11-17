@@ -1,8 +1,12 @@
 """Exercise workflow boundaries, streaming, recovery, and credential isolation."""
 
+from contextlib import contextmanager
 import hashlib
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import io
 import tarfile
+import threading
+import time
 
 import httpx
 import pytest
@@ -468,64 +472,27 @@ def test_rejects_unsafe_transfer_urls(tmp_path, url):
     assert list(tmp_path.iterdir()) == []
 
 
-def test_tus_resume_uses_library_offsets_and_preserves_session_url(
-    tmp_path, monkeypatch
-):
-    pytest.importorskip("tusclient")
-    import requests
-    from tusclient.uploader import uploader as tus_uploader
+class TusApi(Api):
+    def __init__(self, url="https://storage.invalid/tus", chunk_size=2.0):
+        super().__init__()
+        self.url = url
+        self.chunk_size = chunk_size
 
-    class TusApi(Api):
-        def create_upload(self, *, request):
-            session = super().create_upload(request=request)
-            assert request["protocol"] == "tus"
-            session["files"][0]["upload"] = {
-                "protocol": "tus",
-                "url": "https://storage.invalid/tus",
-                "headers": {"x-signature": "capability"},
-                "metadata": {"objectName": "api-allocated-key"},
-                "chunk_size": 2.0,
-            }
-            return session
+    def create_upload(self, *, request):
+        session = super().create_upload(request=request)
+        assert request["protocol"] == "tus"
+        session["files"][0]["upload"] = {
+            "protocol": "tus",
+            "url": self.url,
+            "headers": {"x-signature": "capability"},
+            "metadata": {"objectName": "api-allocated-key"},
+            "chunk_size": self.chunk_size,
+        }
+        return session
 
-    calls = []
-    uploaded = bytearray()
-    fail = True
 
-    def wire(_self, method, url, **kwargs):
-        headers = kwargs["headers"]
-        assert headers["x-signature"] == "capability"
-        assert "Authorization" not in headers
-        assert headers["Tus-Resumable"] == "1.0.0"
-        calls.append((method.lower(), url))
-        response = requests.Response()
-        response._content = b""
-        if method.lower() == "post":
-            assert headers["upload-length"] == "5"
-            assert headers["upload-metadata"].startswith("objectName ")
-            response.status_code = 201
-            response.headers["Location"] = "/tus/session"
-        elif method.lower() == "head":
-            response.status_code = 200
-            response.headers["Upload-Offset"] = str(len(uploaded))
-        else:
-            assert method.lower() == "patch"
-            assert int(headers["upload-offset"]) == len(uploaded)
-            if fail and len(uploaded) >= 2:
-                raise requests.Timeout("response may contain secret signed URL")
-            uploaded.extend(kwargs["data"])
-            response.status_code = 204
-            response.headers["Upload-Offset"] = str(len(uploaded))
-        return response
-
-    monkeypatch.setattr(requests.Session, "request", wire)
-    monkeypatch.setattr(tus_uploader.time, "sleep", lambda _seconds: None)
-    source = tmp_path / "archive"
-    source.write_bytes(b"bytes")
-    api = TusApi()
-    resume_urls = {}
-    client = StorageTransfers(api, resume_urls=resume_urls)
-    arguments = {
+def tus_arguments(source):
+    return {
         "kind": "task",
         "request_id": "same",
         "metadata": {},
@@ -533,21 +500,206 @@ def test_tus_resume_uses_library_offsets_and_preserves_session_url(
         "protocol": "tus",
     }
 
+
+def test_tus_resumes_from_server_offsets_and_preserves_session_url(
+    tmp_path, monkeypatch
+):
+    calls = []
+    uploaded = bytearray()
+    fail = True
+    expired = set()
+
+    def handler(request):
+        headers = request.headers
+        assert headers["x-signature"] == "capability"
+        assert "Authorization" not in headers
+        assert headers["Tus-Resumable"] == "1.0.0"
+        calls.append((request.method, str(request.url)))
+        if request.method == "POST":
+            assert headers["Upload-Length"] == "5"
+            assert headers["Upload-Metadata"] == "objectName YXBpLWFsbG9jYXRlZC1rZXk="
+            session = "/tus/fresh" if expired else "/tus/session"
+            return httpx.Response(201, headers={"Location": session})
+        if str(request.url) in expired:
+            return httpx.Response(404)
+        if request.method == "HEAD":
+            return httpx.Response(200, headers={"Upload-Offset": str(len(uploaded))})
+        assert request.method == "PATCH"
+        assert headers["Content-Type"] == "application/offset+octet-stream"
+        assert int(headers["Upload-Offset"]) == len(uploaded)
+        if fail and len(uploaded) >= 2:
+            raise httpx.ReadTimeout("response may contain secret signed URL")
+        uploaded.extend(request.content)
+        return httpx.Response(204, headers={"Upload-Offset": str(len(uploaded))})
+
+    delays = []
+    monkeypatch.setattr("harbor_client.transfers.time.sleep", delays.append)
+    source = tmp_path / "archive"
+    source.write_bytes(b"bytes")
+    api = TusApi()
+    resume_urls = {}
+    client = StorageTransfers(
+        api, resume_urls=resume_urls, transport=httpx.MockTransport(handler)
+    )
+
     with pytest.raises(
         StorageTransferError, match="Resumable storage transfer failed"
     ) as failure:
-        client.upload(**arguments)
+        client.upload(**tus_arguments(source))
     assert "secret" not in str(failure.value)
     assert failure.value.upload_id == "upload"
     assert uploaded == b"by"
+    assert delays == [1.0] * 3
     assert resume_urls == {"upload/0": "https://storage.invalid/tus/session"}
     assert [name for name, _ in api.calls] == ["prepare"]
 
     fail = False
-    assert client.upload(**arguments)["state"] == "completed"
+    assert client.upload(**tus_arguments(source))["state"] == "completed"
     assert uploaded == b"bytes"
-    assert sum(method == "post" for method, _ in calls) == 1
+    assert [method for method, _ in calls].count("POST") == 1
     assert [name for name, _ in api.calls] == ["prepare", "prepare", "complete"]
+
+    # An expired session is replaced instead of failing every later upload.
+    expired.add("https://storage.invalid/tus/session")
+    uploaded.clear()
+    assert client.upload(**tus_arguments(source))["state"] == "completed"
+    assert uploaded == b"bytes"
+    assert [method for method, _ in calls].count("POST") == 2
+    assert resume_urls == {"upload/0": "https://storage.invalid/tus/fresh"}
+
+
+@pytest.mark.parametrize("offset", ["2", "1", "9", None])
+def test_tus_rejects_stalled_or_out_of_range_offsets(tmp_path, monkeypatch, offset):
+    patches = []
+
+    def handler(request):
+        if request.method == "POST":
+            return httpx.Response(201, headers={"Location": "/tus/session"})
+        if request.method == "HEAD":
+            return httpx.Response(200, headers={"Upload-Offset": "2"})
+        patches.append(request)
+        if not patches[1:]:
+            return httpx.Response(204, headers={"Upload-Offset": "2"})
+        return httpx.Response(
+            204, headers={} if offset is None else {"Upload-Offset": offset}
+        )
+
+    monkeypatch.setattr("harbor_client.transfers._TUS_RETRY_DELAY", 0.0)
+    source = tmp_path / "archive"
+    source.write_bytes(b"bytes")
+    client = StorageTransfers(TusApi(), transport=httpx.MockTransport(handler))
+    with pytest.raises(StorageTransferError, match="Resumable"):
+        client.upload(**tus_arguments(source))
+    assert len(patches) == 2
+
+
+@contextmanager
+def tus_server(behavior):
+    """Serve TUS on a real loopback socket; behavior(handler) answers each request."""
+    requests = []
+    stop = threading.Event()
+
+    class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
+
+        def handle_one_request(self):
+            try:
+                super().handle_one_request()
+            except (BrokenPipeError, ConnectionResetError):
+                self.close_connection = True
+
+        def do_any(self):
+            length = int(self.headers.get("Content-Length") or 0)
+            body = self.rfile.read(length)
+            requests.append((self.command, self.path, body))
+            behavior(self, stop)
+
+        do_POST = do_HEAD = do_PATCH = do_any
+
+        def log_message(self, *_):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    server.daemon_threads = True
+    thread = threading.Thread(
+        target=server.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True
+    )
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_port}", requests
+    finally:
+        stop.set()
+        server.shutdown()
+        server.server_close()
+
+
+def reply(handler, status, headers=()):
+    handler.send_response(status)
+    for name, value in headers:
+        handler.send_header(name, value)
+    handler.send_header("Content-Length", "0")
+    handler.end_headers()
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_tus_upload_times_out_on_a_silent_storage_server(
+    tmp_path, monkeypatch, asynchronous
+):
+    def behavior(handler, stop):
+        if handler.command == "POST":
+            reply(handler, 201, [("Location", "/files/one")])
+        else:
+            stop.wait(10)  # Never answer the PATCH or HEAD.
+
+    monkeypatch.setattr("harbor_client.transfers._TUS_RETRY_DELAY", 0.0)
+    source = tmp_path / "archive"
+    source.write_bytes(b"bytes")
+    with tus_server(behavior) as (url, requests):
+        api = TusApi(f"{url}/files", chunk_size=5)
+        started = time.monotonic()
+        with pytest.raises(StorageTransferError, match="Resumable"):
+            if asynchronous:
+                await AsyncStorageTransfers(AsyncApi(api), timeout=0.2).upload(
+                    **tus_arguments(source)
+                )
+            else:
+                StorageTransfers(api, timeout=0.2).upload(**tus_arguments(source))
+        assert time.monotonic() - started < 5
+        assert requests[0][:2] == ("POST", "/files")
+        assert requests[1][0] == "PATCH"
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("redirected", ["POST", "PATCH"])
+async def test_tus_does_not_follow_redirects_with_file_bytes(
+    tmp_path, monkeypatch, asynchronous, redirected
+):
+    def elsewhere(handler, _stop):
+        reply(handler, 204, [("Upload-Offset", "5"), ("Location", "/x")])
+
+    monkeypatch.setattr("harbor_client.transfers._TUS_RETRY_DELAY", 0.0)
+    source = tmp_path / "archive"
+    source.write_bytes(b"bytes")
+    with tus_server(elsewhere) as (other, received):
+
+        def behavior(handler, _stop):
+            if handler.command == redirected:
+                reply(handler, 307, [("Location", f"{other}/stolen")])
+            elif handler.command == "POST":
+                reply(handler, 201, [("Location", "/files/one")])
+            else:
+                reply(handler, 200, [("Upload-Offset", "0")])
+
+        with tus_server(behavior) as (url, _requests):
+            api = TusApi(f"{url}/files", chunk_size=5)
+            with pytest.raises(StorageTransferError):
+                if asynchronous:
+                    await AsyncStorageTransfers(AsyncApi(api), timeout=2).upload(
+                        **tus_arguments(source)
+                    )
+                else:
+                    StorageTransfers(api, timeout=2).upload(**tus_arguments(source))
+    assert received == []
 
 
 def test_generated_sdk_negotiates_transfers_without_forwarding_harbor_credentials(

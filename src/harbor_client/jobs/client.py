@@ -1382,7 +1382,6 @@ class JobsClient(BaseService):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -1400,8 +1399,6 @@ class JobsClient(BaseService):
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
         :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
         :param search: search, defaults to None
         :type search: str, optional
         :param agents: agents, defaults to None
@@ -1427,7 +1424,6 @@ class JobsClient(BaseService):
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
         Validator(str).is_optional().validate(search, "search")
         Validator(str).is_optional().validate(agents, "agents")
         Validator(str).is_optional().validate(providers, "providers")
@@ -1458,7 +1454,6 @@ class JobsClient(BaseService):
                     .add_path("job_id", job_id)
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
-                    .add_query("offset", offset)
                     .add_query("search", search)
                     .add_query("agents", agents)
                     .add_query("providers", providers)
@@ -2029,7 +2024,6 @@ class RawJobsClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2048,7 +2042,6 @@ class RawJobsClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2456,7 +2449,6 @@ class AsyncJobsClient(JobsClient):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2474,7 +2466,6 @@ class AsyncJobsClient(JobsClient):
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2907,7 +2898,6 @@ class AsyncRawJobsClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2926,7 +2916,6 @@ class AsyncRawJobsClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
