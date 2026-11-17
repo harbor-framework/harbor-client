@@ -9,7 +9,10 @@ import httpx
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from harbor_client import AsyncHarborAPIClient, HarborAPIClient
+from harbor_client.base_client import (
+    AsyncBaseHarborAPIClient as AsyncHarborAPIClient,
+    BaseHarborAPIClient as HarborAPIClient,
+)
 from harbor_client.net.transport.api_error import ApiError
 from harbor_client.net.transport.pagination import SyncPager, AsyncPager
 from harbor_client.types import (

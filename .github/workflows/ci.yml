@@ -30,8 +30,8 @@ jobs:
           node --input-type=module -e 'import { status } from "@fern-api/replay"; const s=status(process.cwd()); if (!s.initialized || s.unresolvedCount > 0) process.exit(1);'
       - run: uv venv
       - run: uv pip install -r requirements-dev.txt '.[tus]'
-      - run: .venv/bin/ruff check . src/harbor_client/validation.py src/harbor_client/transfers.py
-      - run: .venv/bin/ruff format --check . src/harbor_client/validation.py src/harbor_client/transfers.py
+      - run: .venv/bin/ruff check . src/harbor_client/validation.py src/harbor_client/transfers.py src/harbor_client/client.py
+      - run: .venv/bin/ruff format --check . src/harbor_client/validation.py src/harbor_client/transfers.py src/harbor_client/client.py
       - run: .venv/bin/ty check
       - run: .venv/bin/pytest tests
       - run: uv build
@@ -43,10 +43,17 @@ jobs:
           cd "${RUNNER_TEMP}"
           "${GITHUB_WORKSPACE}/wheel-check/bin/python" - <<'PYCODE'
           from importlib.resources import files
-          from harbor_client import HarborAPIClient, AsyncHarborAPIClient
+          from harbor_client import HarborAPIClient, AsyncHarborAPIClient, ContractError, UploadFile, StorageTransferError
+          from importlib.metadata import metadata
+          if metadata("harbor-framework-client")["Requires-Python"] != ">=3.12":
+              raise RuntimeError("Generated packaging lost the minimum Python requirement")
           package = files("harbor_client")
           for name in ("__init__.pyi", "types/__init__.pyi", "_openapi.json.gz", "py.typed"):
               if not package.joinpath(name).is_file():
                   raise RuntimeError(f"Missing SDK package data: {name}")
+          exports = package.joinpath("__init__.pyi").read_text()
+          for name in ("HarborAPIClient", "AsyncHarborAPIClient", "ContractError", "UploadFile", "StorageTransferError", "HarborAPIClientEnvironment"):
+              if f" as {name}\n" not in exports:
+                  raise RuntimeError(f"Missing typed SDK export: {name}")
           PYCODE
           "${GITHUB_WORKSPACE}/wheel-check/bin/python" -m pytest "${GITHUB_WORKSPACE}/tests" -o pythonpath= -q

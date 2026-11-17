@@ -25,7 +25,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -120,7 +120,7 @@ class ApiKeysClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/api-keys",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/api-keys",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -191,7 +191,7 @@ class ApiKeysClient(BaseService):
         Validator(ApiKeyCreate).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/api-keys",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/api-keys",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -239,7 +239,7 @@ class ApiKeysClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/api-keys/{{key_id}}/revoke",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/api-keys/{{key_id}}/revoke",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )

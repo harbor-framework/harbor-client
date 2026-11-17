@@ -107,8 +107,17 @@ class BaseError(Exception):
 
     def __str__(self) -> str:
         """String representation of the error."""
-        message = getattr(self, "message", None)
+        # Problem bodies (RFC 9457) carry their message in `detail`, falling back to `title`.
+        message = (
+            getattr(self, "message", None)
+            or getattr(self, "detail", None)
+            or getattr(self, "title", None)
+        )
         status = getattr(self, "status", None)
+        # Problem-body statuses are float enums; print 404, not 404.0.
+        status = getattr(status, "value", status)
+        if isinstance(status, float) and status.is_integer():
+            status = int(status)
         if message and status:
             return f"{status}: {message}"
         elif message:

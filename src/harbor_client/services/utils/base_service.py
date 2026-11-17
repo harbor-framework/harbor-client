@@ -31,7 +31,7 @@ from ...core.request_options import to_sdk_config
 
 if TYPE_CHECKING:
     from ...net.sdk_config import SdkConfig, RetryConfig
-    from ...net.environment import HarborAPIClientEnvironment
+    from ...net.environment import HarborApiClientEnvironment
 
 
 _BaseServiceT = TypeVar("_BaseServiceT", bound="BaseService")
@@ -57,7 +57,7 @@ class BaseService:
         """
         Initializes a BaseService instance.
 
-        :param base_url: The base URL for the service, as a string or an HarborAPIClientEnvironment enum member. Defaults to None.
+        :param base_url: The base URL for the service, as a string or an HarborApiClientEnvironment enum member. Defaults to None.
         :param client_wrapper: Fern's handle on another client's configuration. When given, this
             client takes the base URL, transport, credentials and config from the wrapper's client,
             and the other arguments are ignored, the way Fern builds a resource client from the
@@ -174,11 +174,11 @@ class BaseService:
 
         return self
 
-    def set_base_url(self, base_url: Union["HarborAPIClientEnvironment", str]):
+    def set_base_url(self, base_url: Union["HarborApiClientEnvironment", str]):
         """
         Sets the base URL for the service.
 
-        :param base_url: The base URL to be set, as a string or an HarborAPIClientEnvironment enum member.
+        :param base_url: The base URL to be set, as a string or an HarborApiClientEnvironment enum member.
         """
         self.base_url = self._normalize_base_url(base_url)
 
@@ -186,14 +186,14 @@ class BaseService:
 
     @staticmethod
     def _normalize_base_url(
-        base_url: Union["HarborAPIClientEnvironment", str, None],
+        base_url: Union["HarborApiClientEnvironment", str, None],
     ) -> Optional[str]:
         """
         Coerces a base URL to its string form. SdkConfig documents `base_url` as either a URL
-        string or an HarborAPIClientEnvironment enum member, so every entry point that assigns `self.base_url`
+        string or an HarborApiClientEnvironment enum member, so every entry point that assigns `self.base_url`
         has to accept both or the setter and the constructor disagree on the property's type.
 
-        :param base_url: A URL string, an HarborAPIClientEnvironment enum member, or None.
+        :param base_url: A URL string, an HarborApiClientEnvironment enum member, or None.
         :return: The URL without a trailing slash, or the input unchanged when it is empty.
         :rtype: Optional[str]
         """
@@ -208,7 +208,7 @@ class BaseService:
     ) -> Optional[str]:
         """
         Resolves the base URL for a single request: a scoped `base_url`, then the service's own
-        base URL, then a scoped `environment`. Each accepts a string or an HarborAPIClientEnvironment enum member.
+        base URL, then a scoped `environment`. Each accepts a string or an HarborApiClientEnvironment enum member.
 
         `self.base_url` MUST come before `environment`. The generator delivers an operation-level
         server through `resolved_config['environment']`, so ordering `environment` first makes an

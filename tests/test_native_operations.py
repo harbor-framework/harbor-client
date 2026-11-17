@@ -7,6 +7,7 @@ import re
 import httpx
 import pytest
 
+from harbor_client import AsyncHarborAPIClient, HarborAPIClient
 from harbor_client.validation import async_client, sync_client
 from test_contract import SPEC, example
 
@@ -72,8 +73,9 @@ def terminal_page(value):
     "path,verb,operation", OPERATIONS, ids=[op[2]["operationId"] for op in OPERATIONS]
 )
 @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
+@pytest.mark.parametrize("public", [False, True], ids=["compatibility", "public"])
 async def test_every_native_operation_serializes_auth_and_decodes_its_response(
-    path, verb, operation, asynchronous
+    path, verb, operation, asynchronous, public
 ):
     status, response = next(
         (int(code), response)
@@ -98,7 +100,8 @@ async def test_every_native_operation_serializes_auth_and_decodes_its_response(
         )
 
     if asynchronous:
-        async with async_client(
+        factory = AsyncHarborAPIClient if public else async_client
+        async with factory(
             token="opaque-explicit-key", transport=httpx.MockTransport(handler)
         ) as client:
             method = getattr(getattr(client, snake(namespace)), snake(name))
@@ -108,7 +111,8 @@ async def test_every_native_operation_serializes_auth_and_decodes_its_response(
             else:
                 await result
     else:
-        with sync_client(
+        factory = HarborAPIClient if public else sync_client
+        with factory(
             token="opaque-explicit-key", transport=httpx.MockTransport(handler)
         ) as client:
             method = getattr(getattr(client, snake(namespace)), snake(name))

@@ -39,7 +39,16 @@ def generate_export_stubs(directory: Path) -> None:
     )
     exports = []
     public = set()
-    for node in ast.parse((directory / "__init__.py").read_text()).body:
+    body = ast.parse((directory / "__init__.py").read_text()).body
+    imports = list(body)
+    for node in body:
+        if (
+            isinstance(node, ast.If)
+            and isinstance(node.test, ast.Name)
+            and node.test.id == "TYPE_CHECKING"
+        ):
+            imports.extend(node.body)
+    for node in imports:
         if isinstance(node, ast.ImportFrom):
             for item in node.names:
                 alias = item.asname or item.name

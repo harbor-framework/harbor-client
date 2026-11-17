@@ -57,7 +57,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -301,7 +301,7 @@ class PackagesClient(BaseService):
         Validator(PackagesSetVisibilityRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/visibility",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/visibility",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -385,7 +385,7 @@ class PackagesClient(BaseService):
         )
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access/organizations/{{target_organization_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access/organizations/{{target_organization_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -445,7 +445,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/access",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -507,7 +507,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -570,7 +570,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/manifest",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/manifest",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -608,7 +608,6 @@ class PackagesClient(BaseService):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[RegistryVersionFile]:
         """list_version_files
@@ -623,8 +622,6 @@ class PackagesClient(BaseService):
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
         :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
@@ -638,7 +635,6 @@ class PackagesClient(BaseService):
         Validator(str).validate(ref, "ref")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
 
         resolved_config = self._get_resolved_config(
             self._list_version_files_config, request_options
@@ -649,7 +645,7 @@ class PackagesClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/files",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions/{{ref}}/files",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -662,7 +658,6 @@ class PackagesClient(BaseService):
                     .add_path("ref", ref)
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
-                    .add_query("offset", offset)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -718,7 +713,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -786,7 +781,7 @@ class PackagesClient(BaseService):
         Validator(TagPackageVersionRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags/{{tag}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags/{{tag}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -858,7 +853,7 @@ class PackagesClient(BaseService):
         Validator(ReserveTemporaryPackageRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/reserve-temporary",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/reserve-temporary",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -915,7 +910,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/private-task-count",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/private-task-count",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -942,7 +937,6 @@ class PackagesClient(BaseService):
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -955,8 +949,6 @@ class PackagesClient(BaseService):
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
         :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
         :param organization_id: organization_id, defaults to None
         :type organization_id: str, optional
         :param include_yanked: include_yanked, defaults to None
@@ -972,7 +964,6 @@ class PackagesClient(BaseService):
         Validator(PackagesListVersionCatalogRequestType).validate(type, "type")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
         Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(
             PackagesListVersionCatalogRequestIncludeYanked
@@ -987,7 +978,7 @@ class PackagesClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -997,7 +988,6 @@ class PackagesClient(BaseService):
                     )
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
-                    .add_query("offset", offset)
                     .add_query("type", type)
                     .add_query("organization_id", organization_id)
                     .add_query("include_yanked", include_yanked)
@@ -1054,7 +1044,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1130,7 +1120,7 @@ class PackagesClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/versions",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1202,7 +1192,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/archive",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/archive",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1266,7 +1256,7 @@ class PackagesClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/files/{{file}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/versions/{{version_id}}/files/{{file}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1416,7 +1406,6 @@ class RawPackagesClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[RegistryVersionFile]]:
         data = PackagesClient.list_version_files(
@@ -1430,7 +1419,6 @@ class RawPackagesClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1515,7 +1503,6 @@ class RawPackagesClient:
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1529,7 +1516,6 @@ class RawPackagesClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
@@ -1743,7 +1729,6 @@ class AsyncPackagesClient(PackagesClient):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[RegistryVersionFile]:  # type: ignore[override]
         sync_pager = super().list_version_files(
@@ -1756,7 +1741,6 @@ class AsyncPackagesClient(PackagesClient):
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1844,7 +1828,6 @@ class AsyncPackagesClient(PackagesClient):
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1857,7 +1840,6 @@ class AsyncPackagesClient(PackagesClient):
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
@@ -2085,7 +2067,6 @@ class AsyncRawPackagesClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[RegistryVersionFile]]:
         data = AsyncPackagesClient.list_version_files(
@@ -2099,7 +2080,6 @@ class AsyncRawPackagesClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -2184,7 +2164,6 @@ class AsyncRawPackagesClient:
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -2198,7 +2177,6 @@ class AsyncRawPackagesClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()

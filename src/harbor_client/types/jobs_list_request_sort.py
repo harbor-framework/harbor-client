@@ -12,8 +12,6 @@ JobsListRequestSort = typing.Union[
         "-state",
         "created_at",
         "-created_at",
-        "updated_at",
-        "-updated_at",
         "started_at",
         "-started_at",
         "finished_at",

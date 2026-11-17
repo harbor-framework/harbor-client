@@ -413,6 +413,8 @@ def test_checked_client_follows_a_new_contract_version(tmp_path, monkeypatch):
     )
     module = importlib.util.module_from_spec(module_spec)
     module_spec.loader.exec_module(module)
+    # Emulate importing the public client against the replacement SDK contract.
+    monkeypatch.setattr("harbor_client.client._http", module._http)
     sent = []
 
     def handler(request):

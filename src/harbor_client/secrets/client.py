@@ -49,7 +49,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -165,7 +165,6 @@ class SecretsClient(BaseService):
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[SecretMetadata]:
         """list
@@ -180,8 +179,6 @@ class SecretsClient(BaseService):
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
         :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
@@ -197,7 +194,6 @@ class SecretsClient(BaseService):
         )
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
 
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
@@ -206,7 +202,7 @@ class SecretsClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -219,7 +215,6 @@ class SecretsClient(BaseService):
                     .add_query("status", status_filter)
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
-                    .add_query("offset", offset)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -297,7 +292,7 @@ class SecretsClient(BaseService):
         Validator(SecretsUpsertRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -370,7 +365,7 @@ class SecretsClient(BaseService):
         Validator(SecretsRevokeRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/revoke",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/revoke",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -439,7 +434,7 @@ class SecretsClient(BaseService):
         Validator(SecretsPreflightRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/preflight",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/preflight",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -498,7 +493,7 @@ class SecretsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -582,7 +577,7 @@ class SecretsClient(BaseService):
         )
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -641,7 +636,7 @@ class SecretsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials/{{credential_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials/{{credential_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -691,7 +686,6 @@ class RawSecretsClient:
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[SecretMetadata]]:
         data = SecretsClient.list(
@@ -705,7 +699,6 @@ class RawSecretsClient:
                         "status_filter": status_filter,
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -911,7 +904,6 @@ class AsyncSecretsClient(SecretsClient):
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[SecretMetadata]:  # type: ignore[override]
         sync_pager = super().list(
@@ -924,7 +916,6 @@ class AsyncSecretsClient(SecretsClient):
                         "status_filter": status_filter,
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1122,7 +1113,6 @@ class AsyncRawSecretsClient:
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[SecretMetadata]]:
         data = AsyncSecretsClient.list(
@@ -1136,7 +1126,6 @@ class AsyncRawSecretsClient:
                         "status_filter": status_filter,
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                     }.items()
                     if v is not SENTINEL
                 }

@@ -6,7 +6,7 @@ from enum import Enum
 from urllib.parse import urlparse
 
 
-class HarborAPIClientEnvironment(Enum):
+class HarborApiClientEnvironment(Enum):
     """The environments available for the SDK"""
 
     DEFAULT = "https://api.harborframework.com/functions/v1/api"
@@ -27,3 +27,6 @@ class HarborAPIClientEnvironment(Enum):
     def url(self):
         """Get the base URL for this environment"""
         return self._url
+
+# Preserve the established environment import across generator naming changes.
+HarborAPIClientEnvironment = HarborApiClientEnvironment

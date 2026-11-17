@@ -62,7 +62,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -324,7 +324,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -402,7 +402,7 @@ class JobsClient(BaseService):
         Validator(UpdateJobSharingRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -453,7 +453,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/trial-status",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/trial-status",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -503,7 +503,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -561,7 +561,7 @@ class JobsClient(BaseService):
         Validator(JobsRenameRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -619,7 +619,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/artifacts",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/artifacts",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -703,7 +703,7 @@ class JobsClient(BaseService):
         Validator(SubmitJobRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/submit",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/submit",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -763,7 +763,7 @@ class JobsClient(BaseService):
         Validator(DeleteJobsRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/delete",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/delete",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -835,7 +835,7 @@ class JobsClient(BaseService):
         Validator(JobsTransferRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/transfer",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/transfer",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -906,7 +906,7 @@ class JobsClient(BaseService):
         Validator(JobsCopyRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{source_job_id}}/copy",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{source_job_id}}/copy",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -963,7 +963,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1021,7 +1021,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1088,7 +1088,7 @@ class JobsClient(BaseService):
         Validator(CancelJobRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1205,7 +1205,7 @@ class JobsClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1335,7 +1335,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/filters",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/filters",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1382,7 +1382,6 @@ class JobsClient(BaseService):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -1400,8 +1399,6 @@ class JobsClient(BaseService):
         :type page_size: str, optional
         :param page_token: page_token, defaults to None
         :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
         :param search: search, defaults to None
         :type search: str, optional
         :param agents: agents, defaults to None
@@ -1427,7 +1424,6 @@ class JobsClient(BaseService):
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
         Validator(str).is_optional().validate(search, "search")
         Validator(str).is_optional().validate(agents, "agents")
         Validator(str).is_optional().validate(providers, "providers")
@@ -1447,7 +1443,7 @@ class JobsClient(BaseService):
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/tasks",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/tasks",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1458,7 +1454,6 @@ class JobsClient(BaseService):
                     .add_path("job_id", job_id)
                     .add_query("page_size", page_size)
                     .add_query("page_token", page_token)
-                    .add_query("offset", offset)
                     .add_query("search", search)
                     .add_query("agents", agents)
                     .add_query("providers", providers)
@@ -1539,7 +1534,7 @@ class JobsClient(BaseService):
         Validator(ResultJobCreate).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/import",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/import",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1598,7 +1593,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/overview",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/overview",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1649,7 +1644,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/comparisons",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/comparisons",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -2029,7 +2024,6 @@ class RawJobsClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2048,7 +2042,6 @@ class RawJobsClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2456,7 +2449,6 @@ class AsyncJobsClient(JobsClient):
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2474,7 +2466,6 @@ class AsyncJobsClient(JobsClient):
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2907,7 +2898,6 @@ class AsyncRawJobsClient:
         *,
         page_size: str = SENTINEL,
         page_token: str = SENTINEL,
-        offset: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2926,7 +2916,6 @@ class AsyncRawJobsClient:
                     for k, v in {
                         "page_size": page_size,
                         "page_token": page_token,
-                        "offset": offset,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
