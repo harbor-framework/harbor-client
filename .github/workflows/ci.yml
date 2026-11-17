@@ -3,6 +3,11 @@ on:
   workflow_call:
   pull_request:
   workflow_dispatch:
+    inputs:
+      replay_base:
+        description: Base branch whose Replay patches this ref must keep, such as a regeneration PR's base
+        type: string
+        default: ""
   push:
     branches: [main]
 permissions:
@@ -28,6 +33,26 @@ jobs:
       - name: Reject unresolved native Replay patches
         run: |
           node --input-type=module -e 'import { status } from "@fern-api/replay"; const s=status(process.cwd()); if (!s.initialized || s.unresolvedCount > 0) process.exit(1);'
+      - name: Reject Replay patches dropped or skipped since the base branch
+        env:
+          REPLAY_BASE: ${{ github.base_ref || inputs.replay_base }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$REPLAY_BASE" ]]; then
+            exit 0
+          fi
+          git fetch --no-tags origin "refs/heads/$REPLAY_BASE"
+          base=$(git merge-base FETCH_HEAD HEAD)
+          patch_ids() { git show "$1:.fern/replay.lock" | sed -n 's/^  - id: //p' | sort; }
+          dropped=$(comm -23 <(patch_ids "$base") <(patch_ids HEAD))
+          if [[ -n "$dropped" ]]; then
+            echo "::error::Replay patches on $REPLAY_BASE are missing from this branch: $(echo $dropped). Restore them, or retire an obsolete patch deliberately with Fern's Replay tools."
+            exit 1
+          fi
+          if git log --format=%s "$base..HEAD" | grep -F '(replay skipped)'; then
+            echo "::error::Fern skipped Replay for this generation, so no customizations were applied."
+            exit 1
+          fi
       - run: uv venv
       - run: uv pip install -r requirements-dev.txt '.[tus]'
       - run: .venv/bin/ruff check . src/harbor_client/validation.py src/harbor_client/transfers.py src/harbor_client/client.py
