@@ -22,6 +22,10 @@ on:
         description: Regenerate even when the API document is unchanged
         type: boolean
         default: false
+  # Daily check of the deployed API document; does nothing when it is unchanged.
+  # Fern's sync-openapi action needs generators.yml, which this sdk-config setup does not use.
+  schedule:
+    - cron: "17 8 * * *"
   push:
     branches: [main]
     paths:
