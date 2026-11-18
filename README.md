@@ -100,7 +100,7 @@ Use `AsyncStorageTransfers` with `AsyncHarborAPIClient`. Upload sources must sta
 
 ## Reference
 
-[reference.md](https://github.com/harbor-framework/harbor-client/blob/main/reference.md) lists every resource and method. Maintainers: see [CONTRIBUTING.md](https://github.com/harbor-framework/harbor-client/blob/main/CONTRIBUTING.md) for regeneration, custom code and releases.
+[reference.md](https://github.com/harbor-framework/harbor-client/blob/main/reference.md) lists every resource and method.
 
 ## License
 

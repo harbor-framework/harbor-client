@@ -20,6 +20,5 @@ package-lock.json
 MANIFEST.in
 fern/
 README.md
-CONTRIBUTING.md
 src/harbor_client/_openapi.json.gz
 src/harbor_client/py.typed
