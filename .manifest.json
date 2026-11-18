@@ -58,6 +58,27 @@
       "moduleName": "harbor_client",
       "description": "Typed synchronous and asynchronous clients for the Harbor API.",
       "repository": "https://github.com/harbor-framework/harbor-client",
+      "classifiers": [
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Typing :: Typed"
+      ],
+      "projectUrls": [
+        {
+          "label": "Homepage",
+          "url": "https://harborframework.com"
+        },
+        {
+          "label": "Issues",
+          "url": "https://github.com/harbor-framework/harbor-client/issues"
+        }
+      ],
       "extraDependencies": [
         {
           "name": "httpx",
