@@ -112,6 +112,23 @@ targets:
       # Emit [project.urls] in every generation mode, not only GitHub delivery,
       # so preview and published generations agree for Replay's 3-way merge.
       repository: https://github.com/harbor-framework/harbor-client
+      # Python 6.17.0 renders `license` as "undefined"; the classifier and the
+      # bundled LICENSE file carry the license instead.
+      classifiers:
+        - "Development Status :: 3 - Alpha"
+        - "Intended Audience :: Developers"
+        - "License :: OSI Approved :: Apache Software License"
+        - "Operating System :: OS Independent"
+        - "Programming Language :: Python :: 3"
+        - "Programming Language :: Python :: 3 :: Only"
+        - "Programming Language :: Python :: 3.12"
+        - "Programming Language :: Python :: 3.13"
+        - "Typing :: Typed"
+      projectUrls:
+        - label: Homepage
+          url: https://harborframework.com
+        - label: Issues
+          url: https://github.com/harbor-framework/harbor-client/issues
       moduleName: harbor_client
       description: Typed synchronous and asynchronous clients for the Harbor API.
       extraDependencies:
