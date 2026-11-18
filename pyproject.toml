@@ -1,3 +1,9 @@
+[project.optional-dependencies]
+tus = ["tuspy>=1.1.0,<2"]
+
+[tool.setuptools.package-data]
+harbor_client = ["py.typed", "_openapi.json.gz", "**/*.pyi"]
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
@@ -22,7 +28,8 @@ classifiers = [
 dependencies = [
     "requests>=2.31.0",
     "pydantic>=2.14.0,<3",
-    "httpx>=0.21.2"
+    "httpx>=0.27.0",
+    "jsonschema>=4.23.0"
 ]
 
 [project.urls]
