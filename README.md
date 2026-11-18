@@ -1,48 +1,107 @@
 # Harbor API Python SDK
 
-Install the independently versioned `harbor-framework-client` package and use `HarborAPIClient` or `AsyncHarborAPIClient`. A package release has not been published yet; development consumers pin this repository to a commit.
+Typed synchronous and asynchronous clients for the [Harbor](https://harborframework.com) API.
+
+```sh
+pip install harbor-framework-client
+```
+
+The distribution is named `harbor-framework-client` and the import package is `harbor_client`. The unrelated `harbor-client` project on PyPI is a different package. Python 3.12 or newer is required. Install the `tus` extra for resumable uploads: `pip install "harbor-framework-client[tus]"`.
+
+## Quickstart
 
 ```python
 from harbor_client import HarborAPIClient
 
 with HarborAPIClient(token="your-api-key") as client:
-    for job in client.jobs.list():
+    for job in client.jobs.list(state="running"):
         print(job.id, job.name)
 ```
 
-Use the same root entry point for async code: `AsyncHarborAPIClient`. Both clients enforce the selected contract and own one reusable pool. The previous `validation.sync_client` and `async_client` factories delegate to these constructors for compatibility.
+`token` takes a string or a callable that returns the current token. Each client owns one connection pool; use it as a context manager or call `close()`.
 
-## Regeneration
+### Async
 
-The API implementation owns the public OpenAPI document. This repository keeps its input snapshot and Fern configuration. When the API's checked-in OpenAPI documents change on its main branch, the API repository pushes the document to this repository's `hub-openapi` branch and runs the Generate SDK workflow with `spec_ref=hub-openapi`; the workflow can also be run manually. A push to `main` that changes Fern configuration or the workflow regenerates from the committed `fern/openapi.json`; merging a regeneration PR, which only updates that document, does not start another. Fern opens SDK update pull requests against this repository. It owns generation commits, customization detection, three-way merging, and `.fern/replay.lock`. Review the generated changes and CI results before merging.
+```python
+import asyncio
 
-For an unmerged API candidate, commit its OpenAPI document to `fern/openapi.json` on an SDK preview branch and run the workflow with `spec_ref` set to that branch. Alternatively supply `spec_url` for an HTTPS document. `sdk_branch` selects the base branch for Fern's update PR; it defaults to `main`. The workflow uses the same pinned SDK profile and attaches the exact selected contract. Checked-client API version defaults follow that contract automatically. No API deployment is needed. Whitespace or object-key ordering changes alone do not trigger regeneration. Without either input, the workflow reads the deployed document, which the `OPENAPI_SPEC_URL` repository variable can change.
+from harbor_client import AsyncHarborAPIClient
 
-Regeneration stays at SDK version `0.1.0` during preview development. Runs without an override pass that version explicitly to Fern. When we choose a new version, `sdk_version` uses Fern's version flag to update all generated version metadata together. Review the generated changelog before merging: the pinned publisher can describe preserved Replay customizations as removals. No custom versioning engine is used.
 
-Commit necessary edits to generated files normally: Fern Replay detects them on the next regeneration. Resolve conflicts with `npx fern-replay resolve .`; do not edit the lockfile by hand or accept unresolved patches. SDK checks on a pull request fail when a Replay patch is unresolved, when a patch on the base branch is missing from the pull request, or when Fern skipped Replay for a generation. `.fernignore` protects the fully owned validation/transfer helpers, packaging support, tests, and CI. It does not freeze generated resource clients or models.
+async def main() -> None:
+    async with AsyncHarborAPIClient(token="your-api-key") as client:
+        async for job in client.jobs.list():
+            print(job.id, job.name)
 
-The SDK retains regression tests for all documented operations, pagination, wire validation, pooling, and signed transfers. Static export stubs are derived from Fern's model registry during the standard package build; there is no separate SDK assembly or patch-generation command.
 
-Generation and release are separate. After an SDK update is reviewed and merged, publish a GitHub release tagged `v<package version>` to run the release workflow. It requires SDK checks, builds distributions and publishes with PyPI trusted publishing. Starting the workflow manually runs verification and builds only; it never publishes. Build files and authenticated generation logs are not uploaded as Actions artifacts.
+asyncio.run(main())
+```
 
-One-time PyPI setup: register `harbor-framework/harbor-client`, workflow `release.yml`, and environment `pypi` as the trusted publisher for `harbor-framework-client`. No PyPI API token is needed. Configure GitHub's `pypi` environment to restrict release deployments to the intended tags.
+`AsyncHarborAPIClient` also accepts `async_token`, an async callable that returns the token. Call `await client.aclose()` when you do not use the context manager.
 
-Fern 6.17.0's SDK Config publishing preview emitted compile/test jobs but no publish job. The release workflow therefore uses the official PyPA action, following [Fern's documented publishing fallback](https://buildwithfern.com/learn/sdks/generators/python/publishing#path-2-manual-ci-workflow-update). Generation and Replay still use Fern's native publisher.
+## Pagination
 
-## Ownership of custom code
+List methods return pagers. Iterate a pager for items across all pages, or use `iter_pages()` for one page at a time:
 
-Fern owns generated resource clients, models, imports and formatting. Project lint and formatting checks cover tests, packaging support and the handwritten public client and helper modules; they do not rewrite generated source.
+```python
+pager = client.jobs.list(page_size="50")
+for page in pager.iter_pages():
+    print(len(page))
+```
 
-The remaining customizations have behavioral regression tests:
+## Errors
 
-- `validation.py` enforces JSON Schema constraints the generator does not preserve.
-- `transfers.py` orchestrates signed byte transfers and resumable uploads over generated endpoint methods.
-- Replay preserves pagination, URL encoding, connection lifetime and model-fidelity fixes until the generator provides them.
-- `setup.py` derives static export stubs during package builds. Packaging metadata includes these stubs and the validation contract.
+HTTP errors raise `harbor_client.core.ApiError` or one of its subclasses exported from `harbor_client`, such as `NotFoundError`, `UnauthorizedError` and `ConflictError`. The error carries `status_code` and the parsed problem `body`; its message shows the problem's `detail`. Error messages never include request or response headers.
 
-Avoid cosmetic edits to generated files. When an upstream fix replaces a customization, verify its regression tests and retire the obsolete patch through Fern's Replay tools.
+```python
+from harbor_client import NotFoundError
 
-## Fern configuration support
+try:
+    client.jobs.get(job_id="3f6c2a1e-8b4d-4e2a-9c1f-5d7e8a9b0c12")
+except NotFoundError as error:
+    print(error.status_code, error.body)
+```
 
-Packaging requirements and user documentation are declared in `fern/sdk-config.yml`. Python generator 6.17.0 currently ignores `pythonVersion`, `extras`, extra dependencies, and README customization despite accepting them. Verified with CLI 5.199.0 and 5.217.2. An unpinned private preview with CLI 5.217.2 selected Python generator 6.18.0 and reproduced the same behavior: the manifest contains the requested settings, but the generated package still declares Python >=3.9, omits the additional dependencies and TUS extra, and emits generic README content. Upgrading the CLI or generator alone did not remove the need for the fallbacks. Keep the packaging Replay corrections and owned README until a regeneration reproduces those settings and passes the distribution checks. The public/generated client split and additional initializer exports are supported.
+The client validates requests and responses against the API contract it was built from. A request or response that does not match raises `harbor_client.ContractError`.
+
+## Configuration
+
+| Option | Purpose |
+| --- | --- |
+| `base_url` | Target another deployment. `client.set_base_url(...)` changes it later. |
+| `harbor_api_version` | API version sent in the `Harbor-API-Version` header. Defaults to the version this release was generated from. |
+| `timeout`, `retry` | Default request timeout in seconds and retry policy. |
+| `headers` | Extra headers sent with every request. |
+| `transport` | A custom `httpx.BaseTransport`, for example for proxies or tests. |
+| `httpx_client`, `http_client` | Reuse an `httpx.Client` or a `requests.Session`. An `httpx.AsyncClient` is not accepted. |
+
+Per call, pass `request_options={"timeout_in_seconds": 30, "max_retries": 2}`, or `additional_headers` and `additional_query_parameters`.
+
+## File transfers
+
+`StorageTransfers` uploads and downloads task, dataset, job and trial files through signed storage grants, including resumable TUS uploads:
+
+```python
+from pathlib import Path
+
+from harbor_client import UploadFile
+from harbor_client.transfers import StorageTransfers
+
+transfers = StorageTransfers(client)
+transfers.download(
+    kind="job",
+    resource_id="3f6c2a1e-8b4d-4e2a-9c1f-5d7e8a9b0c12",
+    role="archive",
+    destination=Path("job.tar.gz"),
+)
+```
+
+Use `AsyncStorageTransfers` with `AsyncHarborAPIClient`. Upload sources must stay unchanged until the upload completes. A failed transfer raises `StorageTransferError`, which carries `upload_id` so `complete_upload` can resume a finished upload.
+
+## Reference
+
+[reference.md](https://github.com/harbor-framework/harbor-client/blob/main/reference.md) lists every resource and method.
+
+## License
+
+Apache-2.0. See [LICENSE](https://github.com/harbor-framework/harbor-client/blob/main/LICENSE).
