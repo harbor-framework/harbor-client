@@ -11541,7 +11541,8 @@
             ]
           },
           "expires_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "files": {
             "type": "array",
@@ -11659,7 +11660,8 @@
             ]
           },
           "expires_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -11698,7 +11700,8 @@
             }
           },
           "expires_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -12832,7 +12835,8 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -12884,7 +12888,8 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -13005,12 +13010,14 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "last_used_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -13875,7 +13882,8 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "max_concurrent_trials": {
             "anyOf": [
@@ -13971,7 +13979,8 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -14154,12 +14163,14 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "last_used_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -14232,7 +14243,8 @@
             "type": "boolean"
           },
           "previous_updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "definition_fields_updated": {
             "type": "array",
@@ -14301,10 +14313,12 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "n_trials": {
             "type": "integer",
@@ -14384,10 +14398,12 @@
             "type": "string"
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -14593,7 +14609,8 @@
             "type": "string"
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -14653,7 +14670,8 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "description": {
             "anyOf": [
@@ -14684,7 +14702,8 @@
             }
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "dataset_version_ids": {
             "type": "array",
@@ -14896,10 +14915,12 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "n_trials": {
             "type": "integer",
@@ -14990,10 +15011,12 @@
             "type": "string"
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -15531,7 +15554,8 @@
           "started_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -15541,7 +15565,8 @@
           "finished_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -15779,7 +15804,8 @@
           "paused_until": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -15884,7 +15910,8 @@
           "paused_until": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -16103,7 +16130,8 @@
         "type": "object",
         "properties": {
           "requested_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "running_count": {
             "anyOf": [
@@ -16228,7 +16256,8 @@
             ]
           },
           "paused_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "paused_by_users": {
             "type": "array",
@@ -16535,7 +16564,8 @@
           "started_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -16545,7 +16575,8 @@
           "finished_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -18688,7 +18719,8 @@
             }
           },
           "expires_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "version": {
             "anyOf": [
@@ -18936,12 +18968,14 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "last_used_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -18951,7 +18985,8 @@
           "expires_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -18961,7 +18996,8 @@
           "revoked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -19014,12 +19050,14 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "last_used_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -19029,7 +19067,8 @@
           "expires_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -19039,7 +19078,8 @@
           "revoked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -19126,7 +19166,8 @@
               ]
             },
             "membership_created_at": {
-              "type": "string"
+              "type": "string",
+              "format": "date-time"
             }
           },
           "required": [
@@ -19924,7 +19965,8 @@
             "type": "string"
           },
           "published_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "published_by": {
             "anyOf": [
@@ -19940,7 +19982,8 @@
           "yanked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -20069,7 +20112,8 @@
             "type": "string"
           },
           "published_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "published_by": {
             "anyOf": [
@@ -20085,7 +20129,8 @@
           "yanked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -20198,7 +20243,8 @@
             "type": "string"
           },
           "expires_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -20301,7 +20347,8 @@
             "type": "string"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -20438,12 +20485,14 @@
           },
           "authors": {},
           "published_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "yanked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -20618,12 +20667,14 @@
           "agent_config": {},
           "environment_config": {},
           "published_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "yanked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -20844,7 +20895,8 @@
             "type": "string"
           },
           "published_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "published_by": {
             "anyOf": [
@@ -20859,7 +20911,8 @@
           "yanked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -21065,12 +21118,14 @@
           },
           "authors": {},
           "published_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "yanked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -21336,7 +21391,8 @@
             "type": "string"
           },
           "published_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "published_by": {
             "anyOf": [
@@ -21351,7 +21407,8 @@
           "yanked_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -21541,7 +21598,8 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -21632,7 +21690,8 @@
             ]
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "recipient_organization": {
             "$ref": "#/components/schemas/PackageAccessOrganizationSummary"
