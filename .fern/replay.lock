@@ -136,7 +136,13 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-python-sdk: 6.17.0
-current_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+  - commit_sha: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
+    tree_hash: 4aa8b12c12ad1b5c02e1321106e5b1bfd0414d14
+    timestamp: 2026-11-19T00:42:13.857Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
 patches:
   - id: patch-dfc12c0a
     content_hash: sha256:87f597c9d56ea9b5bb64a3bbdfd09f2b648b382c0a590545da468045c5ea8d23
@@ -12999,12 +13005,13 @@ patches:
 
             return cast(F, wrapper)
     user_owned: true
+    status: unresolved
   - id: patch-54e30fcc
-    content_hash: sha256:8c4e08ac0b179a1c8b5cdfe261bcdce3f71420b8c012f248498a022e3a10a191
+    content_hash: sha256:957ffc9701c8e6bf44b332eaeb20c6e6e28341b3b6d90bf9c6f83d229fe39f6f
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -13012,7 +13019,7 @@ patches:
       - src/harbor_client/types/trial_detail.py
     patch_content: |
       diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
-      index 455723a..bad17ad 100644
+      index 1bf7be2..25050b1 100644
       --- a/src/harbor_client/rollouts/client.py
       +++ b/src/harbor_client/rollouts/client.py
       @@ -268,6 +268,7 @@ class RolloutsClient(BaseService):
@@ -13032,7 +13039,7 @@ patches:
       -
                        yield current_page
        
-                       next_cursor = parsed_response.next_page_token
+                       next_cursor = parsed_response.next_cursor
       @@ -1047,7 +1045,11 @@ class AsyncRolloutsClient(RolloutsClient):
                )
        
@@ -13058,7 +13065,7 @@ patches:
        
        JobsSubmitResponse_adapter = TypeAdapter(JobsSubmitResponse)
       diff --git a/src/harbor_client/types/rollouts_list_bad_request_response.py b/src/harbor_client/types/rollouts_list_bad_request_response.py
-      index 2e9fe15..02251b5 100644
+      index 452728a..48a053d 100644
       --- a/src/harbor_client/types/rollouts_list_bad_request_response.py
       +++ b/src/harbor_client/types/rollouts_list_bad_request_response.py
       @@ -30,6 +30,5 @@ RolloutsListBadRequestResponse = Union[
@@ -13308,7 +13315,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> SyncPager[TrialSummary]:
@@ -13352,8 +13359,8 @@ patches:
                 :type job_ids: List[str], optional
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
-                :param page_token: page_token, defaults to None
-                :type page_token: str, optional
+                :param cursor: cursor, defaults to None
+                :type cursor: str, optional
                 :param sort: sort, defaults to None
                 :type sort: RolloutsListRequestSort, optional
                 ...
@@ -13393,13 +13400,13 @@ patches:
                 Validator(str).is_optional().validate(job_id, "job_id")
                 Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(page_size, "page_size")
-                Validator(str).is_optional().validate(page_token, "page_token")
+                Validator(str).is_optional().validate(cursor, "cursor")
                 Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
 
                 resolved_config = self._get_resolved_config(self._list_config, request_options)
 
                 def _paginate() -> Generator[List[TrialSummary], None, None]:
-                    nonlocal page_token
+                    nonlocal cursor
                     while True:
                         serialized_request = (
                             Serializer(
@@ -13430,7 +13437,7 @@ patches:
                             .add_query("job_id", job_id)
                             .add_query("job_ids", job_ids)
                             .add_query("page_size", page_size)
-                            .add_query("page_token", page_token)
+                            .add_query("cursor", cursor)
                             .add_query("sort", sort)
                             .add_error(401, UnauthorizedEncoded)
                             .add_error(403, ForbiddenEncoded)
@@ -13449,11 +13456,11 @@ patches:
 
                         yield current_page
 
-                        next_cursor = parsed_response.next_page_token
+                        next_cursor = parsed_response.next_cursor
                         if not next_cursor:
                             break
 
-                        page_token = next_cursor
+                        cursor = next_cursor
 
                 return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -13897,7 +13904,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[SyncPager[TrialSummary]]:
@@ -13926,7 +13933,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -14101,7 +14108,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> AsyncPager[TrialSummary]:  # type: ignore[override]
@@ -14129,7 +14136,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -14295,7 +14302,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[AsyncPager[TrialSummary]]:
@@ -14324,7 +14331,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -14480,7 +14487,7 @@ patches:
         from pydantic import TypeAdapter
         from .bad_request_encoded import BadRequestEncodedData
         from .invalid_page_size_encoded import InvalidPageSizeEncoded
-        from .invalid_page_token_encoded import InvalidPageTokenEncoded
+        from .invalid_cursor_encoded import InvalidCursorEncoded
 
 
         # fernMode variant type for a shared-component member of RolloutsListBadRequestResponse
@@ -14494,14 +14501,14 @@ patches:
 
 
         # fernMode variant type for a shared-component member of RolloutsListBadRequestResponse
-        class RolloutsListBadRequestResponse_InvalidPageToken(InvalidPageTokenEncoded):
+        class RolloutsListBadRequestResponse_InvalidCursor(InvalidCursorEncoded):
             pass
 
 
         # Union type for RolloutsListBadRequestResponse
         # Pydantic will attempt to validate against each type in order
         RolloutsListBadRequestResponse = Union[
-            BadRequestEncodedData, InvalidPageSizeEncoded, InvalidPageTokenEncoded
+            BadRequestEncodedData, InvalidPageSizeEncoded, InvalidCursorEncoded
         ]
         # TypeAdapter for runtime validation of RolloutsListBadRequestResponse
         # This allows validation of Union types which are not directly instantiable
@@ -14617,7 +14624,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -14860,7 +14867,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -14880,18 +14887,18 @@ patches:
         RewardValue = Optional[float]
     user_owned: true
   - id: patch-bcfdf292
-    content_hash: sha256:6b0ddeedf9394e654e6ad9e0105dddf0e3b0e3401bbe29579fed6704f00027c4
+    content_hash: sha256:508bfa970b604e7bd6fd9af54b6566ea79e4422de8f803dbe6646d9c7f99eea9
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/trials/client.py
     patch_content: |
       diff --git a/src/harbor_client/jobs/client.py b/src/harbor_client/jobs/client.py
-      index 3da1eb0..7743d2e 100644
+      index 7b6ce35..c9c6d86 100644
       --- a/src/harbor_client/jobs/client.py
       +++ b/src/harbor_client/jobs/client.py
       @@ -1176,6 +1176,7 @@ class JobsClient(BaseService):
@@ -14911,7 +14918,7 @@ patches:
       -
                        yield current_page
        
-                       next_cursor = parsed_response.next_page_token
+                       next_cursor = parsed_response.next_cursor
       @@ -1421,6 +1419,7 @@ class JobsClient(BaseService):
                :return: The parsed response data.
                :rtype: SyncPager[JobTaskSummary]
@@ -14929,7 +14936,7 @@ patches:
       -
                        yield current_page
        
-                       next_cursor = parsed_response.next_page_token
+                       next_cursor = parsed_response.next_cursor
       @@ -2393,7 +2389,11 @@ class AsyncJobsClient(JobsClient):
                )
        
@@ -14957,7 +14964,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/rollouts/client.py b/src/harbor_client/rollouts/client.py
-      index 455723a..bad17ad 100644
+      index 1bf7be2..25050b1 100644
       --- a/src/harbor_client/rollouts/client.py
       +++ b/src/harbor_client/rollouts/client.py
       @@ -268,6 +268,7 @@ class RolloutsClient(BaseService):
@@ -14977,7 +14984,7 @@ patches:
       -
                        yield current_page
        
-                       next_cursor = parsed_response.next_page_token
+                       next_cursor = parsed_response.next_cursor
       @@ -1047,7 +1045,11 @@ class AsyncRolloutsClient(RolloutsClient):
                )
        
@@ -14992,7 +14999,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/trials/client.py b/src/harbor_client/trials/client.py
-      index 08fa433..164c351 100644
+      index a940046..578f7c9 100644
       --- a/src/harbor_client/trials/client.py
       +++ b/src/harbor_client/trials/client.py
       @@ -310,6 +310,7 @@ class TrialsClient(BaseService):
@@ -15012,7 +15019,7 @@ patches:
       -
                        yield current_page
        
-                       next_cursor = parsed_response.next_page_token
+                       next_cursor = parsed_response.next_cursor
       @@ -1424,7 +1422,11 @@ class AsyncTrialsClient(TrialsClient):
                )
        
@@ -16164,7 +16171,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: JobsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> SyncPager[JobSummary]:
@@ -16196,8 +16203,8 @@ patches:
                 :type created_before: str, optional
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
-                :param page_token: page_token, defaults to None
-                :type page_token: str, optional
+                :param cursor: cursor, defaults to None
+                :type cursor: str, optional
                 :param sort: sort, defaults to None
                 :type sort: JobsListRequestSort, optional
                 ...
@@ -16225,13 +16232,13 @@ patches:
                 Validator(str).is_optional().validate(created_after, "created_after")
                 Validator(str).is_optional().validate(created_before, "created_before")
                 Validator(str).is_optional().validate(page_size, "page_size")
-                Validator(str).is_optional().validate(page_token, "page_token")
+                Validator(str).is_optional().validate(cursor, "cursor")
                 Validator(JobsListRequestSort).is_optional().validate(sort, "sort")
 
                 resolved_config = self._get_resolved_config(self._list_config, request_options)
 
                 def _paginate() -> Generator[List[JobSummary], None, None]:
-                    nonlocal page_token
+                    nonlocal cursor
                     while True:
                         serialized_request = (
                             Serializer(
@@ -16256,7 +16263,7 @@ patches:
                             .add_query("created_after", created_after)
                             .add_query("created_before", created_before)
                             .add_query("page_size", page_size)
-                            .add_query("page_token", page_token)
+                            .add_query("cursor", cursor)
                             .add_query("sort", sort)
                             .add_error(401, UnauthorizedEncoded)
                             .add_error(403, ForbiddenEncoded)
@@ -16275,11 +16282,11 @@ patches:
 
                         yield current_page
 
-                        next_cursor = parsed_response.next_page_token
+                        next_cursor = parsed_response.next_cursor
                         if not next_cursor:
                             break
 
-                        page_token = next_cursor
+                        cursor = next_cursor
 
                 return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -16411,7 +16418,7 @@ patches:
                 job_id: str,
                 *,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -16427,8 +16434,8 @@ patches:
                 :type job_id: str
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
-                :param page_token: page_token, defaults to None
-                :type page_token: str, optional
+                :param cursor: cursor, defaults to None
+                :type cursor: str, optional
                 :param search: search, defaults to None
                 :type search: str, optional
                 :param agents: agents, defaults to None
@@ -16453,7 +16460,7 @@ patches:
 
                 Validator(str).validate(job_id, "job_id")
                 Validator(str).is_optional().validate(page_size, "page_size")
-                Validator(str).is_optional().validate(page_token, "page_token")
+                Validator(str).is_optional().validate(cursor, "cursor")
                 Validator(str).is_optional().validate(search, "search")
                 Validator(str).is_optional().validate(agents, "agents")
                 Validator(str).is_optional().validate(providers, "providers")
@@ -16469,7 +16476,7 @@ patches:
                 )
 
                 def _paginate() -> Generator[List[JobTaskSummary], None, None]:
-                    nonlocal page_token
+                    nonlocal cursor
                     while True:
                         serialized_request = (
                             Serializer(
@@ -16483,7 +16490,7 @@ patches:
                             )
                             .add_path("job_id", job_id)
                             .add_query("page_size", page_size)
-                            .add_query("page_token", page_token)
+                            .add_query("cursor", cursor)
                             .add_query("search", search)
                             .add_query("agents", agents)
                             .add_query("providers", providers)
@@ -16508,11 +16515,11 @@ patches:
 
                         yield current_page
 
-                        next_cursor = parsed_response.next_page_token
+                        next_cursor = parsed_response.next_cursor
                         if not next_cursor:
                             break
 
-                        page_token = next_cursor
+                        cursor = next_cursor
 
                 return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -16968,7 +16975,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: JobsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[SyncPager[JobSummary]]:
@@ -16991,7 +16998,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -17053,7 +17060,7 @@ patches:
                 job_id: str,
                 *,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -17071,7 +17078,7 @@ patches:
                             k: v
                             for k, v in {
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -17387,7 +17394,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: JobsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> AsyncPager[JobSummary]:  # type: ignore[override]
@@ -17409,7 +17416,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -17478,7 +17485,7 @@ patches:
                 job_id: str,
                 *,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -17495,7 +17502,7 @@ patches:
                             k: v
                             for k, v in {
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -17842,7 +17849,7 @@ patches:
                 created_after: str = SENTINEL,
                 created_before: str = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: JobsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[AsyncPager[JobSummary]]:
@@ -17865,7 +17872,7 @@ patches:
                                 "created_after": created_after,
                                 "created_before": created_before,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -17927,7 +17934,7 @@ patches:
                 job_id: str,
                 *,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 search: str = SENTINEL,
                 agents: str = SENTINEL,
                 providers: str = SENTINEL,
@@ -17945,7 +17952,7 @@ patches:
                             k: v
                             for k, v in {
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "search": search,
                                 "agents": agents,
                                 "providers": providers,
@@ -18239,7 +18246,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> SyncPager[TrialSummary]:
@@ -18283,8 +18290,8 @@ patches:
                 :type job_ids: List[str], optional
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
-                :param page_token: page_token, defaults to None
-                :type page_token: str, optional
+                :param cursor: cursor, defaults to None
+                :type cursor: str, optional
                 :param sort: sort, defaults to None
                 :type sort: RolloutsListRequestSort, optional
                 ...
@@ -18324,13 +18331,13 @@ patches:
                 Validator(str).is_optional().validate(job_id, "job_id")
                 Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(page_size, "page_size")
-                Validator(str).is_optional().validate(page_token, "page_token")
+                Validator(str).is_optional().validate(cursor, "cursor")
                 Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
 
                 resolved_config = self._get_resolved_config(self._list_config, request_options)
 
                 def _paginate() -> Generator[List[TrialSummary], None, None]:
-                    nonlocal page_token
+                    nonlocal cursor
                     while True:
                         serialized_request = (
                             Serializer(
@@ -18361,7 +18368,7 @@ patches:
                             .add_query("job_id", job_id)
                             .add_query("job_ids", job_ids)
                             .add_query("page_size", page_size)
-                            .add_query("page_token", page_token)
+                            .add_query("cursor", cursor)
                             .add_query("sort", sort)
                             .add_error(401, UnauthorizedEncoded)
                             .add_error(403, ForbiddenEncoded)
@@ -18380,11 +18387,11 @@ patches:
 
                         yield current_page
 
-                        next_cursor = parsed_response.next_page_token
+                        next_cursor = parsed_response.next_cursor
                         if not next_cursor:
                             break
 
-                        page_token = next_cursor
+                        cursor = next_cursor
 
                 return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -18828,7 +18835,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[SyncPager[TrialSummary]]:
@@ -18857,7 +18864,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -19032,7 +19039,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> AsyncPager[TrialSummary]:  # type: ignore[override]
@@ -19060,7 +19067,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -19226,7 +19233,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: RolloutsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[AsyncPager[TrialSummary]]:
@@ -19255,7 +19262,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -19646,7 +19653,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> SyncPager[TrialSummary]:
@@ -19690,8 +19697,8 @@ patches:
                 :type job_ids: List[str], optional
                 :param page_size: page_size, defaults to None
                 :type page_size: str, optional
-                :param page_token: page_token, defaults to None
-                :type page_token: str, optional
+                :param cursor: cursor, defaults to None
+                :type cursor: str, optional
                 :param sort: sort, defaults to None
                 :type sort: TrialsListRequestSort, optional
                 ...
@@ -19731,13 +19738,13 @@ patches:
                 Validator(str).is_optional().validate(job_id, "job_id")
                 Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
                 Validator(str).is_optional().validate(page_size, "page_size")
-                Validator(str).is_optional().validate(page_token, "page_token")
+                Validator(str).is_optional().validate(cursor, "cursor")
                 Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
 
                 resolved_config = self._get_resolved_config(self._list_config, request_options)
 
                 def _paginate() -> Generator[List[TrialSummary], None, None]:
-                    nonlocal page_token
+                    nonlocal cursor
                     while True:
                         serialized_request = (
                             Serializer(
@@ -19768,7 +19775,7 @@ patches:
                             .add_query("job_id", job_id)
                             .add_query("job_ids", job_ids)
                             .add_query("page_size", page_size)
-                            .add_query("page_token", page_token)
+                            .add_query("cursor", cursor)
                             .add_query("sort", sort)
                             .add_error(401, UnauthorizedEncoded)
                             .add_error(403, ForbiddenEncoded)
@@ -19787,11 +19794,11 @@ patches:
 
                         yield current_page
 
-                        next_cursor = parsed_response.next_page_token
+                        next_cursor = parsed_response.next_cursor
                         if not next_cursor:
                             break
 
-                        page_token = next_cursor
+                        cursor = next_cursor
 
                 return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -20467,7 +20474,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[SyncPager[TrialSummary]]:
@@ -20496,7 +20503,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -20774,7 +20781,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> AsyncPager[TrialSummary]:  # type: ignore[override]
@@ -20802,7 +20809,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -21063,7 +21070,7 @@ patches:
                 job_id: str = SENTINEL,
                 job_ids: List[str] = SENTINEL,
                 page_size: str = SENTINEL,
-                page_token: str = SENTINEL,
+                cursor: str = SENTINEL,
                 sort: TrialsListRequestSort = SENTINEL,
                 request_options: Optional[RequestOptions] = None,
             ) -> HttpResponse[AsyncPager[TrialSummary]]:
@@ -21092,7 +21099,7 @@ patches:
                                 "job_id": job_id,
                                 "job_ids": job_ids,
                                 "page_size": page_size,
-                                "page_token": page_token,
+                                "cursor": cursor,
                                 "sort": sort,
                             }.items()
                             if v is not SENTINEL
@@ -21333,7 +21340,7 @@ patches:
     original_commit: ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e
     original_message: Keep the native generated example aligned with execution filters
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - examples/sample.py
     patch_content: |+
@@ -21438,7 +21445,7 @@ patches:
     original_commit: d332059a9eac2c02fb2fc3b50005cdea1c8b04ad
     original_message: Use one checked public client over Fern generated bases
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/base_client.py
     patch_content: |
@@ -22523,7 +22530,7 @@ patches:
     original_commit: aff4821ec02f05f786650e9cb1c1594b8cb29cb0
     original_message: Preserve public exports and verify both client entry paths
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/__init__.py
       - src/harbor_client/environment.py
@@ -22670,7 +22677,7 @@ patches:
     original_commit: 0aef99d6d3a1dfae76a69853bea5de3c5c30b72b
     original_message: Keep response headers out of ApiError strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/net/transport/api_error.py
     patch_content: |
@@ -22815,7 +22822,7 @@ patches:
     original_commit: 554b6f7e83a0b97433dd5adf9e834ba71bd37e4a
     original_message: Keep credentials out of Request and Response strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/net/transport/request.py
       - src/harbor_client/net/transport/response.py
@@ -23503,7 +23510,7 @@ patches:
     original_commit: a8e5d1c2ba71ee2b477ffd7ff0568a31840cb2ac
     original_message: Show problem detail in typed API error strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: 919ce808b4093d8bc8551430aaca6bf9e86aa287
+    base_generation: 083b7e1cf31d0b71a0aa5e49131a6df92733d100
     files:
       - src/harbor_client/types/utils/base_error.py
     patch_content: |
