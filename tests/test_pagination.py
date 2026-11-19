@@ -87,6 +87,14 @@ def methods():
 
 
 METHODS = methods()
+# Fern regenerates these pagers without the Replay fixes; new cursor lists belong here.
+EMPTY_BATCH_PATHS = [
+    "/v1/api-keys",
+    "/v1/trials",
+    "/v1/rollouts",
+    "/v1/account/organization-memberships",
+    "/v1/packages/{organization_name}/{name}/tags",
+]
 
 
 def arguments(operation, method):
@@ -200,16 +208,7 @@ async def test_every_native_pager_exposes_one_page_with_original_metadata(
     assert body == payload
 
 
-@pytest.mark.parametrize(
-    "path",
-    [
-        "/v1/api-keys",
-        "/v1/trials",
-        "/v1/rollouts",
-        "/v1/account/organization-memberships",
-        "/v1/packages/{organization_name}/{name}/tags",
-    ],
-)
+@pytest.mark.parametrize("path", EMPTY_BATCH_PATHS)
 @pytest.mark.parametrize(
     "empty_position", [0, 1, 2], ids=["first", "middle", "terminal"]
 )
@@ -245,7 +244,7 @@ async def test_native_cursor_iteration_preserves_opaque_tokens_through_empty_bat
     assert calls == tokens
 
 
-@pytest.mark.parametrize("path", ["/v1/api-keys", "/v1/trials", "/v1/rollouts"])
+@pytest.mark.parametrize("path", EMPTY_BATCH_PATHS)
 async def test_native_async_pages_use_workers_and_propagate_context_and_rotating_auth(
     path,
 ):
@@ -266,10 +265,12 @@ async def test_native_async_pages_use_workers_and_propagate_context_and_rotating
         put(payload, info["next_cursor"], "opaque" if len(headers) == 1 else "")
         return httpx.Response(200, json=payload)
 
+    resource, method_name = METHODS[path]
     async with async_client(
         token=lambda: token[0], transport=httpx.MockTransport(handler)
     ) as client:
-        batches = getattr(client, METHODS[path][0]).list().iter_pages()
+        method = getattr(getattr(client, resource), method_name)
+        batches = method(**arguments(CURSORS[path], method)).iter_pages()
         assert await anext(batches) == []
         token[0] = "second"
         assert await anext(batches) == []

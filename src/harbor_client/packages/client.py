@@ -1811,7 +1811,11 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
