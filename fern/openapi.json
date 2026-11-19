@@ -852,15 +852,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
             },
             "required": false
           },
@@ -895,7 +898,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -907,7 +910,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -956,9 +959,9 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.files"
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       }
     },
@@ -986,6 +989,25 @@
             "required": true
           },
           {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
+            },
+            "required": false
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
+            },
+            "required": false
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -1006,21 +1028,64 @@
         ],
         "responses": {
           "200": {
-            "description": "PackageTags",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PackageTags"
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "$ref": "#/components/schemas/PackageTags"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+                    },
+                    "prev_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "next_cursor",
+                    "prev_cursor"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "400": {
-            "description": "BadRequest",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BadRequestEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidPageSizeEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -1065,6 +1130,11 @@
               }
             }
           }
+        },
+        "x-fern-pagination": {
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       }
     },
@@ -1429,15 +1499,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
             },
             "required": false
           },
@@ -1505,7 +1578,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1517,7 +1590,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -1566,9 +1639,9 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.versions"
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       }
     },
@@ -1705,15 +1778,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice."
             },
             "required": false
           },
@@ -1760,7 +1836,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1772,7 +1848,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -1821,9 +1897,9 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.versions"
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       }
     },
@@ -2828,15 +2904,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
             },
             "required": false
           },
@@ -2923,7 +3002,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2935,7 +3014,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -2984,8 +3063,8 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
           "results": "$response.items"
         }
       },
@@ -3314,15 +3393,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
             },
             "required": false
           },
@@ -3409,7 +3491,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3421,7 +3503,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -3470,8 +3552,8 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
           "results": "$response.items"
         }
       }
@@ -5289,6 +5371,25 @@
         "operationId": "account.listOrganizationMemberships",
         "parameters": [
           {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
+            },
+            "required": false
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
+            },
+            "required": false
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -5309,21 +5410,64 @@
         ],
         "responses": {
           "200": {
-            "description": "MyOrganizations",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MyOrganizations"
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "$ref": "#/components/schemas/MyOrganizations"
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+                    },
+                    "prev_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "next_cursor",
+                    "prev_cursor"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "400": {
-            "description": "BadRequest",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BadRequestEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidPageSizeEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -5368,6 +5512,11 @@
               }
             }
           }
+        },
+        "x-fern-pagination": {
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       }
     },
@@ -5470,15 +5619,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice."
             },
             "required": false
           },
@@ -5512,7 +5664,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5524,7 +5676,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -5573,9 +5725,9 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.api_keys"
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       }
     },
@@ -7574,15 +7726,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
             },
             "required": false
           },
@@ -7643,7 +7798,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7655,7 +7810,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -7704,8 +7859,8 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
           "results": "$response.items"
         }
       }
@@ -7976,15 +8131,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
             },
             "required": false
           },
@@ -8101,7 +8259,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8113,7 +8271,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -8162,8 +8320,8 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
           "results": "$response.items"
         }
       }
@@ -9113,15 +9271,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice."
             },
             "required": false
           },
@@ -9165,7 +9326,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9177,7 +9338,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -9226,9 +9387,9 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.rows"
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       }
     },
@@ -9243,15 +9404,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice."
             },
             "required": false
           },
@@ -9303,7 +9467,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9315,7 +9479,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -9364,9 +9528,9 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.leaderboards"
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       },
       "post": {
@@ -9589,15 +9753,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice."
             },
             "required": false
           },
@@ -9632,7 +9799,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9644,7 +9811,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -9693,9 +9860,9 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
-          "results": "$response.trials"
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       }
     },
@@ -9743,15 +9910,18 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
             },
             "required": false
           },
           {
-            "name": "page_token",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
             },
             "required": false
           },
@@ -9785,7 +9955,7 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidPageSize | InvalidPageToken",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9797,7 +9967,7 @@
                       "$ref": "#/components/schemas/InvalidPageSizeEncoded"
                     },
                     {
-                      "$ref": "#/components/schemas/InvalidPageTokenEncoded"
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
                     }
                   ]
                 }
@@ -9856,8 +10026,8 @@
           }
         },
         "x-fern-pagination": {
-          "cursor": "$request.page_token",
-          "next_cursor": "$response.next_page_token",
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
           "results": "$response.items"
         }
       },
@@ -13998,25 +14168,26 @@
         ],
         "additionalProperties": false
       },
-      "InvalidPageTokenEncoded": {
+      "InvalidCursorEncoded": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "InvalidPageToken"
+              "InvalidCursor"
             ]
           },
           "type": {
             "type": "string",
             "enum": [
-              "about:blank"
-            ]
+              "https://api.harborframework.com/problems/invalid-cursor"
+            ],
+            "description": "The cursor can't be used: it is malformed, from an older cursor format, or was issued for a request with different parameters, such as other filters or sort. Cursors are opaque and may stop working when their format changes. Request the list again without cursor to start from the first page."
           },
           "title": {
             "type": "string",
             "enum": [
-              "Bad Request"
+              "Invalid cursor"
             ]
           },
           "status": {
@@ -14026,7 +14197,10 @@
             ]
           },
           "detail": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "cursor is invalid, expired, or was issued for a different request. Request the list again without cursor to start from the first page."
+            ]
           }
         },
         "required": [
@@ -14087,13 +14261,33 @@
               "$ref": "#/components/schemas/SecretMetadata"
             }
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
           }
         },
         "required": [
           "items",
-          "next_page_token"
+          "next_cursor",
+          "prev_cursor"
         ],
         "additionalProperties": false
       },
@@ -14580,25 +14774,45 @@
       "LeaderboardTrialLinkPage": {
         "type": "object",
         "properties": {
-          "trials": {
+          "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LeaderboardTrialLink"
             }
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
           },
-          "total_size": {
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "total": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           }
         },
         "required": [
-          "trials",
-          "next_page_token",
-          "total_size"
+          "items",
+          "next_cursor",
+          "prev_cursor",
+          "total"
         ],
         "additionalProperties": false
       },
@@ -14622,25 +14836,45 @@
       "LeaderboardSummaryPage": {
         "type": "object",
         "properties": {
-          "leaderboards": {
+          "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LeaderboardSummary"
             }
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
           },
-          "total_size": {
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "total": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           }
         },
         "required": [
-          "leaderboards",
-          "next_page_token",
-          "total_size"
+          "items",
+          "next_cursor",
+          "prev_cursor",
+          "total"
         ],
         "additionalProperties": false
       },
@@ -14854,29 +15088,45 @@
       "LeaderboardRowsPage": {
         "type": "object",
         "properties": {
-          "leaderboard": {
-            "$ref": "#/components/schemas/LeaderboardDefinition"
-          },
-          "rows": {
+          "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LeaderboardRankedRow"
             }
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
           },
-          "total_size": {
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "total": {
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991
           }
         },
         "required": [
-          "leaderboard",
-          "rows",
-          "next_page_token",
-          "total_size"
+          "items",
+          "next_cursor",
+          "prev_cursor",
+          "total"
         ],
         "additionalProperties": false
       },
@@ -14938,6 +15188,30 @@
           "created_at",
           "updated_at",
           "n_trials"
+        ],
+        "additionalProperties": false
+      },
+      "LeaderboardRowDetail": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "$ref": "#/components/schemas/LeaderboardRankedRow"
+          }
+        },
+        "required": [
+          "row"
+        ],
+        "additionalProperties": false
+      },
+      "LeaderboardDetail": {
+        "type": "object",
+        "properties": {
+          "leaderboard": {
+            "$ref": "#/components/schemas/LeaderboardDefinition"
+          }
+        },
+        "required": [
+          "leaderboard"
         ],
         "additionalProperties": false
       },
@@ -15035,30 +15309,6 @@
           "created_by",
           "created_at",
           "updated_at"
-        ],
-        "additionalProperties": false
-      },
-      "LeaderboardRowDetail": {
-        "type": "object",
-        "properties": {
-          "row": {
-            "$ref": "#/components/schemas/LeaderboardRankedRow"
-          }
-        },
-        "required": [
-          "row"
-        ],
-        "additionalProperties": false
-      },
-      "LeaderboardDetail": {
-        "type": "object",
-        "properties": {
-          "leaderboard": {
-            "$ref": "#/components/schemas/LeaderboardDefinition"
-          }
-        },
-        "required": [
-          "leaderboard"
         ],
         "additionalProperties": false
       },
@@ -16703,14 +16953,34 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
           }
         },
         "required": [
           "items",
           "total",
-          "next_page_token"
+          "next_cursor",
+          "prev_cursor"
         ],
         "additionalProperties": false
       },
@@ -17013,14 +17283,34 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
           }
         },
         "required": [
           "items",
           "total",
-          "next_page_token"
+          "next_cursor",
+          "prev_cursor"
         ],
         "additionalProperties": false
       },
@@ -18923,25 +19213,45 @@
       "ApiKeyMetadataPage": {
         "type": "object",
         "properties": {
-          "api_keys": {
+          "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ApiKeyMetadata"
             }
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
           },
-          "total_size": {
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "total": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           }
         },
         "required": [
-          "api_keys",
-          "next_page_token",
-          "total_size"
+          "items",
+          "next_cursor",
+          "prev_cursor",
+          "total"
         ],
         "additionalProperties": false
       },
@@ -19669,14 +19979,34 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
           }
         },
         "required": [
           "items",
           "total",
-          "next_page_token"
+          "next_cursor",
+          "prev_cursor"
         ],
         "additionalProperties": false
       },
@@ -19919,30 +20249,39 @@
       "RegistryPackageVersionPage": {
         "type": "object",
         "properties": {
-          "package": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/RegistryPackage"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "versions": {
+          "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RegistryPackageVersion"
             }
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
           }
         },
         "required": [
-          "package",
-          "versions",
-          "next_page_token"
+          "items",
+          "next_cursor",
+          "prev_cursor"
         ],
         "additionalProperties": false
       },
@@ -20077,19 +20416,39 @@
       "PackageVersionCatalogPage": {
         "type": "object",
         "properties": {
-          "versions": {
+          "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PackageVersionSummary"
             }
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
           }
         },
         "required": [
-          "versions",
-          "next_page_token"
+          "items",
+          "next_cursor",
+          "prev_cursor"
         ],
         "additionalProperties": false
       },
@@ -20362,19 +20721,39 @@
       "PackageVersionFilePage": {
         "type": "object",
         "properties": {
-          "files": {
+          "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RegistryVersionFile"
             }
           },
-          "next_page_token": {
-            "type": "string"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+          },
+          "prev_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
           }
         },
         "required": [
-          "files",
-          "next_page_token"
+          "items",
+          "next_cursor",
+          "prev_cursor"
         ],
         "additionalProperties": false
       },

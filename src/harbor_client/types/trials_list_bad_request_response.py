@@ -5,7 +5,7 @@ from typing import Annotated
 from pydantic import TypeAdapter
 from .bad_request_encoded import BadRequestEncodedData
 from .invalid_page_size_encoded import InvalidPageSizeEncoded
-from .invalid_page_token_encoded import InvalidPageTokenEncoded
+from .invalid_cursor_encoded import InvalidCursorEncoded
 
 
 # fernMode variant type for a shared-component member of TrialsListBadRequestResponse
@@ -19,14 +19,14 @@ class TrialsListBadRequestResponse_InvalidPageSize(InvalidPageSizeEncoded):
 
 
 # fernMode variant type for a shared-component member of TrialsListBadRequestResponse
-class TrialsListBadRequestResponse_InvalidPageToken(InvalidPageTokenEncoded):
+class TrialsListBadRequestResponse_InvalidCursor(InvalidCursorEncoded):
     pass
 
 
 # Union type for TrialsListBadRequestResponse
 # Pydantic will attempt to validate against each type in order
 TrialsListBadRequestResponse = Union[
-    BadRequestEncodedData, InvalidPageSizeEncoded, InvalidPageTokenEncoded
+    BadRequestEncodedData, InvalidPageSizeEncoded, InvalidCursorEncoded
 ]
 # TypeAdapter for runtime validation of TrialsListBadRequestResponse
 # This allows validation of Union types which are not directly instantiable

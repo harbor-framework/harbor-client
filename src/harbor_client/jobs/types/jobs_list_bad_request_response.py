@@ -2,12 +2,12 @@ from ...types import (
     JobsListBadRequestResponse,
     JobsListBadRequestResponse_BadRequest,
     JobsListBadRequestResponse_InvalidPageSize,
-    JobsListBadRequestResponse_InvalidPageToken,
+    JobsListBadRequestResponse_InvalidCursor,
 )
 
 __all__ = [
     "JobsListBadRequestResponse",
     "JobsListBadRequestResponse_BadRequest",
     "JobsListBadRequestResponse_InvalidPageSize",
-    "JobsListBadRequestResponse_InvalidPageToken",
+    "JobsListBadRequestResponse_InvalidCursor",
 ]

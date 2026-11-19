@@ -209,7 +209,7 @@ async def test_dataset_task_union_keeps_available_and_unavailable_shapes(
         (
             "list_rows",
             "/v1/leaderboards/rows",
-            {"leaderboard_id": UUID, "page_token": "opaque+/cursor=="},
+            {"leaderboard_id": UUID, "cursor": "opaque+/cursor=="},
         ),
     ],
 )

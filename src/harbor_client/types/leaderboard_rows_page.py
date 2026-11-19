@@ -5,24 +5,27 @@ from typing import Optional
 from typing import Any
 from typing import Union
 from .utils.base_model import BaseModel
-from .leaderboard_definition import LeaderboardDefinition
 from .leaderboard_ranked_row import LeaderboardRankedRow
 
 
 class LeaderboardRowsPage(BaseModel):
     """LeaderboardRowsPage
 
-    :param leaderboard: leaderboard
-    :type leaderboard: LeaderboardDefinition
-    :param rows: rows
-    :type rows: List[LeaderboardRankedRow]
-    :param next_page_token: next_page_token
-    :type next_page_token: str
-    :param total_size: total_size
-    :type total_size: int
+    :param items: items
+    :type items: List[LeaderboardRankedRow]
+    :param next_cursor: Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice.
+    :type next_cursor: str
+    :param prev_cursor: Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice.
+    :type prev_cursor: str
+    :param total: total
+    :type total: int
     """
 
-    leaderboard: LeaderboardDefinition
-    rows: List[LeaderboardRankedRow]
-    next_page_token: str
-    total_size: int
+    items: List[LeaderboardRankedRow]
+    next_cursor: Optional[str] = Field(
+        description="Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+    )
+    prev_cursor: Optional[str] = Field(
+        description="Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
+    )
+    total: int

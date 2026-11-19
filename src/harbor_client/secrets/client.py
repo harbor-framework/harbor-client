@@ -164,7 +164,7 @@ class SecretsClient(BaseService):
         job_id: str = SENTINEL,
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[SecretMetadata]:
         """list
@@ -177,8 +177,8 @@ class SecretsClient(BaseService):
         :type status_filter: SecretsListRequestStatusFilter, optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
@@ -193,12 +193,12 @@ class SecretsClient(BaseService):
             status_filter, "status_filter"
         )
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
 
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
         def _paginate() -> Generator[List[SecretMetadata], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -214,7 +214,7 @@ class SecretsClient(BaseService):
                     .add_query("job_id", job_id)
                     .add_query("status", status_filter)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -232,11 +232,11 @@ class SecretsClient(BaseService):
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -685,7 +685,7 @@ class RawSecretsClient:
         job_id: str = SENTINEL,
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[SecretMetadata]]:
         data = SecretsClient.list(
@@ -698,7 +698,7 @@ class RawSecretsClient:
                         "job_id": job_id,
                         "status_filter": status_filter,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -903,7 +903,7 @@ class AsyncSecretsClient(SecretsClient):
         job_id: str = SENTINEL,
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[SecretMetadata]:  # type: ignore[override]
         sync_pager = super().list(
@@ -915,7 +915,7 @@ class AsyncSecretsClient(SecretsClient):
                         "job_id": job_id,
                         "status_filter": status_filter,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1112,7 +1112,7 @@ class AsyncRawSecretsClient:
         job_id: str = SENTINEL,
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[SecretMetadata]]:
         data = AsyncSecretsClient.list(
@@ -1125,7 +1125,7 @@ class AsyncRawSecretsClient:
                         "job_id": job_id,
                         "status_filter": status_filter,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                     }.items()
                     if v is not SENTINEL
                 }

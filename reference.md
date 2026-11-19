@@ -82,7 +82,7 @@
 - `name` (required)
 - `ref` (required)
 - `page_size`
-- `page_token`
+- `cursor`
 
 ### `client.packages.list_tags`
 
@@ -92,6 +92,8 @@
 
 - `organization_name` (required)
 - `name` (required)
+- `page_size`
+- `cursor`
 
 ### `client.packages.tag_version`
 
@@ -124,7 +126,7 @@
 
 - `type` (required)
 - `page_size`
-- `page_token`
+- `cursor`
 - `organization_id`
 - `include_yanked`
 
@@ -146,7 +148,7 @@
 - `organization_name` (required)
 - `name` (required)
 - `page_size`
-- `page_token`
+- `cursor`
 - `include_yanked`
 
 ### `client.packages.download_archive`
@@ -294,7 +296,7 @@
 - `created_after`
 - `created_before`
 - `page_size`
-- `page_token`
+- `cursor`
 - `sort`
 
 ### `client.jobs.get_filters`
@@ -326,7 +328,7 @@
 
 - `job_id` (required)
 - `page_size`
-- `page_token`
+- `cursor`
 - `search`
 - `agents`
 - `providers`
@@ -391,7 +393,7 @@
 - `job_id`
 - `job_ids`
 - `page_size`
-- `page_token`
+- `cursor`
 - `sort`
 
 ### `client.trials.create`
@@ -521,7 +523,7 @@ Retry this physical trial. Reusing the same Idempotency-Key does not reapply the
 - `job_id`
 - `job_ids`
 - `page_size`
-- `page_token`
+- `cursor`
 - `sort`
 
 ### `client.rollouts.get_filters`
@@ -605,6 +607,11 @@ Retry this physical rollout. Reusing the same Idempotency-Key does not reapply t
 
 `GET /v1/account/organization-memberships`
 
+**Parameters:**
+
+- `page_size`
+- `cursor`
+
 ## ApiKeysClient
 
 ### `client.api_keys.list`
@@ -614,7 +621,7 @@ Retry this physical rollout. Reusing the same Idempotency-Key does not reapply t
 **Parameters:**
 
 - `page_size`
-- `page_token`
+- `cursor`
 
 ### `client.api_keys.create`
 
@@ -689,7 +696,7 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 - `package`
 - `name`
 - `page_size`
-- `page_token`
+- `cursor`
 - `row_ids`
 
 ### `client.leaderboards.list`
@@ -699,7 +706,7 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 **Parameters:**
 
 - `page_size`
-- `page_token`
+- `cursor`
 - `package`
 - `dataset_version_id`
 
@@ -715,7 +722,7 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 
 - `row_id` (required)
 - `page_size`
-- `page_token`
+- `cursor`
 
 ## SecretsClient
 
@@ -729,7 +736,7 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 - `job_id`
 - `status_filter`
 - `page_size`
-- `page_token`
+- `cursor`
 
 ### `client.secrets.upsert`
 

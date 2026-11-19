@@ -1,10 +1,10 @@
-# HarborApiClient Python SDK 0.1.0<a id="harborapiclient-python-sdk-010"></a>
+# HarborApiClient Python SDK 0.2.0<a id="harborapiclient-python-sdk-020"></a>
 
 Welcome to the HarborApiClient SDK documentation. This guide will help you get started with integrating and using the HarborApiClient SDK in your project.
 
 ## Versions<a id="versions"></a>
 
-- SDK version: `0.1.0`
+- SDK version: `0.2.0`
 
 ## About the API<a id="about-the-api"></a>
 
@@ -148,8 +148,8 @@ response = client.jobs.list(
     ],
     created_after="created_after",
     created_before="created_before",
-    page_size="page_size",
-    page_token="page_token",
+    page_size="50",
+    cursor="cursor",
     sort="id",
 )
 for item in response:
@@ -209,8 +209,8 @@ async def main():
     source=source,
     created_after="created_after",
     created_before="created_before",
-    page_size="page_size",
-    page_token="page_token",
+    page_size="50",
+    cursor="cursor",
     sort="id"
 )
   for page in response_iterator:
@@ -260,7 +260,7 @@ The SDK includes several models that represent the data structures used in API r
 | UpdatePackageAccessResponse                    |                                                                                                                               |
 | PackageAccess                                  |                                                                                                                               |
 | PackageVersionFilePage                         |                                                                                                                               |
-| PackageTag                                     |                                                                                                                               |
+| PackagesListTagsResponse                       |                                                                                                                               |
 | TagPackageVersionRequest                       |                                                                                                                               |
 | TagPackageVersionResponse                      |                                                                                                                               |
 | ReserveTemporaryPackageRequest                 |                                                                                                                               |
@@ -328,7 +328,7 @@ The SDK includes several models that represent the data structures used in API r
 | RolloutsGetFiltersRequestTerminal              | True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials.                           |
 | RetryRolloutResponse                           |                                                                                                                               |
 | AccountIdentity                                |                                                                                                                               |
-| MyOrganizationsItem                            |                                                                                                                               |
+| AccountListOrganizationMembershipsResponse     |                                                                                                                               |
 | ApiKeyMetadataPage                             |                                                                                                                               |
 | ApiKeyCreate                                   |                                                                                                                               |
 | ApiKeyCreated                                  |                                                                                                                               |
@@ -358,6 +358,8 @@ The SDK includes several models that represent the data structures used in API r
 | SecretsRevokeRegistryCredentialRequestPurge    |                                                                                                                               |
 | StorageUploadSession                           |                                                                                                                               |
 | StorageUploadReceipt                           |                                                                                                                               |
+| PackageTag                                     |                                                                                                                               |
+| MyOrganizationsItem                            |                                                                                                                               |
 | PackageNameReference                           |                                                                                                                               |
 | PackageAccessOrganizationSummary               |                                                                                                                               |
 | PackageOrganizationGrant                       |                                                                                                                               |
@@ -474,7 +476,7 @@ The SDK includes several models that represent the data structures used in API r
 | StorageTusTransfer                             |                                                                                                                               |
 | BadRequestEncoded                              |                                                                                                                               |
 | InvalidPageSizeEncoded                         |                                                                                                                               |
-| InvalidPageTokenEncoded                        |                                                                                                                               |
+| InvalidCursorEncoded                           |                                                                                                                               |
 | RegistryCredentialReplacementRequiredEncoded   |                                                                                                                               |
 | RegistryCredentialReplacementStaleEncoded      |                                                                                                                               |
 | ExistingRegistryCredential                     |                                                                                                                               |

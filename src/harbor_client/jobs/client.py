@@ -1134,7 +1134,7 @@ class JobsClient(BaseService):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[JobSummary]:
@@ -1166,8 +1166,8 @@ class JobsClient(BaseService):
         :type created_before: str, optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param sort: sort, defaults to None
         :type sort: JobsListRequestSort, optional
         ...
@@ -1195,13 +1195,13 @@ class JobsClient(BaseService):
         Validator(str).is_optional().validate(created_after, "created_after")
         Validator(str).is_optional().validate(created_before, "created_before")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(JobsListRequestSort).is_optional().validate(sort, "sort")
 
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
         def _paginate() -> Generator[List[JobSummary], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -1226,7 +1226,7 @@ class JobsClient(BaseService):
                     .add_query("created_after", created_after)
                     .add_query("created_before", created_before)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_query("sort", sort)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
@@ -1245,11 +1245,11 @@ class JobsClient(BaseService):
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -1381,7 +1381,7 @@ class JobsClient(BaseService):
         job_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -1397,8 +1397,8 @@ class JobsClient(BaseService):
         :type job_id: str
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param search: search, defaults to None
         :type search: str, optional
         :param agents: agents, defaults to None
@@ -1423,7 +1423,7 @@ class JobsClient(BaseService):
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(str).is_optional().validate(search, "search")
         Validator(str).is_optional().validate(agents, "agents")
         Validator(str).is_optional().validate(providers, "providers")
@@ -1439,7 +1439,7 @@ class JobsClient(BaseService):
         )
 
         def _paginate() -> Generator[List[JobTaskSummary], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -1453,7 +1453,7 @@ class JobsClient(BaseService):
                     )
                     .add_path("job_id", job_id)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_query("search", search)
                     .add_query("agents", agents)
                     .add_query("providers", providers)
@@ -1478,11 +1478,11 @@ class JobsClient(BaseService):
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -1938,7 +1938,7 @@ class RawJobsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[JobSummary]]:
@@ -1961,7 +1961,7 @@ class RawJobsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -2023,7 +2023,7 @@ class RawJobsClient:
         job_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2041,7 +2041,7 @@ class RawJobsClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2357,7 +2357,7 @@ class AsyncJobsClient(JobsClient):
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[JobSummary]:  # type: ignore[override]
@@ -2379,7 +2379,7 @@ class AsyncJobsClient(JobsClient):
                         "created_after": created_after,
                         "created_before": created_before,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -2448,7 +2448,7 @@ class AsyncJobsClient(JobsClient):
         job_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2465,7 +2465,7 @@ class AsyncJobsClient(JobsClient):
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2812,7 +2812,7 @@ class AsyncRawJobsClient:
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[JobSummary]]:
@@ -2835,7 +2835,7 @@ class AsyncRawJobsClient:
                         "created_after": created_after,
                         "created_before": created_before,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -2897,7 +2897,7 @@ class AsyncRawJobsClient:
         job_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2915,7 +2915,7 @@ class AsyncRawJobsClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "search": search,
                         "agents": agents,
                         "providers": providers,

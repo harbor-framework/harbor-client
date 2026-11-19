@@ -43,13 +43,15 @@ async def test_server_filters_survive_empty_pages_and_opaque_cursors(
         assert query["failed_only"] == "true"
         assert query["terminal"] == "true"
         assert query["sort"] == "-error_type"
-        seen.append(query.get("page_token"))
+        seen.append(query.get("cursor"))
         if len(seen) == 1:
             return httpx.Response(
-                200, json={**page, "items": [], "next_page_token": cursor}
+                200,
+                json={**page, "items": [], "next_cursor": cursor, "prev_cursor": None},
             )
         return httpx.Response(
-            200, json={**page, "items": [item], "next_page_token": ""}
+            200,
+            json={**page, "items": [item], "next_cursor": None, "prev_cursor": None},
         )
 
     results = await invoke(
@@ -84,7 +86,8 @@ async def test_nullable_error_type_rows_decode_with_both_sort_directions(
     def handler(request):
         assert request.url.params["sort"] == sort
         return httpx.Response(
-            200, json={**page, "items": [item], "next_page_token": ""}
+            200,
+            json={**page, "items": [item], "next_cursor": None, "prev_cursor": None},
         )
 
     results = await invoke(namespace, "list", {"sort": sort}, handler, asynchronous)

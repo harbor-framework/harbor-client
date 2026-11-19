@@ -61,7 +61,7 @@ def arguments(operation, method):
 def terminal_page(value):
     if isinstance(value, dict):
         return {
-            key: "" if key == "next_page_token" else terminal_page(item)
+            key: None if key == "next_cursor" else terminal_page(item)
             for key, item in value.items()
         }
     if isinstance(value, list):

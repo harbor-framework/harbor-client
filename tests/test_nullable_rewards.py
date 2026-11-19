@@ -66,7 +66,7 @@ def reward_payload(path, wrapper, rewards):
     payload = response_fixture(path)
     if wrapper is None:
         item = example(SPEC["components"]["schemas"]["TrialSummary"], allow_null=False)
-        payload.update(items=[item], total=1, next_page_token="")
+        payload.update(items=[item], total=1, next_cursor=None, prev_cursor=None)
     else:
         item = payload[wrapper]
     item["rewards"] = deepcopy(rewards)

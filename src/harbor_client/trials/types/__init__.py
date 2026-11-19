@@ -6,7 +6,7 @@ from .trials_list_bad_request_response import (
     TrialsListBadRequestResponse,
     TrialsListBadRequestResponse_BadRequest,
     TrialsListBadRequestResponse_InvalidPageSize,
-    TrialsListBadRequestResponse_InvalidPageToken,
+    TrialsListBadRequestResponse_InvalidCursor,
 )
 from .trials_get_filters_request_attempts import TrialsGetFiltersRequestAttempts
 from .trials_get_filters_request_failed_only import TrialsGetFiltersRequestFailedOnly
@@ -21,7 +21,7 @@ __all__ = [
     "TrialsListBadRequestResponse",
     "TrialsListBadRequestResponse_BadRequest",
     "TrialsListBadRequestResponse_InvalidPageSize",
-    "TrialsListBadRequestResponse_InvalidPageToken",
+    "TrialsListBadRequestResponse_InvalidCursor",
     "TrialsGetFiltersRequestAttempts",
     "TrialsGetFiltersRequestFailedOnly",
     "TrialsGetFiltersRequestTerminal",

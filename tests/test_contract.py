@@ -164,21 +164,33 @@ def test_checked_reads_send_auth_and_preserve_empty_strings_and_opaque_cursors()
     def handler(request):
         requests.append(request)
         return httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": "opaque/+=token"}
+            200,
+            json={
+                "items": [],
+                "total": 0,
+                "next_cursor": "opaque/+=token",
+                "prev_cursor": None,
+            },
         )
 
     with sync_client(token="key", transport=httpx.MockTransport(handler)) as client:
-        pager = client.jobs.list(q="", page_token="opaque/+=token")
+        pager = client.jobs.list(q="", cursor="opaque/+=token")
         assert next(pager.iter_pages()) == []
         assert pager.last_response.body["total"] == 0
     assert requests[0].headers["authorization"] == "Bearer key"
     assert requests[0].url.params["q"] == ""
-    assert requests[0].url.params["page_token"] == "opaque/+=token"
+    assert requests[0].url.params["cursor"] == "opaque/+=token"
 
 
 @pytest.mark.parametrize("total", [True, "0"])
 def test_known_response_types_are_strict_without_rejecting_future_fields(total):
-    payload = {"items": [], "total": total, "next_page_token": "", "future_field": True}
+    payload = {
+        "items": [],
+        "total": total,
+        "next_cursor": None,
+        "prev_cursor": None,
+        "future_field": True,
+    }
     with sync_client(
         transport=httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
     ) as client:
@@ -233,7 +245,8 @@ def test_one_pool_is_reused_and_closed_even_on_failure(failure):
 
     pool = Pool(
         lambda request: httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": ""}
+            200,
+            json={"items": [], "total": 0, "next_cursor": None, "prev_cursor": None},
         )
     )
     try:
@@ -254,7 +267,8 @@ async def test_async_checked_client_reuses_the_same_contract_transport():
     def handler(request):
         with_requests.append(request)
         return httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": ""}
+            200,
+            json={"items": [], "total": 0, "next_cursor": None, "prev_cursor": None},
         )
 
     async with async_client(
@@ -275,7 +289,8 @@ async def test_cancelled_async_workflow_waits_for_inflight_request_before_closin
             pytest.fail("Request was not released")
         assert not closed.is_set()
         return httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": ""}
+            200,
+            json={"items": [], "total": 0, "next_cursor": None, "prev_cursor": None},
         )
 
     class Pool(httpx.MockTransport):

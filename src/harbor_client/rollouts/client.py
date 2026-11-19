@@ -214,7 +214,7 @@ class RolloutsClient(BaseService):
         job_id: str = SENTINEL,
         job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: RolloutsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[TrialSummary]:
@@ -258,8 +258,8 @@ class RolloutsClient(BaseService):
         :type job_ids: List[str], optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param sort: sort, defaults to None
         :type sort: RolloutsListRequestSort, optional
         ...
@@ -299,13 +299,13 @@ class RolloutsClient(BaseService):
         Validator(str).is_optional().validate(job_id, "job_id")
         Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(RolloutsListRequestSort).is_optional().validate(sort, "sort")
 
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
         def _paginate() -> Generator[List[TrialSummary], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -336,7 +336,7 @@ class RolloutsClient(BaseService):
                     .add_query("job_id", job_id)
                     .add_query("job_ids", job_ids)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_query("sort", sort)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
@@ -355,11 +355,11 @@ class RolloutsClient(BaseService):
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -803,7 +803,7 @@ class RawRolloutsClient:
         job_id: str = SENTINEL,
         job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: RolloutsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[TrialSummary]]:
@@ -832,7 +832,7 @@ class RawRolloutsClient:
                         "job_id": job_id,
                         "job_ids": job_ids,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -1007,7 +1007,7 @@ class AsyncRolloutsClient(RolloutsClient):
         job_id: str = SENTINEL,
         job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: RolloutsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[TrialSummary]:  # type: ignore[override]
@@ -1035,7 +1035,7 @@ class AsyncRolloutsClient(RolloutsClient):
                         "job_id": job_id,
                         "job_ids": job_ids,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -1201,7 +1201,7 @@ class AsyncRawRolloutsClient:
         job_id: str = SENTINEL,
         job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: RolloutsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[TrialSummary]]:
@@ -1230,7 +1230,7 @@ class AsyncRawRolloutsClient:
                         "job_id": job_id,
                         "job_ids": job_ids,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
