@@ -176,9 +176,6 @@ class AccountClient(BaseService):
                 )
                 current_page = parsed_response.items
 
-                if not current_page:
-                    break
-
                 yield current_page
 
                 next_cursor = parsed_response.next_cursor
