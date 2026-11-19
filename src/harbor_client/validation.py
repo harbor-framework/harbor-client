@@ -1,0 +1,335 @@
+"""Configure native Fern clients with exact JSON Schema checks at the HTTP boundary.
+
+The generator currently loses ``not`` and null-only constraints in some models.
+The checked clients enforce the original wire contract without patching generated
+models, closing free-form objects, or adding operation-specific client methods.
+"""
+
+from __future__ import annotations
+
+from collections.abc import AsyncGenerator, Callable, Generator
+from contextlib import asynccontextmanager, contextmanager
+from functools import cache
+import gzip
+from importlib.resources import files
+import json
+import re
+from threading import Condition
+from typing import TYPE_CHECKING, Any, override
+from urllib.parse import unquote, urlsplit
+
+import httpx
+from jsonschema import Draft202012Validator, ValidationError
+from jsonschema.protocols import Validator
+
+if TYPE_CHECKING:
+    from .client import AsyncHarborAPIClient, HarborAPIClient
+
+DEFAULT_BASE_URL = "https://api.harborframework.com/functions/v1/api"
+
+
+class ContractError(ValueError):
+    """A wire payload violates the API schema; input values are never echoed."""
+
+
+def _allow_response_extensions(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: _allow_response_extensions(item)
+            for key, item in value.items()
+            if not (key == "additionalProperties" and item is False)
+        }
+    if isinstance(value, list):
+        return [_allow_response_extensions(item) for item in value]
+    return value
+
+
+@cache
+def _schema(response: bool = False) -> dict[str, Any]:
+    if response:
+        # Additive response fields are compatible with older SDKs. Keep known
+        # field constraints (including not/null), but permit future fields.
+        return _allow_response_extensions(_schema())
+    return json.loads(
+        gzip.decompress(
+            files("harbor_client").joinpath("_openapi.json.gz").read_bytes()
+        )
+    )
+
+
+# Follow the selected contract when its API version advances.
+API_VERSION: str = _schema()["info"]["version"]
+
+
+def _pointer(parts: tuple[str, ...]) -> str:
+    return "#/" + "/".join(part.replace("~", "~0").replace("/", "~1") for part in parts)
+
+
+@cache
+def _validator(parts: tuple[str, ...]) -> Validator:
+    return Draft202012Validator(
+        {**_schema(response=parts[3] == "responses"), "$ref": _pointer(parts)}
+    )
+
+
+def _validate(parts: tuple[str, ...], value: Any, where: str) -> None:
+    try:
+        _validator(parts).validate(value)
+    except ValidationError as exc:
+        raise ContractError(
+            f"{where} violates the API schema ({exc.validator})"
+        ) from None
+
+
+@cache
+def _routes() -> list[tuple[str, re.Pattern[str], list[str]]]:
+    routes = []
+    # OpenAPI gives concrete paths precedence over templates.
+    paths = sorted(
+        _schema()["paths"],
+        key=lambda path: (
+            tuple("{" in segment for segment in path.split("/")),
+            path.count("{"),
+            -len(path),
+        ),
+    )
+    for path in paths:
+        names = re.findall(r"\{([^{}]+)\}", path)
+        pattern = "([^/]+)".join(
+            re.escape(part) for part in re.split(r"\{[^{}]+\}", path)
+        )
+        routes.append((path, re.compile(pattern), names))
+    return routes
+
+
+class ContractTransport(httpx.BaseTransport):
+    """Validate serialized request bodies and JSON responses before Fern parses them."""
+
+    def __init__(
+        self, transport: httpx.BaseTransport, base_url: str = DEFAULT_BASE_URL
+    ) -> None:
+        self._transport = transport
+        self._condition = Condition()
+        self._active = 0
+        self._closed = False
+        self.set_base_url(base_url)
+
+    def set_base_url(self, base_url: str) -> None:
+        """Move the checked origin and base path; later requests must match it."""
+        base = httpx.URL(_checked_base_url(base_url))
+        with self._condition:
+            self._base = base
+            self._prefix = base.raw_path.rstrip(b"/")
+
+    @override
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        with self._condition:
+            if self._closed:
+                raise RuntimeError("The checked SDK session is closed")
+            self._active += 1
+        try:
+            return self._handle_request(request)
+        finally:
+            with self._condition:
+                self._active -= 1
+                self._condition.notify_all()
+
+    def _handle_request(self, request: httpx.Request) -> httpx.Response:
+        base, prefix = self._base, self._prefix
+        if (request.url.scheme, request.url.host, request.url.port) != (
+            base.scheme,
+            base.host,
+            base.port,
+        ):
+            raise ValueError(
+                "The checked client only sends requests to its configured API origin"
+            )
+        raw_path = request.url.raw_path.split(b"?", 1)[0]
+        if not raw_path.startswith(prefix + b"/"):
+            raise ValueError("The request does not match the configured API base path")
+        relative = raw_path.removeprefix(prefix).decode("ascii")
+        method = request.method.lower()
+        path_values = {}
+        path = relative
+        for template, pattern, names in _routes():
+            match = pattern.fullmatch(relative)
+            if match is not None:
+                path = template
+                path_values = {
+                    name: unquote(value)
+                    for name, value in zip(names, match.groups(), strict=True)
+                }
+                break
+        operation = _schema()["paths"].get(path, {}).get(method)
+        if operation is None:
+            raise ValueError("The request does not match a documented API operation")
+        for index, parameter in enumerate(operation.get("parameters", [])):
+            location = parameter["in"]
+            if location not in {"header", "query", "path"}:
+                continue
+            name = parameter["name"]
+            if location == "query":
+                values = request.url.params.get_list(name)
+                # OpenAPI's default form/explode encoding repeats the key.
+                if parameter.get("schema", {}).get("type") == "array":
+                    value = values or None
+                elif len(values) > 1:
+                    raise ContractError(
+                        f"query parameter {name} must appear at most once"
+                    )
+                else:
+                    value = values[0] if values else None
+            else:
+                source = request.headers if location == "header" else path_values
+                value = source.get(name)
+            if value is None:
+                if parameter.get("required"):
+                    raise ValueError(f"The operation requires {parameter['name']}")
+            elif "schema" in parameter:
+                _validate(
+                    ("paths", path, method, "parameters", str(index), "schema"),
+                    value,
+                    f"{location} parameter {parameter['name']}",
+                )
+        media = request.headers.get("content-type", "").split(";", 1)[0].strip()
+        body = operation.get("requestBody")
+        if body is not None:
+            if not request.content:
+                if body.get("required"):
+                    raise ValueError("The API operation requires a request body")
+            elif media in body.get("content", {}):
+                if media == "application/json" or media.endswith("+json"):
+                    _validate(
+                        (
+                            "paths",
+                            path,
+                            method,
+                            "requestBody",
+                            "content",
+                            media,
+                            "schema",
+                        ),
+                        json.loads(request.content),
+                        "request body",
+                    )
+            else:
+                raise ValueError("The request body content type is not documented")
+        response = self._transport.handle_request(request)
+        if response.is_error:
+            # Proxies and gateways answer with HTML or plain text. Leave error bodies
+            # to Fern, which raises a typed ApiError and applies the retry policy.
+            return response
+        try:
+            responses = operation.get("responses", {})
+            code = str(response.status_code)
+            code = code if code in responses else "default"
+            media = response.headers.get("content-type", "").split(";", 1)[0].strip()
+            content = responses.get(code, {}).get("content", {})
+            if content and media not in content:
+                raise ValueError(
+                    "The response content type does not match the API contract"
+                )
+            if media in content and (
+                media == "application/json" or media.endswith("+json")
+            ):
+                response.read()
+                _validate(
+                    (
+                        "paths",
+                        path,
+                        method,
+                        "responses",
+                        code,
+                        "content",
+                        media,
+                        "schema",
+                    ),
+                    response.json(),
+                    "response body",
+                )
+            return response
+        except BaseException:
+            response.close()
+            raise
+
+    @override
+    def close(self) -> None:
+        with self._condition:
+            if self._closed:
+                return
+            self._closed = True
+            self._condition.wait_for(lambda: self._active == 0)
+        self._transport.close()
+
+
+def _checked_base_url(base_url: str) -> str:
+    parsed = urlsplit(base_url)
+    if parsed.scheme != "https" and not (
+        parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+    ):
+        raise ValueError(
+            "The Harbor API requires HTTPS except for loopback development"
+        )
+    return base_url
+
+
+class _CheckedClient(httpx.Client):
+    """Reject dot path segments before HTTPX resolves them into another route."""
+
+    def __init__(self, contract: ContractTransport) -> None:
+        super().__init__(transport=contract, timeout=60)
+        self.contract = contract
+
+    @override
+    def build_request(self, method: str, url: Any, **kwargs: Any) -> httpx.Request:
+        path = urlsplit(str(url)).path
+        if any(segment in {".", ".."} for segment in path.split("/")):
+            raise ValueError("Path parameters cannot be '.' or '..'")
+        return super().build_request(method, url, **kwargs)
+
+
+def _http(base_url: str, transport: httpx.BaseTransport | None) -> _CheckedClient:
+    _checked_base_url(base_url)
+    return _CheckedClient(
+        ContractTransport(transport or httpx.HTTPTransport(), base_url)
+    )
+
+
+@contextmanager
+def sync_client(
+    *,
+    token: str | Callable[[], str] | None = None,
+    base_url: str = DEFAULT_BASE_URL,
+    api_version: str = API_VERSION,
+    transport: httpx.BaseTransport | None = None,
+) -> Generator[HarborAPIClient]:
+    """Compatibility shim; new integrations construct HarborAPIClient directly."""
+    from .client import HarborAPIClient
+
+    with HarborAPIClient(
+        token=token,
+        base_url=base_url,
+        harbor_api_version=api_version,
+        transport=transport,
+    ) as client:
+        yield client
+
+
+@asynccontextmanager
+async def async_client(
+    *,
+    token: str | Callable[[], str] | None = None,
+    base_url: str = DEFAULT_BASE_URL,
+    api_version: str = API_VERSION,
+    transport: httpx.BaseTransport | None = None,
+) -> AsyncGenerator[AsyncHarborAPIClient]:
+    """Compatibility shim; new integrations construct AsyncHarborAPIClient directly."""
+    from .client import AsyncHarborAPIClient
+
+    async with AsyncHarborAPIClient(
+        token=token,
+        base_url=base_url,
+        harbor_api_version=api_version,
+        transport=transport,
+    ) as client:
+        yield client

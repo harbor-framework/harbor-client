@@ -2,12 +2,12 @@ from ...types import (
     ApiKeysListBadRequestResponse,
     ApiKeysListBadRequestResponse_BadRequest,
     ApiKeysListBadRequestResponse_InvalidPageSize,
-    ApiKeysListBadRequestResponse_InvalidPageToken,
+    ApiKeysListBadRequestResponse_InvalidCursor,
 )
 
 __all__ = [
     "ApiKeysListBadRequestResponse",
     "ApiKeysListBadRequestResponse_BadRequest",
     "ApiKeysListBadRequestResponse_InvalidPageSize",
-    "ApiKeysListBadRequestResponse_InvalidPageToken",
+    "ApiKeysListBadRequestResponse_InvalidCursor",
 ]

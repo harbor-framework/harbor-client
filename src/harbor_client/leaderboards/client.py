@@ -50,7 +50,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -189,7 +189,7 @@ class LeaderboardsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/{{leaderboard_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/{{leaderboard_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -269,7 +269,7 @@ class LeaderboardsClient(BaseService):
         Validator(LeaderboardsUpdateRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/{{leaderboard_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/{{leaderboard_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -327,7 +327,7 @@ class LeaderboardsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/resolve",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/resolve",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -378,7 +378,7 @@ class LeaderboardsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/rows/{{row_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/rows/{{row_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -413,7 +413,7 @@ class LeaderboardsClient(BaseService):
         package: LeaderboardPackageSelectorEncoded = SENTINEL,
         name: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         row_ids: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[LeaderboardRankedRow]:
@@ -427,8 +427,8 @@ class LeaderboardsClient(BaseService):
         :type name: str, optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param row_ids: row_ids, defaults to None
         :type row_ids: str, optional
         ...
@@ -444,7 +444,7 @@ class LeaderboardsClient(BaseService):
         )
         Validator(str).is_optional().validate(name, "name")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(str).is_optional().validate(row_ids, "row_ids")
 
         resolved_config = self._get_resolved_config(
@@ -452,11 +452,11 @@ class LeaderboardsClient(BaseService):
         )
 
         def _paginate() -> Generator[List[LeaderboardRankedRow], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/rows",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/rows",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -468,7 +468,7 @@ class LeaderboardsClient(BaseService):
                     .add_query("package", package)
                     .add_query("name", name)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_query("row_ids", row_ids)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
@@ -483,18 +483,18 @@ class LeaderboardsClient(BaseService):
                     if should_validate_response(resolved_config)
                     else construct_lenient(LeaderboardRowsPage, response)
                 )
-                current_page = parsed_response.rows
+                current_page = parsed_response.items
 
                 if not current_page:
                     break
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -503,7 +503,7 @@ class LeaderboardsClient(BaseService):
         self,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         package: LeaderboardPackageSelectorEncoded = SENTINEL,
         dataset_version_id: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -512,8 +512,8 @@ class LeaderboardsClient(BaseService):
 
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param package: package, defaults to None
         :type package: LeaderboardPackageSelectorEncoded, optional
         :param dataset_version_id: dataset_version_id, defaults to None
@@ -526,7 +526,7 @@ class LeaderboardsClient(BaseService):
         """
 
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(LeaderboardPackageSelectorEncoded).is_optional().validate(
             package, "package"
         )
@@ -535,11 +535,11 @@ class LeaderboardsClient(BaseService):
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
         def _paginate() -> Generator[List[LeaderboardSummary], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -548,7 +548,7 @@ class LeaderboardsClient(BaseService):
                         self._global_headers.get("Harbor-API-Version"),
                     )
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_query("package", package)
                     .add_query("dataset_version_id", dataset_version_id)
                     .add_error(401, UnauthorizedEncoded)
@@ -564,18 +564,18 @@ class LeaderboardsClient(BaseService):
                     if should_validate_response(resolved_config)
                     else construct_lenient(LeaderboardSummaryPage, response)
                 )
-                current_page = parsed_response.leaderboards
+                current_page = parsed_response.items
 
                 if not current_page:
                     break
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -637,7 +637,7 @@ class LeaderboardsClient(BaseService):
         Validator(LeaderboardsCreateRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -670,7 +670,7 @@ class LeaderboardsClient(BaseService):
         row_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[LeaderboardTrialLink]:
         """list_trials
@@ -679,8 +679,8 @@ class LeaderboardsClient(BaseService):
         :type row_id: str
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
@@ -690,18 +690,18 @@ class LeaderboardsClient(BaseService):
 
         Validator(str).validate(row_id, "row_id")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
 
         resolved_config = self._get_resolved_config(
             self._list_trials_config, request_options
         )
 
         def _paginate() -> Generator[List[LeaderboardTrialLink], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/leaderboards/rows/{{row_id}}/trials",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/leaderboards/rows/{{row_id}}/trials",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -711,7 +711,7 @@ class LeaderboardsClient(BaseService):
                     )
                     .add_path("row_id", row_id)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -725,18 +725,18 @@ class LeaderboardsClient(BaseService):
                     if should_validate_response(resolved_config)
                     else construct_lenient(LeaderboardTrialLinkPage, response)
                 )
-                current_page = parsed_response.trials
+                current_page = parsed_response.items
 
                 if not current_page:
                     break
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -824,7 +824,7 @@ class RawLeaderboardsClient:
         package: LeaderboardPackageSelectorEncoded = SENTINEL,
         name: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         row_ids: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[LeaderboardRankedRow]]:
@@ -838,7 +838,7 @@ class RawLeaderboardsClient:
                         "package": package,
                         "name": name,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "row_ids": row_ids,
                     }.items()
                     if v is not SENTINEL
@@ -852,7 +852,7 @@ class RawLeaderboardsClient:
         self,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         package: LeaderboardPackageSelectorEncoded = SENTINEL,
         dataset_version_id: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -864,7 +864,7 @@ class RawLeaderboardsClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "package": package,
                         "dataset_version_id": dataset_version_id,
                     }.items()
@@ -923,7 +923,7 @@ class RawLeaderboardsClient:
         row_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[LeaderboardTrialLink]]:
         data = LeaderboardsClient.list_trials(
@@ -932,10 +932,7 @@ class RawLeaderboardsClient:
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -1019,7 +1016,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
         package: LeaderboardPackageSelectorEncoded = SENTINEL,
         name: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         row_ids: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[LeaderboardRankedRow]:  # type: ignore[override]
@@ -1032,7 +1029,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
                         "package": package,
                         "name": name,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "row_ids": row_ids,
                     }.items()
                     if v is not SENTINEL
@@ -1051,7 +1048,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
         self,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         package: LeaderboardPackageSelectorEncoded = SENTINEL,
         dataset_version_id: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1062,7 +1059,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "package": package,
                         "dataset_version_id": dataset_version_id,
                     }.items()
@@ -1124,7 +1121,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
         row_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[LeaderboardTrialLink]:  # type: ignore[override]
         sync_pager = super().list_trials(
@@ -1132,10 +1129,7 @@ class AsyncLeaderboardsClient(LeaderboardsClient):
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -1228,7 +1222,7 @@ class AsyncRawLeaderboardsClient:
         package: LeaderboardPackageSelectorEncoded = SENTINEL,
         name: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         row_ids: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[LeaderboardRankedRow]]:
@@ -1242,7 +1236,7 @@ class AsyncRawLeaderboardsClient:
                         "package": package,
                         "name": name,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "row_ids": row_ids,
                     }.items()
                     if v is not SENTINEL
@@ -1256,7 +1250,7 @@ class AsyncRawLeaderboardsClient:
         self,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         package: LeaderboardPackageSelectorEncoded = SENTINEL,
         dataset_version_id: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1268,7 +1262,7 @@ class AsyncRawLeaderboardsClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "package": package,
                         "dataset_version_id": dataset_version_id,
                     }.items()
@@ -1327,7 +1321,7 @@ class AsyncRawLeaderboardsClient:
         row_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[LeaderboardTrialLink]]:
         data = AsyncLeaderboardsClient.list_trials(
@@ -1336,10 +1330,7 @@ class AsyncRawLeaderboardsClient:
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),

@@ -1,6 +1,6 @@
 from typing import Any, Dict, TypedDict, Optional, Union
 
-from ..net.environment import HarborAPIClientEnvironment
+from ..net.environment import HarborApiClientEnvironment
 
 
 class RetryConfig(TypedDict, total=False):
@@ -73,8 +73,8 @@ class SdkConfig(TypedDict, total=False):
     - Service config (set via set_config())
     - SDK config (set at initialization)
 
-    :ivar Union[HarborAPIClientEnvironment, str] base_url: Base URL for API requests. Can be a string URL or HarborAPIClientEnvironment enum. Wins over ``environment`` when both are set.
-    :ivar Union[HarborAPIClientEnvironment, str] environment: Base URL for API requests, expressed as an HarborAPIClientEnvironment enum member. Used only when ``base_url`` is not set at this or a higher-priority scope.
+    :ivar Union[HarborApiClientEnvironment, str] base_url: Base URL for API requests. Can be a string URL or HarborApiClientEnvironment enum. Wins over ``environment`` when both are set.
+    :ivar Union[HarborApiClientEnvironment, str] environment: Base URL for API requests, expressed as an HarborApiClientEnvironment enum member. Used only when ``base_url`` is not set at this or a higher-priority scope.
     :ivar float timeout: Request timeout in seconds.
     :ivar Dict[str, str] additional_headers: Extra headers merged into every request in scope. They override headers the SDK already set for the request (authentication, User-Agent, spec-declared header parameters) but not the body's Content-Type.
     :ivar Dict[str, Any] additional_query_parameters: Extra query parameters appended to every request in scope, under the wire names given. An entry overrides a spec-declared parameter of the same name. A list value is sent as a repeated key; a dict value as `key[sub]=value`.
@@ -87,8 +87,8 @@ class SdkConfig(TypedDict, total=False):
     :ivar ValidationConfig validation: Validation configuration.
     """
 
-    base_url: Union[HarborAPIClientEnvironment, str]
-    environment: Union[HarborAPIClientEnvironment, str]
+    base_url: Union[HarborApiClientEnvironment, str]
+    environment: Union[HarborApiClientEnvironment, str]
     timeout: float
     additional_headers: Dict[str, str]
     additional_query_parameters: Dict[str, Any]

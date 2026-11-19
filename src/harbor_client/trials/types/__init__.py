@@ -1,21 +1,29 @@
-from .trials_list_request_failed_only import TrialsListRequestFailedOnly
 from .trials_list_request_attempts import TrialsListRequestAttempts
-from .trials_list_request_sort_by import TrialsListRequestSortBy
-from .trials_list_request_sort_order import TrialsListRequestSortOrder
+from .trials_list_request_failed_only import TrialsListRequestFailedOnly
+from .trials_list_request_terminal import TrialsListRequestTerminal
+from .trials_list_request_sort import TrialsListRequestSort
 from .trials_list_bad_request_response import (
     TrialsListBadRequestResponse,
     TrialsListBadRequestResponse_BadRequest,
     TrialsListBadRequestResponse_InvalidPageSize,
-    TrialsListBadRequestResponse_InvalidPageToken,
+    TrialsListBadRequestResponse_InvalidCursor,
 )
+from .trials_get_filters_request_attempts import TrialsGetFiltersRequestAttempts
+from .trials_get_filters_request_failed_only import TrialsGetFiltersRequestFailedOnly
+from .trials_get_filters_request_terminal import TrialsGetFiltersRequestTerminal
+from .trials_get_filters_request_field import TrialsGetFiltersRequestField
 
 __all__ = [
-    "TrialsListRequestFailedOnly",
     "TrialsListRequestAttempts",
-    "TrialsListRequestSortBy",
-    "TrialsListRequestSortOrder",
+    "TrialsListRequestFailedOnly",
+    "TrialsListRequestTerminal",
+    "TrialsListRequestSort",
     "TrialsListBadRequestResponse",
     "TrialsListBadRequestResponse_BadRequest",
     "TrialsListBadRequestResponse_InvalidPageSize",
-    "TrialsListBadRequestResponse_InvalidPageToken",
+    "TrialsListBadRequestResponse_InvalidCursor",
+    "TrialsGetFiltersRequestAttempts",
+    "TrialsGetFiltersRequestFailedOnly",
+    "TrialsGetFiltersRequestTerminal",
+    "TrialsGetFiltersRequestField",
 ]

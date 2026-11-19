@@ -19,7 +19,7 @@ from ..net.transport.serializer import Serializer
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -95,7 +95,7 @@ class StorageClient(BaseService):
         Validator(StorageUploadCreate).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/storage/uploads",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/storage/uploads",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -146,7 +146,7 @@ class StorageClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/storage/uploads/{{upload_id}}/complete",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/storage/uploads/{{upload_id}}/complete",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )

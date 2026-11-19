@@ -2,6 +2,8 @@ from __future__ import annotations
 from pydantic import Field
 from typing import Optional
 from typing import Any
+from typing import Union
+from typing import Dict
 from .utils.base_model import BaseModel
 
 
@@ -15,7 +17,7 @@ class ResolvedTaskStep(BaseModel):
     :param instruction: instruction
     :type instruction: str
     :param config: config
-    :type config: Any
+    :type config: Dict[str, Any]
     :param agent_config: agent_config
     :type agent_config: Any
     :param verifier_config: verifier_config
@@ -29,7 +31,7 @@ class ResolvedTaskStep(BaseModel):
     step_index: int
     name: str
     instruction: str
-    config: Any
+    config: Optional[Dict[str, Any]]
     agent_config: Any
     verifier_config: Any
     healthcheck_config: Any

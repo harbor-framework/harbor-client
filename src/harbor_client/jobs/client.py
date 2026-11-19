@@ -4,36 +4,37 @@ from ..services.utils.base_service import BaseService
 from ..types.utils.sentinel import SENTINEL
 from ..types.utils.cast_models import cast_models
 from ..types.utils.base_model import construct_lenient
+from ..types.jobs_submit_response import JobsSubmitResponse_adapter
 from ..types.jobs_list_tasks_bad_request_response import (
     JobsListTasksBadRequestResponse_adapter,
 )
 from ..types.jobs_list_bad_request_response import JobsListBadRequestResponse_adapter
 from ..types import (
     BadRequestEncoded,
-    CancelJobWithIdRequest,
+    CancelJobRequest,
     ConflictEncoded,
     CreatedResultJob,
     DeleteJobsRequest,
     DeleteJobsResponse,
     EvaluationComparison,
+    FilterValuesResponse,
     ForbiddenEncoded,
     InternalServerErrorEncoded,
     JobArtifactType,
-    JobDetail,
     JobOverview,
     JobPage,
+    JobResponse,
     JobsCopyRequest,
+    JobsGetFiltersRequestField,
     JobsGetOverviewRequestForceCombined,
     JobSharing,
     JobsListBadRequestResponse,
-    JobsListRequestAccess,
-    JobsListRequestArchive,
-    JobsListRequestScope,
     JobsListRequestSort,
     JobsListTasksBadRequestResponse,
     JobsListTasksRequestSortBy,
     JobsListTasksRequestSortOrder,
     JobsRenameRequest,
+    JobsSubmitResponse,
     JobsTransferRequest,
     JobSummary,
     JobTaskPage,
@@ -43,13 +44,13 @@ from ..types import (
     RenameJobResponse,
     ResultJobCreate,
     ResultJobCreateVisibility,
+    RunState,
     ServiceUnavailableEncoded,
     StorageCopyResult,
     StorageDownload,
     SubmitJobRequest,
     SubmitJobRequestConfig,
     SubmitJobRequestRegrade,
-    SubmitJobResponse,
     TooManyRequestsEncoded,
     TransferJobResponse,
     UnauthorizedEncoded,
@@ -61,7 +62,7 @@ from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
@@ -84,15 +85,18 @@ class JobsClient(BaseService):
         self._get_sharing_config: SdkConfig = {}
         self._update_sharing_config: SdkConfig = {}
         self._get_trial_status_config: SdkConfig = {}
-        self._get_artifact_download_config: SdkConfig = {}
-        self._submit_config: SdkConfig = {}
         self._get_config: SdkConfig = {}
         self._rename_config: SdkConfig = {}
+        self._get_artifact_download_config: SdkConfig = {}
+        self._submit_config: SdkConfig = {}
         self._delete_config: SdkConfig = {}
         self._transfer_config: SdkConfig = {}
         self._copy_config: SdkConfig = {}
+        self._pause_config: SdkConfig = {}
+        self._resume_config: SdkConfig = {}
         self._cancel_config: SdkConfig = {}
         self._list_config: SdkConfig = {}
+        self._get_filters_config: SdkConfig = {}
         self._list_tasks_config: SdkConfig = {}
         self._import_results_config: SdkConfig = {}
         self._get_overview_config: SdkConfig = {}
@@ -128,26 +132,6 @@ class JobsClient(BaseService):
         self._get_trial_status_config = config
         return self
 
-    def set_get_artifact_download_config(self, config: SdkConfig):
-        """
-        Sets method-level configuration for get_artifact_download.
-
-        :param SdkConfig config: Configuration dictionary to override service-level defaults.
-        :return: The service instance for method chaining.
-        """
-        self._get_artifact_download_config = config
-        return self
-
-    def set_submit_config(self, config: SdkConfig):
-        """
-        Sets method-level configuration for submit.
-
-        :param SdkConfig config: Configuration dictionary to override service-level defaults.
-        :return: The service instance for method chaining.
-        """
-        self._submit_config = config
-        return self
-
     def set_get_config(self, config: SdkConfig):
         """
         Sets method-level configuration for get.
@@ -166,6 +150,26 @@ class JobsClient(BaseService):
         :return: The service instance for method chaining.
         """
         self._rename_config = config
+        return self
+
+    def set_get_artifact_download_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for get_artifact_download.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._get_artifact_download_config = config
+        return self
+
+    def set_submit_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for submit.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._submit_config = config
         return self
 
     def set_delete_config(self, config: SdkConfig):
@@ -198,6 +202,26 @@ class JobsClient(BaseService):
         self._copy_config = config
         return self
 
+    def set_pause_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for pause.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._pause_config = config
+        return self
+
+    def set_resume_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for resume.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._resume_config = config
+        return self
+
     def set_cancel_config(self, config: SdkConfig):
         """
         Sets method-level configuration for cancel.
@@ -216,6 +240,16 @@ class JobsClient(BaseService):
         :return: The service instance for method chaining.
         """
         self._list_config = config
+        return self
+
+    def set_get_filters_config(self, config: SdkConfig):
+        """
+        Sets method-level configuration for get_filters.
+
+        :param SdkConfig config: Configuration dictionary to override service-level defaults.
+        :return: The service instance for method chaining.
+        """
+        self._get_filters_config = config
         return self
 
     def set_list_tasks_config(self, config: SdkConfig):
@@ -290,7 +324,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -368,7 +402,7 @@ class JobsClient(BaseService):
         Validator(UpdateJobSharingRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/shares",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -419,7 +453,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/trial-status",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/trial-status",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -449,153 +483,9 @@ class JobsClient(BaseService):
         )
 
     @cast_models
-    def get_artifact_download(
-        self,
-        job_id: str,
-        *,
-        artifact_type: JobArtifactType,
-        request_options: Optional[RequestOptions] = None,
-    ) -> StorageDownload:
-        """get_artifact_download
-
-        :param job_id: job_id
-        :type job_id: str
-        :param artifact_type: artifact_type
-        :type artifact_type: JobArtifactType
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: StorageDownload
-        """
-
-        Validator(str).validate(job_id, "job_id")
-        Validator(JobArtifactType).validate(artifact_type, "artifact_type")
-
-        resolved_config = self._get_resolved_config(
-            self._get_artifact_download_config, request_options
-        )
-
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/artifacts",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_path("job_id", job_id)
-            .add_query("artifact_type", artifact_type)
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(429, TooManyRequestsEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("GET")
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                StorageDownload.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(StorageDownload, response)
-            )
-        )
-
-    @cast_models
-    def submit(
-        self,
-        *,
-        config: SubmitJobRequestConfig,
-        relay_inference: bool,
-        idempotency_key: str,
-        dry_run: bool = SENTINEL,
-        job_secrets: Union[dict, None] = SENTINEL,
-        registry_credentials: Union[dict, None] = SENTINEL,
-        regrade: SubmitJobRequestRegrade = SENTINEL,
-        organization_id: str = SENTINEL,
-        session_id: Union[str, None] = SENTINEL,
-        request_options: Optional[RequestOptions] = None,
-    ) -> SubmitJobResponse:
-        """submit
-
-        :param request_body: The request body.
-        :type request_body: SubmitJobRequest
-        :param idempotency_key: idempotency_key
-        :type idempotency_key: str
-        ...
-        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
-        ...
-        :return: The parsed response data.
-        :rtype: SubmitJobResponse
-        """
-
-        Validator(str).validate(idempotency_key, "idempotency_key")
-
-        resolved_config = self._get_resolved_config(
-            self._submit_config, request_options
-        )
-
-        request_body = SubmitJobRequest(
-            config=config,
-            relay_inference=relay_inference,
-            **dict[str, Any](
-                {
-                    k: v
-                    for k, v in {
-                        "dry_run": dry_run,
-                        "job_secrets": job_secrets,
-                        "registry_credentials": registry_credentials,
-                        "regrade": regrade,
-                        "organization_id": organization_id,
-                        "session_id": session_id,
-                    }.items()
-                    if v is not SENTINEL
-                }
-            ),
-        )
-        Validator(SubmitJobRequest).validate(request_body, "request_body")
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/submit",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_header("idempotency-key", idempotency_key)
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(429, TooManyRequestsEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .add_error(503, ServiceUnavailableEncoded)
-            .serialize()
-            .set_method("POST")
-            .set_body(request_body)
-        )
-
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                SubmitJobResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(SubmitJobResponse, response)
-            )
-        )
-
-    @cast_models
     def get(
         self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> JobDetail:
+    ) -> JobResponse:
         """get
 
         :param job_id: job_id
@@ -604,7 +494,7 @@ class JobsClient(BaseService):
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: JobDetail
+        :rtype: JobResponse
         """
 
         Validator(str).validate(job_id, "job_id")
@@ -613,7 +503,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -634,9 +524,9 @@ class JobsClient(BaseService):
             None
             if response in (b"", "")
             else (
-                JobDetail.model_validate(response)
+                JobResponse.model_validate(response)
                 if should_validate_response(resolved_config)
-                else construct_lenient(JobDetail, response)
+                else construct_lenient(JobResponse, response)
             )
         )
 
@@ -671,7 +561,7 @@ class JobsClient(BaseService):
         Validator(JobsRenameRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -696,6 +586,150 @@ class JobsClient(BaseService):
                 RenameJobResponse.model_validate(response)
                 if should_validate_response(resolved_config)
                 else construct_lenient(RenameJobResponse, response)
+            )
+        )
+
+    @cast_models
+    def get_artifact_download(
+        self,
+        job_id: str,
+        *,
+        artifact_type: JobArtifactType,
+        request_options: Optional[RequestOptions] = None,
+    ) -> StorageDownload:
+        """get_artifact_download
+
+        :param job_id: job_id
+        :type job_id: str
+        :param artifact_type: artifact_type
+        :type artifact_type: JobArtifactType
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: StorageDownload
+        """
+
+        Validator(str).validate(job_id, "job_id")
+        Validator(JobArtifactType).validate(artifact_type, "artifact_type")
+
+        resolved_config = self._get_resolved_config(
+            self._get_artifact_download_config, request_options
+        )
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/artifacts",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_path("job_id", job_id)
+            .add_query("artifact_type", artifact_type)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(429, TooManyRequestsEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("GET")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                StorageDownload.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(StorageDownload, response)
+            )
+        )
+
+    @cast_models
+    def submit(
+        self,
+        *,
+        config: SubmitJobRequestConfig,
+        idempotency_key: str,
+        dry_run: bool = SENTINEL,
+        job_secrets: Union[dict, None] = SENTINEL,
+        registry_credentials: Union[dict, None] = SENTINEL,
+        regrade: SubmitJobRequestRegrade = SENTINEL,
+        organization_id: str = SENTINEL,
+        relay_inference: bool = SENTINEL,
+        session_id: Union[str, None] = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> JobsSubmitResponse:
+        """submit
+
+        :param request_body: The request body.
+        :type request_body: SubmitJobRequest
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: JobsSubmitResponse
+        """
+
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(
+            self._submit_config, request_options
+        )
+
+        request_body = SubmitJobRequest(
+            config=config,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "dry_run": dry_run,
+                        "job_secrets": job_secrets,
+                        "registry_credentials": registry_credentials,
+                        "regrade": regrade,
+                        "organization_id": organization_id,
+                        "relay_inference": relay_inference,
+                        "session_id": session_id,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+        )
+        Validator(SubmitJobRequest).validate(request_body, "request_body")
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/submit",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(429, TooManyRequestsEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .add_error(503, ServiceUnavailableEncoded)
+            .serialize()
+            .set_method("POST")
+            .set_body(request_body)
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                JobsSubmitResponse_adapter.validate_python(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(JobsSubmitResponse, response)
             )
         )
 
@@ -729,7 +763,7 @@ class JobsClient(BaseService):
         Validator(DeleteJobsRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/delete",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/delete",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -801,7 +835,7 @@ class JobsClient(BaseService):
         Validator(JobsTransferRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/transfer",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/transfer",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -872,7 +906,7 @@ class JobsClient(BaseService):
         Validator(JobsCopyRequest).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{source_job_id}}/copy",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{source_job_id}}/copy",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -902,46 +936,167 @@ class JobsClient(BaseService):
         )
 
     @cast_models
-    def cancel(
+    def pause(
         self,
-        *,
         job_id: str,
-        soft: bool,
-        reason: Union[str, None] = SENTINEL,
+        *,
+        idempotency_key: str,
         request_options: Optional[RequestOptions] = None,
-    ) -> Any:
-        """cancel
+    ) -> JobResponse:
+        """pause
 
-        :param request_body: The request body.
-        :type request_body: CancelJobWithIdRequest
+        :param job_id: job_id
+        :type job_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: Any
+        :rtype: JobResponse
         """
 
-        resolved_config = self._get_resolved_config(
-            self._cancel_config, request_options
-        )
+        Validator(str).validate(job_id, "job_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
 
-        request_body = CancelJobWithIdRequest(
-            job_id=job_id,
-            soft=soft,
-            **dict[str, Any](
-                {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
-            ),
-        )
-        Validator(CancelJobWithIdRequest).validate(request_body, "request_body")
+        resolved_config = self._get_resolved_config(self._pause_config, request_options)
+
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/cancel",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/pause",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
             .add_header(
                 "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
             )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("job_id", job_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                JobResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(JobResponse, response)
+            )
+        )
+
+    @cast_models
+    def resume(
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> JobResponse:
+        """resume
+
+        :param job_id: job_id
+        :type job_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: JobResponse
+        """
+
+        Validator(str).validate(job_id, "job_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(
+            self._resume_config, request_options
+        )
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/resume",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("job_id", job_id)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("POST")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                JobResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(JobResponse, response)
+            )
+        )
+
+    @cast_models
+    def cancel(
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        force: bool = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> JobResponse:
+        """cancel
+
+        :param request_body: The request body.
+        :type request_body: CancelJobRequest
+        :param job_id: job_id
+        :type job_id: str
+        :param idempotency_key: idempotency_key
+        :type idempotency_key: str
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: JobResponse
+        """
+
+        Validator(str).validate(job_id, "job_id")
+        Validator(str).validate(idempotency_key, "idempotency_key")
+
+        resolved_config = self._get_resolved_config(
+            self._cancel_config, request_options
+        )
+
+        request_body = CancelJobRequest(
+            **dict[str, Any](
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
+            )
+        )
+        Validator(CancelJobRequest).validate(request_body, "request_body")
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/cancel",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_header("idempotency-key", idempotency_key)
+            .add_path("job_id", job_id)
             .add_error(401, UnauthorizedEncoded)
             .add_error(403, ForbiddenEncoded)
             .add_error(404, NotFoundEncoded)
@@ -952,68 +1107,67 @@ class JobsClient(BaseService):
         )
 
         response, status, content = self.send_request(serialized_request)
-        return response
+        return (
+            None
+            if response in (b"", "")
+            else (
+                JobResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(JobResponse, response)
+            )
+        )
 
     @cast_models
     def list(
         self,
         *,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        offset: str = SENTINEL,
-        search: str = SENTINEL,
-        agents: str = SENTINEL,
-        providers: str = SENTINEL,
-        models: str = SENTINEL,
-        date_: str = SENTINEL,
-        scope: JobsListRequestScope = SENTINEL,
-        shared_with_organization_id: str = SENTINEL,
-        datasets: str = SENTINEL,
-        access: JobsListRequestAccess = SENTINEL,
-        owner_organization_id: str = SENTINEL,
-        date_from: str = SENTINEL,
-        date_to: str = SENTINEL,
-        created_by: str = SENTINEL,
-        archive: JobsListRequestArchive = SENTINEL,
+        cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[JobSummary]:
         """list
 
+        :param task: task, defaults to None
+        :type task: List[str], optional
+        :param state: state, defaults to None
+        :type state: RunState, optional
+        :param name: name, defaults to None
+        :type name: str, optional
+        :param q: q, defaults to None
+        :type q: str, optional
+        :param agent_name: agent_name, defaults to None
+        :type agent_name: List[str], optional
+        :param agent_version: agent_version, defaults to None
+        :type agent_version: List[str], optional
+        :param model_name: model_name, defaults to None
+        :type model_name: List[str], optional
+        :param model_provider: model_provider, defaults to None
+        :type model_provider: List[str], optional
+        :param reasoning_effort: reasoning_effort, defaults to None
+        :type reasoning_effort: List[str], optional
+        :param source: source, defaults to None
+        :type source: List[str], optional
+        :param created_after: created_after, defaults to None
+        :type created_after: str, optional
+        :param created_before: created_before, defaults to None
+        :type created_before: str, optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
-        :param search: search, defaults to None
-        :type search: str, optional
-        :param agents: agents, defaults to None
-        :type agents: str, optional
-        :param providers: providers, defaults to None
-        :type providers: str, optional
-        :param models: models, defaults to None
-        :type models: str, optional
-        :param date_: date_, defaults to None
-        :type date_: str, optional
-        :param scope: scope, defaults to None
-        :type scope: JobsListRequestScope, optional
-        :param shared_with_organization_id: shared_with_organization_id, defaults to None
-        :type shared_with_organization_id: str, optional
-        :param datasets: datasets, defaults to None
-        :type datasets: str, optional
-        :param access: access, defaults to None
-        :type access: JobsListRequestAccess, optional
-        :param owner_organization_id: owner_organization_id, defaults to None
-        :type owner_organization_id: str, optional
-        :param date_from: date_from, defaults to None
-        :type date_from: str, optional
-        :param date_to: date_to, defaults to None
-        :type date_to: str, optional
-        :param created_by: created_by, defaults to None
-        :type created_by: str, optional
-        :param archive: archive, defaults to None
-        :type archive: JobsListRequestArchive, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param sort: sort, defaults to None
         :type sort: JobsListRequestSort, optional
         ...
@@ -1023,37 +1177,34 @@ class JobsClient(BaseService):
         :rtype: SyncPager[JobSummary]
         """
 
+        Validator(str).is_array().is_optional().validate(task, "task")
+        Validator(RunState).is_optional().validate(state, "state")
+        Validator(str).is_optional().validate(name, "name")
+        Validator(str).is_optional().validate(q, "q")
+        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+        Validator(str).is_array().is_optional().validate(
+            model_provider, "model_provider"
+        )
+        Validator(str).is_array().is_optional().validate(
+            reasoning_effort, "reasoning_effort"
+        )
+        Validator(str).is_array().is_optional().validate(source, "source")
+        Validator(str).is_optional().validate(created_after, "created_after")
+        Validator(str).is_optional().validate(created_before, "created_before")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
-        Validator(str).is_optional().validate(search, "search")
-        Validator(str).is_optional().validate(agents, "agents")
-        Validator(str).is_optional().validate(providers, "providers")
-        Validator(str).is_optional().validate(models, "models")
-        Validator(str).is_optional().validate(date_, "date_")
-        Validator(JobsListRequestScope).is_optional().validate(scope, "scope")
-        Validator(str).is_optional().validate(
-            shared_with_organization_id, "shared_with_organization_id"
-        )
-        Validator(str).is_optional().validate(datasets, "datasets")
-        Validator(JobsListRequestAccess).is_optional().validate(access, "access")
-        Validator(str).is_optional().validate(
-            owner_organization_id, "owner_organization_id"
-        )
-        Validator(str).is_optional().validate(date_from, "date_from")
-        Validator(str).is_optional().validate(date_to, "date_to")
-        Validator(str).is_optional().validate(created_by, "created_by")
-        Validator(JobsListRequestArchive).is_optional().validate(archive, "archive")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(JobsListRequestSort).is_optional().validate(sort, "sort")
 
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
         def _paginate() -> Generator[List[JobSummary], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1061,25 +1212,20 @@ class JobsClient(BaseService):
                         "Harbor-API-Version",
                         self._global_headers.get("Harbor-API-Version"),
                     )
+                    .add_query("task", task)
+                    .add_query("state", state)
+                    .add_query("name", name)
+                    .add_query("q", q)
+                    .add_query("agent_name", agent_name)
+                    .add_query("agent_version", agent_version)
+                    .add_query("model_name", model_name)
+                    .add_query("model_provider", model_provider)
+                    .add_query("reasoning_effort", reasoning_effort)
+                    .add_query("source", source)
+                    .add_query("created_after", created_after)
+                    .add_query("created_before", created_before)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
-                    .add_query("offset", offset)
-                    .add_query("search", search)
-                    .add_query("agents", agents)
-                    .add_query("providers", providers)
-                    .add_query("models", models)
-                    .add_query("date", date_)
-                    .add_query("scope", scope)
-                    .add_query(
-                        "shared_with_organization_id", shared_with_organization_id
-                    )
-                    .add_query("datasets", datasets)
-                    .add_query("access", access)
-                    .add_query("owner_organization_id", owner_organization_id)
-                    .add_query("date_from", date_from)
-                    .add_query("date_to", date_to)
-                    .add_query("created_by", created_by)
-                    .add_query("archive", archive)
+                    .add_query("cursor", cursor)
                     .add_query("sort", sort)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
@@ -1101,13 +1247,135 @@ class JobsClient(BaseService):
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
+
+    @cast_models
+    def get_filters(
+        self,
+        *,
+        field: JobsGetFiltersRequestField,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
+        limit: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> FilterValuesResponse:
+        """get_filters
+
+        :param field: field
+        :type field: JobsGetFiltersRequestField
+        :param task: task, defaults to None
+        :type task: List[str], optional
+        :param state: state, defaults to None
+        :type state: RunState, optional
+        :param name: name, defaults to None
+        :type name: str, optional
+        :param q: q, defaults to None
+        :type q: str, optional
+        :param agent_name: agent_name, defaults to None
+        :type agent_name: List[str], optional
+        :param agent_version: agent_version, defaults to None
+        :type agent_version: List[str], optional
+        :param model_name: model_name, defaults to None
+        :type model_name: List[str], optional
+        :param model_provider: model_provider, defaults to None
+        :type model_provider: List[str], optional
+        :param reasoning_effort: reasoning_effort, defaults to None
+        :type reasoning_effort: List[str], optional
+        :param source: source, defaults to None
+        :type source: List[str], optional
+        :param created_after: created_after, defaults to None
+        :type created_after: str, optional
+        :param created_before: created_before, defaults to None
+        :type created_before: str, optional
+        :param limit: limit, defaults to None
+        :type limit: str, optional
+        ...
+        :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
+        ...
+        :return: The parsed response data.
+        :rtype: FilterValuesResponse
+        """
+
+        Validator(JobsGetFiltersRequestField).validate(field, "field")
+        Validator(str).is_array().is_optional().validate(task, "task")
+        Validator(RunState).is_optional().validate(state, "state")
+        Validator(str).is_optional().validate(name, "name")
+        Validator(str).is_optional().validate(q, "q")
+        Validator(str).is_array().is_optional().validate(agent_name, "agent_name")
+        Validator(str).is_array().is_optional().validate(agent_version, "agent_version")
+        Validator(str).is_array().is_optional().validate(model_name, "model_name")
+        Validator(str).is_array().is_optional().validate(
+            model_provider, "model_provider"
+        )
+        Validator(str).is_array().is_optional().validate(
+            reasoning_effort, "reasoning_effort"
+        )
+        Validator(str).is_array().is_optional().validate(source, "source")
+        Validator(str).is_optional().validate(created_after, "created_after")
+        Validator(str).is_optional().validate(created_before, "created_before")
+        Validator(str).is_optional().validate(limit, "limit")
+
+        resolved_config = self._get_resolved_config(
+            self._get_filters_config, request_options
+        )
+
+        serialized_request = (
+            Serializer(
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/filters",
+                [self.get_access_token(resolved_config)],
+                resolved_config,
+            )
+            .add_header(
+                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
+            )
+            .add_query("task", task)
+            .add_query("state", state)
+            .add_query("name", name)
+            .add_query("q", q)
+            .add_query("agent_name", agent_name)
+            .add_query("agent_version", agent_version)
+            .add_query("model_name", model_name)
+            .add_query("model_provider", model_provider)
+            .add_query("reasoning_effort", reasoning_effort)
+            .add_query("source", source)
+            .add_query("created_after", created_after)
+            .add_query("created_before", created_before)
+            .add_query("field", field)
+            .add_query("limit", limit)
+            .add_error(401, UnauthorizedEncoded)
+            .add_error(403, ForbiddenEncoded)
+            .add_error(404, NotFoundEncoded)
+            .add_error(500, InternalServerErrorEncoded)
+            .serialize()
+            .set_method("GET")
+        )
+
+        response, status, content = self.send_request(serialized_request)
+        return (
+            None
+            if response in (b"", "")
+            else (
+                FilterValuesResponse.model_validate(response)
+                if should_validate_response(resolved_config)
+                else construct_lenient(FilterValuesResponse, response)
+            )
+        )
 
     @cast_models
     def list_tasks(
@@ -1115,8 +1383,7 @@ class JobsClient(BaseService):
         job_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        offset: str = SENTINEL,
+        cursor: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -1132,10 +1399,8 @@ class JobsClient(BaseService):
         :type job_id: str
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
-        :param offset: offset, defaults to None
-        :type offset: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param search: search, defaults to None
         :type search: str, optional
         :param agents: agents, defaults to None
@@ -1159,8 +1424,7 @@ class JobsClient(BaseService):
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
-        Validator(str).is_optional().validate(offset, "offset")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(str).is_optional().validate(search, "search")
         Validator(str).is_optional().validate(agents, "agents")
         Validator(str).is_optional().validate(providers, "providers")
@@ -1176,11 +1440,11 @@ class JobsClient(BaseService):
         )
 
         def _paginate() -> Generator[List[JobTaskSummary], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
-                        f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/tasks",
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/{{job_id}}/tasks",
                         [self.get_access_token(resolved_config)],
                         resolved_config,
                     )
@@ -1190,8 +1454,7 @@ class JobsClient(BaseService):
                     )
                     .add_path("job_id", job_id)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
-                    .add_query("offset", offset)
+                    .add_query("cursor", cursor)
                     .add_query("search", search)
                     .add_query("agents", agents)
                     .add_query("providers", providers)
@@ -1219,11 +1482,11 @@ class JobsClient(BaseService):
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -1275,7 +1538,7 @@ class JobsClient(BaseService):
         Validator(ResultJobCreate).validate(request_body, "request_body")
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/import",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/import",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1334,7 +1597,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/overview",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/overview",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1385,7 +1648,7 @@ class JobsClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/jobs/comparisons",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/jobs/comparisons",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -1475,6 +1738,24 @@ class RawJobsClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
+    def get(
+        self, job_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[JobResponse]:
+        data = JobsClient.get(self._client, job_id, request_options=request_options)
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def rename(
+        self,
+        job_id: str,
+        *,
+        job_name: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[RenameJobResponse]:
+        data = JobsClient.rename(
+            self._client, job_id, job_name=job_name, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
     def get_artifact_download(
         self,
         job_id: str,
@@ -1494,20 +1775,19 @@ class RawJobsClient:
         self,
         *,
         config: SubmitJobRequestConfig,
-        relay_inference: bool,
         idempotency_key: str,
         dry_run: bool = SENTINEL,
         job_secrets: Union[dict, None] = SENTINEL,
         registry_credentials: Union[dict, None] = SENTINEL,
         regrade: SubmitJobRequestRegrade = SENTINEL,
         organization_id: str = SENTINEL,
+        relay_inference: bool = SENTINEL,
         session_id: Union[str, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[SubmitJobResponse]:
+    ) -> HttpResponse[JobsSubmitResponse]:
         data = JobsClient.submit(
             self._client,
             config=config,
-            relay_inference=relay_inference,
             idempotency_key=idempotency_key,
             **dict[str, Any](
                 {
@@ -1518,30 +1798,13 @@ class RawJobsClient:
                         "registry_credentials": registry_credentials,
                         "regrade": regrade,
                         "organization_id": organization_id,
+                        "relay_inference": relay_inference,
                         "session_id": session_id,
                     }.items()
                     if v is not SENTINEL
                 }
             ),
             request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def get(
-        self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobDetail]:
-        data = JobsClient.get(self._client, job_id, request_options=request_options)
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    def rename(
-        self,
-        job_id: str,
-        *,
-        job_name: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RenameJobResponse]:
-        data = JobsClient.rename(
-            self._client, job_id, job_name=job_name, request_options=request_options
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
@@ -1614,20 +1877,50 @@ class RawJobsClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
+    def pause(
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[JobResponse]:
+        data = JobsClient.pause(
+            self._client,
+            job_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    def resume(
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[JobResponse]:
+        data = JobsClient.resume(
+            self._client,
+            job_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
     def cancel(
         self,
-        *,
         job_id: str,
-        soft: bool,
-        reason: Union[str, None] = SENTINEL,
+        *,
+        idempotency_key: str,
+        force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[Any]:
+    ) -> HttpResponse[JobResponse]:
         data = JobsClient.cancel(
             self._client,
-            job_id=job_id,
-            soft=soft,
+            job_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
-                {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
             request_options=request_options,
         )
@@ -1636,23 +1929,20 @@ class RawJobsClient:
     def list(
         self,
         *,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        offset: str = SENTINEL,
-        search: str = SENTINEL,
-        agents: str = SENTINEL,
-        providers: str = SENTINEL,
-        models: str = SENTINEL,
-        date_: str = SENTINEL,
-        scope: JobsListRequestScope = SENTINEL,
-        shared_with_organization_id: str = SENTINEL,
-        datasets: str = SENTINEL,
-        access: JobsListRequestAccess = SENTINEL,
-        owner_organization_id: str = SENTINEL,
-        date_from: str = SENTINEL,
-        date_to: str = SENTINEL,
-        created_by: str = SENTINEL,
-        archive: JobsListRequestArchive = SENTINEL,
+        cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[JobSummary]]:
@@ -1662,23 +1952,20 @@ class RawJobsClient:
                 {
                     k: v
                     for k, v in {
+                        "task": task,
+                        "state": state,
+                        "name": name,
+                        "q": q,
+                        "agent_name": agent_name,
+                        "agent_version": agent_version,
+                        "model_name": model_name,
+                        "model_provider": model_provider,
+                        "reasoning_effort": reasoning_effort,
+                        "source": source,
+                        "created_after": created_after,
+                        "created_before": created_before,
                         "page_size": page_size,
-                        "page_token": page_token,
-                        "offset": offset,
-                        "search": search,
-                        "agents": agents,
-                        "providers": providers,
-                        "models": models,
-                        "date_": date_,
-                        "scope": scope,
-                        "shared_with_organization_id": shared_with_organization_id,
-                        "datasets": datasets,
-                        "access": access,
-                        "owner_organization_id": owner_organization_id,
-                        "date_from": date_from,
-                        "date_to": date_to,
-                        "created_by": created_by,
-                        "archive": archive,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -1688,13 +1975,59 @@ class RawJobsClient:
         )
         return HttpResponse(data=data, response_source=lambda: data.last_response)
 
+    def get_filters(
+        self,
+        *,
+        field: JobsGetFiltersRequestField,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
+        limit: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[FilterValuesResponse]:
+        data = JobsClient.get_filters(
+            self._client,
+            field=field,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "task": task,
+                        "state": state,
+                        "name": name,
+                        "q": q,
+                        "agent_name": agent_name,
+                        "agent_version": agent_version,
+                        "model_name": model_name,
+                        "model_provider": model_provider,
+                        "reasoning_effort": reasoning_effort,
+                        "source": source,
+                        "created_after": created_after,
+                        "created_before": created_before,
+                        "limit": limit,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
     def list_tasks(
         self,
         job_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        offset: str = SENTINEL,
+        cursor: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -1712,8 +2045,7 @@ class RawJobsClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
-                        "offset": offset,
+                        "cursor": cursor,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -1849,6 +2181,22 @@ class AsyncJobsClient(JobsClient):
             job_id, request_options=request_options
         )
 
+    def get(
+        self, job_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> Awaitable[JobResponse]:  # type: ignore[override]
+        return to_async(super().get)(job_id, request_options=request_options)
+
+    def rename(
+        self,
+        job_id: str,
+        *,
+        job_name: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[RenameJobResponse]:  # type: ignore[override]
+        return to_async(super().rename)(
+            job_id, job_name=job_name, request_options=request_options
+        )
+
     def get_artifact_download(
         self,
         job_id: str,
@@ -1864,19 +2212,18 @@ class AsyncJobsClient(JobsClient):
         self,
         *,
         config: SubmitJobRequestConfig,
-        relay_inference: bool,
         idempotency_key: str,
         dry_run: bool = SENTINEL,
         job_secrets: Union[dict, None] = SENTINEL,
         registry_credentials: Union[dict, None] = SENTINEL,
         regrade: SubmitJobRequestRegrade = SENTINEL,
         organization_id: str = SENTINEL,
+        relay_inference: bool = SENTINEL,
         session_id: Union[str, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[SubmitJobResponse]:  # type: ignore[override]
+    ) -> Awaitable[JobsSubmitResponse]:  # type: ignore[override]
         return to_async(super().submit)(
             config=config,
-            relay_inference=relay_inference,
             idempotency_key=idempotency_key,
             **dict[str, Any](
                 {
@@ -1887,28 +2234,13 @@ class AsyncJobsClient(JobsClient):
                         "registry_credentials": registry_credentials,
                         "regrade": regrade,
                         "organization_id": organization_id,
+                        "relay_inference": relay_inference,
                         "session_id": session_id,
                     }.items()
                     if v is not SENTINEL
                 }
             ),
             request_options=request_options,
-        )
-
-    def get(
-        self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[JobDetail]:  # type: ignore[override]
-        return to_async(super().get)(job_id, request_options=request_options)
-
-    def rename(
-        self,
-        job_id: str,
-        *,
-        job_name: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[RenameJobResponse]:  # type: ignore[override]
-        return to_async(super().rename)(
-            job_id, job_name=job_name, request_options=request_options
         )
 
     def delete(
@@ -1974,19 +2306,41 @@ class AsyncJobsClient(JobsClient):
             request_options=request_options,
         )
 
+    def pause(
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[JobResponse]:  # type: ignore[override]
+        return to_async(super().pause)(
+            job_id, idempotency_key=idempotency_key, request_options=request_options
+        )
+
+    def resume(
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[JobResponse]:  # type: ignore[override]
+        return to_async(super().resume)(
+            job_id, idempotency_key=idempotency_key, request_options=request_options
+        )
+
     def cancel(
         self,
-        *,
         job_id: str,
-        soft: bool,
-        reason: Union[str, None] = SENTINEL,
+        *,
+        idempotency_key: str,
+        force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[Any]:  # type: ignore[override]
+    ) -> Awaitable[JobResponse]:  # type: ignore[override]
         return to_async(super().cancel)(
-            job_id=job_id,
-            soft=soft,
+            job_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
-                {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
             request_options=request_options,
         )
@@ -1994,23 +2348,20 @@ class AsyncJobsClient(JobsClient):
     def list(
         self,
         *,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        offset: str = SENTINEL,
-        search: str = SENTINEL,
-        agents: str = SENTINEL,
-        providers: str = SENTINEL,
-        models: str = SENTINEL,
-        date_: str = SENTINEL,
-        scope: JobsListRequestScope = SENTINEL,
-        shared_with_organization_id: str = SENTINEL,
-        datasets: str = SENTINEL,
-        access: JobsListRequestAccess = SENTINEL,
-        owner_organization_id: str = SENTINEL,
-        date_from: str = SENTINEL,
-        date_to: str = SENTINEL,
-        created_by: str = SENTINEL,
-        archive: JobsListRequestArchive = SENTINEL,
+        cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[JobSummary]:  # type: ignore[override]
@@ -2019,23 +2370,20 @@ class AsyncJobsClient(JobsClient):
                 {
                     k: v
                     for k, v in {
+                        "task": task,
+                        "state": state,
+                        "name": name,
+                        "q": q,
+                        "agent_name": agent_name,
+                        "agent_version": agent_version,
+                        "model_name": model_name,
+                        "model_provider": model_provider,
+                        "reasoning_effort": reasoning_effort,
+                        "source": source,
+                        "created_after": created_after,
+                        "created_before": created_before,
                         "page_size": page_size,
-                        "page_token": page_token,
-                        "offset": offset,
-                        "search": search,
-                        "agents": agents,
-                        "providers": providers,
-                        "models": models,
-                        "date_": date_,
-                        "scope": scope,
-                        "shared_with_organization_id": shared_with_organization_id,
-                        "datasets": datasets,
-                        "access": access,
-                        "owner_organization_id": owner_organization_id,
-                        "date_from": date_from,
-                        "date_to": date_to,
-                        "created_by": created_by,
-                        "archive": archive,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -2050,13 +2398,57 @@ class AsyncJobsClient(JobsClient):
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
 
+    def get_filters(
+        self,
+        *,
+        field: JobsGetFiltersRequestField,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
+        limit: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
+        return to_async(super().get_filters)(
+            field=field,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "task": task,
+                        "state": state,
+                        "name": name,
+                        "q": q,
+                        "agent_name": agent_name,
+                        "agent_version": agent_version,
+                        "model_name": model_name,
+                        "model_provider": model_provider,
+                        "reasoning_effort": reasoning_effort,
+                        "source": source,
+                        "created_after": created_after,
+                        "created_before": created_before,
+                        "limit": limit,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
+        )
+
     def list_tasks(
         self,
         job_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        offset: str = SENTINEL,
+        cursor: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2073,8 +2465,7 @@ class AsyncJobsClient(JobsClient):
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
-                        "offset": offset,
+                        "cursor": cursor,
                         "search": search,
                         "agents": agents,
                         "providers": providers,
@@ -2211,6 +2602,26 @@ class AsyncRawJobsClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
+    async def get(
+        self, job_id: str, *, request_options: Optional[RequestOptions] = None
+    ) -> HttpResponse[JobResponse]:
+        data = await AsyncJobsClient.get(
+            self._client, job_id, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def rename(
+        self,
+        job_id: str,
+        *,
+        job_name: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[RenameJobResponse]:
+        data = await AsyncJobsClient.rename(
+            self._client, job_id, job_name=job_name, request_options=request_options
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
     async def get_artifact_download(
         self,
         job_id: str,
@@ -2230,20 +2641,19 @@ class AsyncRawJobsClient:
         self,
         *,
         config: SubmitJobRequestConfig,
-        relay_inference: bool,
         idempotency_key: str,
         dry_run: bool = SENTINEL,
         job_secrets: Union[dict, None] = SENTINEL,
         registry_credentials: Union[dict, None] = SENTINEL,
         regrade: SubmitJobRequestRegrade = SENTINEL,
         organization_id: str = SENTINEL,
+        relay_inference: bool = SENTINEL,
         session_id: Union[str, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[SubmitJobResponse]:
+    ) -> HttpResponse[JobsSubmitResponse]:
         data = await AsyncJobsClient.submit(
             self._client,
             config=config,
-            relay_inference=relay_inference,
             idempotency_key=idempotency_key,
             **dict[str, Any](
                 {
@@ -2254,32 +2664,13 @@ class AsyncRawJobsClient:
                         "registry_credentials": registry_credentials,
                         "regrade": regrade,
                         "organization_id": organization_id,
+                        "relay_inference": relay_inference,
                         "session_id": session_id,
                     }.items()
                     if v is not SENTINEL
                 }
             ),
             request_options=request_options,
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def get(
-        self, job_id: str, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[JobDetail]:
-        data = await AsyncJobsClient.get(
-            self._client, job_id, request_options=request_options
-        )
-        return HttpResponse(data=data, response=self._client._last_response)
-
-    async def rename(
-        self,
-        job_id: str,
-        *,
-        job_name: str,
-        request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[RenameJobResponse]:
-        data = await AsyncJobsClient.rename(
-            self._client, job_id, job_name=job_name, request_options=request_options
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
@@ -2352,20 +2743,50 @@ class AsyncRawJobsClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
+    async def pause(
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[JobResponse]:
+        data = await AsyncJobsClient.pause(
+            self._client,
+            job_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
+    async def resume(
+        self,
+        job_id: str,
+        *,
+        idempotency_key: str,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[JobResponse]:
+        data = await AsyncJobsClient.resume(
+            self._client,
+            job_id,
+            idempotency_key=idempotency_key,
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
     async def cancel(
         self,
-        *,
         job_id: str,
-        soft: bool,
-        reason: Union[str, None] = SENTINEL,
+        *,
+        idempotency_key: str,
+        force: bool = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[Any]:
+    ) -> HttpResponse[JobResponse]:
         data = await AsyncJobsClient.cancel(
             self._client,
-            job_id=job_id,
-            soft=soft,
+            job_id,
+            idempotency_key=idempotency_key,
             **dict[str, Any](
-                {k: v for k, v in {"reason": reason}.items() if v is not SENTINEL}
+                {k: v for k, v in {"force": force}.items() if v is not SENTINEL}
             ),
             request_options=request_options,
         )
@@ -2374,23 +2795,20 @@ class AsyncRawJobsClient:
     def list(
         self,
         *,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        offset: str = SENTINEL,
-        search: str = SENTINEL,
-        agents: str = SENTINEL,
-        providers: str = SENTINEL,
-        models: str = SENTINEL,
-        date_: str = SENTINEL,
-        scope: JobsListRequestScope = SENTINEL,
-        shared_with_organization_id: str = SENTINEL,
-        datasets: str = SENTINEL,
-        access: JobsListRequestAccess = SENTINEL,
-        owner_organization_id: str = SENTINEL,
-        date_from: str = SENTINEL,
-        date_to: str = SENTINEL,
-        created_by: str = SENTINEL,
-        archive: JobsListRequestArchive = SENTINEL,
+        cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[JobSummary]]:
@@ -2400,23 +2818,20 @@ class AsyncRawJobsClient:
                 {
                     k: v
                     for k, v in {
+                        "task": task,
+                        "state": state,
+                        "name": name,
+                        "q": q,
+                        "agent_name": agent_name,
+                        "agent_version": agent_version,
+                        "model_name": model_name,
+                        "model_provider": model_provider,
+                        "reasoning_effort": reasoning_effort,
+                        "source": source,
+                        "created_after": created_after,
+                        "created_before": created_before,
                         "page_size": page_size,
-                        "page_token": page_token,
-                        "offset": offset,
-                        "search": search,
-                        "agents": agents,
-                        "providers": providers,
-                        "models": models,
-                        "date_": date_,
-                        "scope": scope,
-                        "shared_with_organization_id": shared_with_organization_id,
-                        "datasets": datasets,
-                        "access": access,
-                        "owner_organization_id": owner_organization_id,
-                        "date_from": date_from,
-                        "date_to": date_to,
-                        "created_by": created_by,
-                        "archive": archive,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -2426,13 +2841,59 @@ class AsyncRawJobsClient:
         )
         return HttpResponse(data=data, response_source=lambda: data.last_response)
 
+    async def get_filters(
+        self,
+        *,
+        field: JobsGetFiltersRequestField,
+        task: List[str] = SENTINEL,
+        state: RunState = SENTINEL,
+        name: str = SENTINEL,
+        q: str = SENTINEL,
+        agent_name: List[str] = SENTINEL,
+        agent_version: List[str] = SENTINEL,
+        model_name: List[str] = SENTINEL,
+        model_provider: List[str] = SENTINEL,
+        reasoning_effort: List[str] = SENTINEL,
+        source: List[str] = SENTINEL,
+        created_after: str = SENTINEL,
+        created_before: str = SENTINEL,
+        limit: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[FilterValuesResponse]:
+        data = await AsyncJobsClient.get_filters(
+            self._client,
+            field=field,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {
+                        "task": task,
+                        "state": state,
+                        "name": name,
+                        "q": q,
+                        "agent_name": agent_name,
+                        "agent_version": agent_version,
+                        "model_name": model_name,
+                        "model_provider": model_provider,
+                        "reasoning_effort": reasoning_effort,
+                        "source": source,
+                        "created_after": created_after,
+                        "created_before": created_before,
+                        "limit": limit,
+                    }.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
+        )
+        return HttpResponse(data=data, response=self._client._last_response)
+
     def list_tasks(
         self,
         job_id: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
-        offset: str = SENTINEL,
+        cursor: str = SENTINEL,
         search: str = SENTINEL,
         agents: str = SENTINEL,
         providers: str = SENTINEL,
@@ -2450,8 +2911,7 @@ class AsyncRawJobsClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
-                        "offset": offset,
+                        "cursor": cursor,
                         "search": search,
                         "agents": agents,
                         "providers": providers,

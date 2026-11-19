@@ -1,10 +1,10 @@
-# HarborApiClient Python SDK 0.1.0<a id="harborapiclient-python-sdk-010"></a>
+# HarborApiClient Python SDK 0.2.0<a id="harborapiclient-python-sdk-020"></a>
 
 Welcome to the HarborApiClient SDK documentation. This guide will help you get started with integrating and using the HarborApiClient SDK in your project.
 
 ## Versions<a id="versions"></a>
 
-- SDK version: `0.1.0`
+- SDK version: `0.2.0`
 
 ## About the API<a id="about-the-api"></a>
 
@@ -34,13 +34,13 @@ This SDK is compatible with the following versions: `Python >= 3.9`
 To get started with the SDK, we recommend installing using `pip`:
 
 ```bash
-pip install harbor-client
+pip install harbor-framework-client
 ```
 
 If you are using Python 3, you can use `pip3` instead:
 
 ```bash
-pip3 install harbor-client
+pip3 install harbor-framework-client
 ```
 
 ## Disabling Redirects<a id="disabling-redirects"></a>
@@ -116,30 +116,41 @@ Below is a comprehensive example demonstrating how to authenticate and call a si
 
 ```py
 from harbor_client import HarborAPIClient
-from harbor_client.types import JobsListRequestScope, JobsListRequestAccess, JobsListRequestArchive, JobsListRequestSort
+from harbor_client.types import RunState, JobsListRequestSort
 
 client = HarborAPIClient(
     harbor_api_version="YOUR_HARBOR_API_VERSION",
 )
 response = client.jobs.list(
-    page_size="page_size",
-    page_token="page_token",
-    offset="offset",
-    search="search",
-    agents="agents",
-    providers="providers",
-    models="models",
-    date_="date",
-    scope="my",
-    shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
-    datasets="datasets",
-    access="owned",
-    owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
-    date_from="date_from",
-    date_to="date_to",
-    created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
-    archive="current",
-    sort="importance",
+    task=[
+        "task"
+    ],
+    state="queued",
+    name="name",
+    q="q",
+    agent_name=[
+        "agent_name"
+    ],
+    agent_version=[
+        "agent_version"
+    ],
+    model_name=[
+        "model_name"
+    ],
+    model_provider=[
+        "model_provider"
+    ],
+    reasoning_effort=[
+        "reasoning_effort"
+    ],
+    source=[
+        "source"
+    ],
+    created_after="created_after",
+    created_before="created_before",
+    page_size="50",
+    cursor="cursor",
+    sort="id",
 )
 for item in response:
     print(item)
@@ -155,34 +166,52 @@ The SDK includes an Async Client for making asynchronous API requests. This is u
 ```py
 import asyncio
 from harbor_client import AsyncHarborAPIClient
-from harbor_client.types import JobsListRequestScope, JobsListRequestAccess, JobsListRequestArchive, JobsListRequestSort
+from harbor_client.types import RunState, JobsListRequestSort
 
 sdk = AsyncHarborAPIClient(
     harbor_api_version="YOUR_HARBOR_API_VERSION",
     timeout=10
 )
 
+task=[
+    "task"
+]
+agent_name=[
+    "agent_name"
+]
+agent_version=[
+    "agent_version"
+]
+model_name=[
+    "model_name"
+]
+model_provider=[
+    "model_provider"
+]
+reasoning_effort=[
+    "reasoning_effort"
+]
+source=[
+    "source"
+]
 
 async def main():
   response_iterator = await sdk.jobs.list(
-    page_size="page_size",
-    page_token="page_token",
-    offset="offset",
-    search="search",
-    agents="agents",
-    providers="providers",
-    models="models",
-    date_="date",
-    scope="my",
-    shared_with_organization_id="eB1fbaFE-8057-91Ab-e599-fF4BE1FefE95",
-    datasets="datasets",
-    access="owned",
-    owner_organization_id="A961822f-aE15-4fBd-61fc-bdFA1a0c4bf1",
-    date_from="date_from",
-    date_to="date_to",
-    created_by="aF923390-7cd1-4f3d-B212-e447f11BCCa2",
-    archive="current",
-    sort="importance"
+    task=task,
+    state="queued",
+    name="name",
+    q="q",
+    agent_name=agent_name,
+    agent_version=agent_version,
+    model_name=model_name,
+    model_provider=model_provider,
+    reasoning_effort=reasoning_effort,
+    source=source,
+    created_after="created_after",
+    created_before="created_before",
+    page_size="50",
+    cursor="cursor",
+    sort="id"
 )
   for page in response_iterator:
     print(page)
@@ -203,6 +232,7 @@ The SDK provides various services to interact with the API.
 | packages      |
 | jobs          |
 | trials        |
+| rollouts      |
 | account       |
 | api_keys      |
 | agents        |
@@ -219,231 +249,247 @@ The SDK includes several models that represent the data structures used in API r
 <details> 
 <summary>Below is a list of all available models:</summary>
 
-| Name                                           | Description |
-| :--------------------------------------------- | :---------- |
-| OrganizationDetail                             |             |
-| OrganizationsEnsureRequest                     |             |
-| EnsureOrganizationResponse                     |             |
-| PackagesSetVisibilityRequest                   |             |
-| SetPackageVisibilityResponse                   |             |
-| PackagesUpdateOrganizationAccessRequest        |             |
-| UpdatePackageAccessResponse                    |             |
-| PackageAccess                                  |             |
-| PackageVersionFilePage                         |             |
-| PackageTag                                     |             |
-| TagPackageVersionRequest                       |             |
-| TagPackageVersionResponse                      |             |
-| ReserveTemporaryPackageRequest                 |             |
-| ReserveTemporaryTaskResponse                   |             |
-| PackageVersionCatalogPage                      |             |
-| PackagesListVersionCatalogRequestType          |             |
-| PackagesListVersionCatalogRequestIncludeYanked |             |
-| RegistryPackage                                |             |
-| RegistryPackageVersionPage                     |             |
-| PackagesListVersionsRequestIncludeYanked       |             |
-| StorageDownload                                |             |
-| JobSharing                                     |             |
-| UpdateJobSharingRequest                        |             |
-| JobTrialStatusItem                             |             |
-| JobArtifactType                                |             |
-| SubmitJobRequest                               |             |
-| SubmitJobResponse                              |             |
-| JobDetail                                      |             |
-| JobsRenameRequest                              |             |
-| RenameJobResponse                              |             |
-| DeleteJobsRequest                              |             |
-| DeleteJobsResponse                             |             |
-| JobsTransferRequest                            |             |
-| TransferJobResponse                            |             |
-| JobsCopyRequest                                |             |
-| StorageCopyResult                              |             |
-| CancelJobWithIdRequest                         |             |
-| JobPage                                        |             |
-| JobsListRequestScope                           |             |
-| JobsListRequestAccess                          |             |
-| JobsListRequestArchive                         |             |
-| JobsListRequestSort                            |             |
-| JobTaskPage                                    |             |
-| JobsListTasksRequestSortBy                     |             |
-| JobsListTasksRequestSortOrder                  |             |
-| ResultJobCreate                                |             |
-| CreatedResultJob                               |             |
-| JobOverview                                    |             |
-| JobsGetOverviewRequestForceCombined            |             |
-| EvaluationComparison                           |             |
-| TrialDetail                                    |             |
-| TrialArtifactType                              |             |
-| CancelTrialsResponse                           |             |
-| RetryTrialsResponse                            |             |
-| TrialsCopyRequest                              |             |
-| JobTrialPage                                   |             |
-| TrialsListRequestFailedOnly                    |             |
-| TrialsListRequestAttempts                      |             |
-| TrialsListRequestSortBy                        |             |
-| TrialsListRequestSortOrder                     |             |
-| ResultTrialCreate                              |             |
-| CreatedResultTrial                             |             |
-| AccountIdentity                                |             |
-| MyOrganizationsItem                            |             |
-| ApiKeyMetadataPage                             |             |
-| ApiKeyCreate                                   |             |
-| ApiKeyCreated                                  |             |
-| HostedAgentCatalog                             |             |
-| LeaderboardDetail                              |             |
-| LeaderboardsUpdateRequest                      |             |
-| UpdateLeaderboardResponse                      |             |
-| LeaderboardRowDetail                           |             |
-| LeaderboardRowsPage                            |             |
-| LeaderboardSummaryPage                         |             |
-| LeaderboardsCreateRequest                      |             |
-| CreateLeaderboardResponse                      |             |
-| LeaderboardTrialLinkPage                       |             |
-| SecretMetadataPage                             |             |
-| SecretsListRequestStatusFilter                 |             |
-| SecretsUpsertRequest                           |             |
-| SecretWriteResult                              |             |
-| SecretsRevokeRequest                           |             |
-| SecretsRevokeResponse                          |             |
-| SecretsPreflightRequest                        |             |
-| SecretPreflight                                |             |
-| SecretsListRegistryCredentialsResponse         |             |
-| SecretsListRegistryCredentialsRequestStatus    |             |
-| RegistryCredentialUpsertEncoded                |             |
-| RegistryCredential                             |             |
-| RegistryCredentialRevokeResult                 |             |
-| SecretsRevokeRegistryCredentialRequestPurge    |             |
-| StorageUploadSession                           |             |
-| StorageUploadReceipt                           |             |
-| PackageNameReference                           |             |
-| PackageAccessOrganizationSummary               |             |
-| PackageOrganizationGrant                       |             |
-| PackagePublicGrant                             |             |
-| PackageAccessGrantCreator                      |             |
-| TaskVersionDetail                              |             |
-| DatasetVersionDetail                           |             |
-| ResolvedTaskStep                               |             |
-| DatasetVersionFile                             |             |
-| DatasetVersionRevisionSummary                  |             |
-| TaskVersionManifest                            |             |
-| DatasetVersionManifest                         |             |
-| RegistryVersionFile                            |             |
-| UnavailableDatasetTaskDependency               |             |
-| AvailableDatasetTaskDependency                 |             |
-| PackageVersionSummary                          |             |
-| RegistryPackageVersion                         |             |
-| JobOwnerOrganization                           |             |
-| JobShareOrganizationSummary                    |             |
-| JobCreator                                     |             |
-| HostedDiffSelectors                            |             |
-| HostedAgentConfig                              |             |
-| HostedSubmissionEnvironmentConfig              |             |
-| HostedSubmissionTaskConfig                     |             |
-| HostedSubmissionDatasetConfig                  |             |
-| HostedSubmissionRetryConfig                    |             |
-| HostedVerifierConfig                           |             |
-| MetricConfig                                   |             |
-| HostedGithubAgentSource                        |             |
-| HostedSecretSelection                          |             |
-| HostedSubmissionCredentialProxyPolicyRule      |             |
-| HostedSubmissionCredentialProxyRequestMatch    |             |
-| CredentialProxyHeaderTransform                 |             |
-| HostedSubmissionCredentialProxyPathMatch       |             |
-| ArtifactConfig                                 |             |
-| HostedJobTrialRegradeSource                    |             |
-| OwnerOrganization                              |             |
-| SelectedSecret                                 |             |
-| AgentSource                                    |             |
-| AgentSourceManifest                            |             |
-| AgentSourceRuntime                             |             |
-| EvaluationJobReference                         |             |
-| EvaluationSummary                              |             |
-| JobManualPauseSummary                          |             |
-| JobCancellationSummary                         |             |
-| JobOverviewStatistics                          |             |
-| JobCircuitState                                |             |
-| JobBucketCircuitState                          |             |
-| EvaluationSummaryRow                           |             |
-| JobPackageRunTarget                            |             |
-| JobPathRunTarget                               |             |
-| EvaluationMetricSet                            |             |
-| JobSummary                                     |             |
-| JobTaskSummary                                 |             |
-| JobRewardMetricSet                             |             |
-| EvaluationComparisonTask                       |             |
-| EvaluationComparisonAgentModel                 |             |
-| EvaluationComparisonCell                       |             |
-| EvaluationUserSummary                          |             |
-| JobShareOwnerOrganization                      |             |
-| TrialAgentInfo                                 |             |
-| TrialVerifierResult                            |             |
-| TrialExceptionInfo                             |             |
-| TrialPhaseTiming                               |             |
-| TrialModelInfo                                 |             |
-| CancelTrialsByIdRequest                        |             |
-| CancelTrialsByFilterRequest                    |             |
-| CancelAllJobTrialsRequest                      |             |
-| RetryTrialsByIdRequest                         |             |
-| RetryTrialsByFilterRequest                     |             |
-| RetryAllJobTrialsRequest                       |             |
-| JobTrialSummary                                |             |
-| ResultModelUsage                               |             |
-| ApiKeyMetadata                                 |             |
-| LeaderboardDefinition                          |             |
-| LeaderboardReadColumnDefinition                |             |
-| LeaderboardReadRankingRule                     |             |
-| CreateLeaderboardRowInput                      |             |
-| LeaderboardWriteColumnDefinition               |             |
-| LeaderboardWriteRankingRule                    |             |
-| LeaderboardMutationRecord                      |             |
-| LeaderboardMutationRow                         |             |
-| LeaderboardChangeSummary                       |             |
-| LeaderboardRankedRow                           |             |
-| LeaderboardSummary                             |             |
-| LeaderboardTrialLink                           |             |
-| SecretMetadata                                 |             |
-| HostedLocalTaskRequirements                    |             |
-| HostedPreflightEnvironmentConfig               |             |
-| HostedTaskConfig                               |             |
-| HostedDatasetConfig                            |             |
-| HostedRetryConfig                              |             |
-| CredentialProxyPolicyRule                      |             |
-| CredentialProxyRequestMatch                    |             |
-| CredentialProxyPathMatch                       |             |
-| HostedTaskEnvironmentRequirement               |             |
-| RegistryCredentialSummary                      |             |
-| StorageTaskUploadCreate                        |             |
-| StorageDatasetUploadCreate                     |             |
-| StorageJobUploadCreate                         |             |
-| StorageTrialUploadCreate                       |             |
-| StorageUploadFileInput                         |             |
-| StorageTaskUploadMetadata                      |             |
-| TaskPublishStep                                |             |
-| StoragePublicationFile                         |             |
-| StorageDatasetUploadMetadata                   |             |
-| DatasetPublishTaskReference                    |             |
-| StorageJobUploadMetadata                       |             |
-| StorageUploadFile                              |             |
-| StorageTaskUploadResult                        |             |
-| StorageDatasetUploadResult                     |             |
-| StorageResultUploadResult                      |             |
-| StorageHttpTransfer                            |             |
-| StorageTusTransfer                             |             |
-| BadRequestEncoded                              |             |
-| InvalidPageSizeEncoded                         |             |
-| InvalidPageTokenEncoded                        |             |
-| RegistryCredentialReplacementRequiredEncoded   |             |
-| RegistryCredentialReplacementStaleEncoded      |             |
-| ExistingRegistryCredential                     |             |
-| UnauthorizedEncoded                            |             |
-| NotFoundEncoded                                |             |
-| InternalServerErrorEncoded                     |             |
-| ForbiddenEncoded                               |             |
-| ConflictEncoded                                |             |
-| TooManyRequestsEncoded                         |             |
-| ServiceUnavailableEncoded                      |             |
-| SecretReplacementRequiredEncoded               |             |
-| SecretReplacementStaleEncoded                  |             |
-| ExistingSecretSummary                          |             |
+| Name                                           | Description                                                                                                                   |
+| :--------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| OrganizationDetail                             |                                                                                                                               |
+| OrganizationsEnsureRequest                     |                                                                                                                               |
+| EnsureOrganizationResponse                     |                                                                                                                               |
+| PackagesSetVisibilityRequest                   |                                                                                                                               |
+| SetPackageVisibilityResponse                   |                                                                                                                               |
+| PackagesUpdateOrganizationAccessRequest        |                                                                                                                               |
+| UpdatePackageAccessResponse                    |                                                                                                                               |
+| PackageAccess                                  |                                                                                                                               |
+| PackageVersionFilePage                         |                                                                                                                               |
+| PackagesListTagsResponse                       |                                                                                                                               |
+| TagPackageVersionRequest                       |                                                                                                                               |
+| TagPackageVersionResponse                      |                                                                                                                               |
+| ReserveTemporaryPackageRequest                 |                                                                                                                               |
+| ReserveTemporaryTaskResponse                   |                                                                                                                               |
+| PackageVersionCatalogPage                      |                                                                                                                               |
+| PackagesListVersionCatalogRequestType          |                                                                                                                               |
+| PackagesListVersionCatalogRequestIncludeYanked |                                                                                                                               |
+| RegistryPackage                                |                                                                                                                               |
+| RegistryPackageVersionPage                     |                                                                                                                               |
+| PackagesListVersionsRequestIncludeYanked       |                                                                                                                               |
+| StorageDownload                                |                                                                                                                               |
+| JobSharing                                     |                                                                                                                               |
+| UpdateJobSharingRequest                        |                                                                                                                               |
+| JobTrialStatusItem                             |                                                                                                                               |
+| JobResponse                                    |                                                                                                                               |
+| JobsRenameRequest                              |                                                                                                                               |
+| RenameJobResponse                              |                                                                                                                               |
+| JobArtifactType                                |                                                                                                                               |
+| SubmitJobRequest                               |                                                                                                                               |
+| DeleteJobsRequest                              |                                                                                                                               |
+| DeleteJobsResponse                             |                                                                                                                               |
+| JobsTransferRequest                            |                                                                                                                               |
+| TransferJobResponse                            |                                                                                                                               |
+| JobsCopyRequest                                |                                                                                                                               |
+| StorageCopyResult                              |                                                                                                                               |
+| CancelJobRequest                               |                                                                                                                               |
+| JobPage                                        |                                                                                                                               |
+| RunState                                       |                                                                                                                               |
+| JobsListRequestSort                            |                                                                                                                               |
+| FilterValuesResponse                           |                                                                                                                               |
+| JobsGetFiltersRequestField                     |                                                                                                                               |
+| JobTaskPage                                    |                                                                                                                               |
+| JobsListTasksRequestSortBy                     |                                                                                                                               |
+| JobsListTasksRequestSortOrder                  |                                                                                                                               |
+| ResultJobCreate                                |                                                                                                                               |
+| CreatedResultJob                               |                                                                                                                               |
+| JobOverview                                    |                                                                                                                               |
+| JobsGetOverviewRequestForceCombined            |                                                                                                                               |
+| EvaluationComparison                           |                                                                                                                               |
+| TrialResponse                                  |                                                                                                                               |
+| TrialPage                                      |                                                                                                                               |
+| TrialsListRequestAttempts                      | All readable attempts by default; latest selects the newest readable attempt per logical trial before applying other filters. |
+| TrialsListRequestFailedOnly                    | Select trials with a recorded error when true.                                                                                |
+| TrialsListRequestTerminal                      | True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials.                           |
+| TrialsListRequestSort                          |                                                                                                                               |
+| ResultTrialCreate                              |                                                                                                                               |
+| CreatedResultTrial                             |                                                                                                                               |
+| TrialFilterValuesResponse                      |                                                                                                                               |
+| TrialsGetFiltersRequestField                   |                                                                                                                               |
+| TrialsGetFiltersRequestAttempts                | All readable attempts by default; latest selects the newest readable attempt per logical trial before applying other filters. |
+| TrialsGetFiltersRequestFailedOnly              | Select trials with a recorded error when true.                                                                                |
+| TrialsGetFiltersRequestTerminal                | True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials.                           |
+| CancelTrialRequest                             |                                                                                                                               |
+| RetryTrialResponse                             |                                                                                                                               |
+| TrialArtifactType                              |                                                                                                                               |
+| TrialsCopyRequest                              |                                                                                                                               |
+| RolloutResponse                                |                                                                                                                               |
+| RolloutsListRequestAttempts                    | All readable attempts by default; latest selects the newest readable attempt per logical trial before applying other filters. |
+| RolloutsListRequestFailedOnly                  | Select trials with a recorded error when true.                                                                                |
+| RolloutsListRequestTerminal                    | True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials.                           |
+| RolloutsListRequestSort                        |                                                                                                                               |
+| RolloutsGetFiltersRequestField                 |                                                                                                                               |
+| RolloutsGetFiltersRequestAttempts              | All readable attempts by default; latest selects the newest readable attempt per logical trial before applying other filters. |
+| RolloutsGetFiltersRequestFailedOnly            | Select trials with a recorded error when true.                                                                                |
+| RolloutsGetFiltersRequestTerminal              | True selects finished/cancelled trials; false selects queued, paused, running or cancelling trials.                           |
+| RetryRolloutResponse                           |                                                                                                                               |
+| AccountIdentity                                |                                                                                                                               |
+| AccountListOrganizationMembershipsResponse     |                                                                                                                               |
+| ApiKeyMetadataPage                             |                                                                                                                               |
+| ApiKeyCreate                                   |                                                                                                                               |
+| ApiKeyCreated                                  |                                                                                                                               |
+| AgentsResponse                                 |                                                                                                                               |
+| LeaderboardDetail                              |                                                                                                                               |
+| LeaderboardsUpdateRequest                      |                                                                                                                               |
+| UpdateLeaderboardResponse                      |                                                                                                                               |
+| LeaderboardRowDetail                           |                                                                                                                               |
+| LeaderboardRowsPage                            |                                                                                                                               |
+| LeaderboardSummaryPage                         |                                                                                                                               |
+| LeaderboardsCreateRequest                      |                                                                                                                               |
+| CreateLeaderboardResponse                      |                                                                                                                               |
+| LeaderboardTrialLinkPage                       |                                                                                                                               |
+| SecretMetadataPage                             |                                                                                                                               |
+| SecretsListRequestStatusFilter                 |                                                                                                                               |
+| SecretsUpsertRequest                           |                                                                                                                               |
+| SecretWriteResult                              |                                                                                                                               |
+| SecretsRevokeRequest                           |                                                                                                                               |
+| SecretsRevokeResponse                          |                                                                                                                               |
+| SecretsPreflightRequest                        |                                                                                                                               |
+| SecretPreflight                                |                                                                                                                               |
+| SecretsListRegistryCredentialsResponse         |                                                                                                                               |
+| SecretsListRegistryCredentialsRequestStatus    |                                                                                                                               |
+| RegistryCredentialUpsertEncoded                |                                                                                                                               |
+| RegistryCredential                             |                                                                                                                               |
+| RegistryCredentialRevokeResult                 |                                                                                                                               |
+| SecretsRevokeRegistryCredentialRequestPurge    |                                                                                                                               |
+| StorageUploadSession                           |                                                                                                                               |
+| StorageUploadReceipt                           |                                                                                                                               |
+| PackageTag                                     |                                                                                                                               |
+| MyOrganizationsItem                            |                                                                                                                               |
+| PackageNameReference                           |                                                                                                                               |
+| PackageAccessOrganizationSummary               |                                                                                                                               |
+| PackageOrganizationGrant                       |                                                                                                                               |
+| PackagePublicGrant                             |                                                                                                                               |
+| PackageAccessGrantCreator                      |                                                                                                                               |
+| TaskVersionDetail                              |                                                                                                                               |
+| DatasetVersionDetail                           |                                                                                                                               |
+| TaskEnvironmentRequirement                     |                                                                                                                               |
+| ResolvedTaskStep                               |                                                                                                                               |
+| DatasetVersionFile                             |                                                                                                                               |
+| DatasetVersionRevisionSummary                  |                                                                                                                               |
+| TaskVersionManifest                            |                                                                                                                               |
+| DatasetVersionManifest                         |                                                                                                                               |
+| RegistryVersionFile                            |                                                                                                                               |
+| UnavailableDatasetTaskDependency               |                                                                                                                               |
+| AvailableDatasetTaskDependency                 |                                                                                                                               |
+| PackageVersionSummary                          |                                                                                                                               |
+| RegistryPackageVersion                         |                                                                                                                               |
+| JobOwnerOrganization                           |                                                                                                                               |
+| JobShareOrganizationSummary                    |                                                                                                                               |
+| JobCreator                                     |                                                                                                                               |
+| JobDetail                                      |                                                                                                                               |
+| TrialCounts                                    |                                                                                                                               |
+| MeanAggregate                                  |                                                                                                                               |
+| UsageAggregates                                |                                                                                                                               |
+| SumAggregate                                   |                                                                                                                               |
+| HostedDiffSelectors                            |                                                                                                                               |
+| HostedAgentConfig                              |                                                                                                                               |
+| HostedSubmissionEnvironmentConfig              |                                                                                                                               |
+| HostedSubmissionTaskConfig                     |                                                                                                                               |
+| HostedSubmissionDatasetConfig                  |                                                                                                                               |
+| HostedSubmissionRetryConfig                    |                                                                                                                               |
+| HostedVerifierConfig                           |                                                                                                                               |
+| MetricConfig                                   |                                                                                                                               |
+| HostedGithubAgentSource                        |                                                                                                                               |
+| HostedSecretSelection                          |                                                                                                                               |
+| HostedSubmissionCredentialProxyPolicyRule      |                                                                                                                               |
+| HostedSubmissionCredentialProxyRequestMatch    |                                                                                                                               |
+| CredentialProxyHeaderTransform                 |                                                                                                                               |
+| HostedSubmissionCredentialProxyPathMatch       |                                                                                                                               |
+| ArtifactConfig                                 |                                                                                                                               |
+| HostedJobTrialRegradeSource                    |                                                                                                                               |
+| SubmitJobResponse                              |                                                                                                                               |
+| DryRunResponse                                 |                                                                                                                               |
+| OwnerOrganization                              |                                                                                                                               |
+| SelectedSecret                                 |                                                                                                                               |
+| AgentSource                                    |                                                                                                                               |
+| AgentSourceManifest                            |                                                                                                                               |
+| AgentSourceRuntime                             |                                                                                                                               |
+| JobSummary                                     |                                                                                                                               |
+| JobTaskSummary                                 |                                                                                                                               |
+| JobRewardMetricSet                             |                                                                                                                               |
+| EvaluationJobReference                         |                                                                                                                               |
+| EvaluationSummary                              |                                                                                                                               |
+| JobManualPauseSummary                          |                                                                                                                               |
+| JobCancellationSummary                         |                                                                                                                               |
+| JobOverviewStatistics                          |                                                                                                                               |
+| JobCircuitState                                |                                                                                                                               |
+| JobBucketCircuitState                          |                                                                                                                               |
+| EvaluationSummaryRow                           |                                                                                                                               |
+| JobPackageRunTarget                            |                                                                                                                               |
+| JobPathRunTarget                               |                                                                                                                               |
+| EvaluationMetricSet                            |                                                                                                                               |
+| EvaluationComparisonTask                       |                                                                                                                               |
+| EvaluationComparisonAgentModel                 |                                                                                                                               |
+| EvaluationComparisonCell                       |                                                                                                                               |
+| TrialDetail                                    |                                                                                                                               |
+| TaskIdentity                                   |                                                                                                                               |
+| AgentIdentity                                  |                                                                                                                               |
+| ModelIdentity                                  |                                                                                                                               |
+| Usage                                          |                                                                                                                               |
+| TrialSummary                                   |                                                                                                                               |
+| ResultModelUsage                               |                                                                                                                               |
+| ApiKeyMetadata                                 |                                                                                                                               |
+| LeaderboardDefinition                          |                                                                                                                               |
+| LeaderboardReadColumnDefinition                |                                                                                                                               |
+| LeaderboardReadRankingRule                     |                                                                                                                               |
+| CreateLeaderboardRowInput                      |                                                                                                                               |
+| LeaderboardWriteColumnDefinition               |                                                                                                                               |
+| LeaderboardWriteRankingRule                    |                                                                                                                               |
+| LeaderboardMutationRecord                      |                                                                                                                               |
+| LeaderboardMutationRow                         |                                                                                                                               |
+| LeaderboardChangeSummary                       |                                                                                                                               |
+| LeaderboardRankedRow                           |                                                                                                                               |
+| LeaderboardSummary                             |                                                                                                                               |
+| LeaderboardTrialLink                           |                                                                                                                               |
+| SecretMetadata                                 |                                                                                                                               |
+| HostedLocalTaskRequirements                    |                                                                                                                               |
+| HostedPreflightEnvironmentConfig               |                                                                                                                               |
+| HostedTaskConfig                               |                                                                                                                               |
+| HostedDatasetConfig                            |                                                                                                                               |
+| HostedRetryConfig                              |                                                                                                                               |
+| CredentialProxyPolicyRule                      |                                                                                                                               |
+| CredentialProxyRequestMatch                    |                                                                                                                               |
+| CredentialProxyPathMatch                       |                                                                                                                               |
+| HostedTaskEnvironmentRequirement               |                                                                                                                               |
+| RegistryCredentialSummary                      |                                                                                                                               |
+| StorageTaskUploadCreate                        |                                                                                                                               |
+| StorageDatasetUploadCreate                     |                                                                                                                               |
+| StorageJobUploadCreate                         |                                                                                                                               |
+| StorageTrialUploadCreate                       |                                                                                                                               |
+| StorageUploadFileInput                         |                                                                                                                               |
+| StorageTaskUploadMetadata                      |                                                                                                                               |
+| TaskPublishStep                                |                                                                                                                               |
+| StoragePublicationFile                         |                                                                                                                               |
+| StorageDatasetUploadMetadata                   |                                                                                                                               |
+| DatasetPublishTaskReference                    |                                                                                                                               |
+| StorageJobUploadMetadata                       |                                                                                                                               |
+| StorageUploadFile                              |                                                                                                                               |
+| StorageTaskUploadResult                        |                                                                                                                               |
+| StorageDatasetUploadResult                     |                                                                                                                               |
+| StorageResultUploadResult                      |                                                                                                                               |
+| StorageHttpTransfer                            |                                                                                                                               |
+| StorageTusTransfer                             |                                                                                                                               |
+| BadRequestEncoded                              |                                                                                                                               |
+| InvalidPageSizeEncoded                         |                                                                                                                               |
+| InvalidCursorEncoded                           |                                                                                                                               |
+| RegistryCredentialReplacementRequiredEncoded   |                                                                                                                               |
+| RegistryCredentialReplacementStaleEncoded      |                                                                                                                               |
+| ExistingRegistryCredential                     |                                                                                                                               |
+| UnauthorizedEncoded                            |                                                                                                                               |
+| NotFoundEncoded                                |                                                                                                                               |
+| InternalServerErrorEncoded                     |                                                                                                                               |
+| ForbiddenEncoded                               |                                                                                                                               |
+| ConflictEncoded                                |                                                                                                                               |
+| TooManyRequestsEncoded                         |                                                                                                                               |
+| ServiceUnavailableEncoded                      |                                                                                                                               |
+| SecretReplacementRequiredEncoded               |                                                                                                                               |
+| SecretReplacementStaleEncoded                  |                                                                                                                               |
+| ExistingSecretSummary                          |                                                                                                                               |
 
 </details>
 

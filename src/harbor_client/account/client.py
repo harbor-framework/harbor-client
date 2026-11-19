@@ -1,10 +1,16 @@
-from typing import Any, Optional, List, Union
+from typing import Any, Optional, Generator, List, Union
 from ..services.utils.validator import Validator
 from ..services.utils.base_service import BaseService
+from ..types.utils.sentinel import SENTINEL
 from ..types.utils.cast_models import cast_models
 from ..types.utils.base_model import construct_lenient
+from ..types.account_list_organization_memberships_bad_request_response import (
+    AccountListOrganizationMembershipsBadRequestResponse_adapter,
+)
 from ..types import (
     AccountIdentity,
+    AccountListOrganizationMembershipsBadRequestResponse,
+    AccountListOrganizationMembershipsResponse,
     BadRequestEncoded,
     ForbiddenEncoded,
     InternalServerErrorEncoded,
@@ -13,13 +19,16 @@ from ..types import (
     UnauthorizedEncoded,
 )
 from ..net.transport.serializer import Serializer
+from ..net.transport.pagination import SyncPager
 from ..net.transport.http_response import HttpResponse
 from ..net.sdk_config import should_validate_response
 from ..net.sdk_config import SdkConfig
-from ..net.environment.environment import HarborAPIClientEnvironment
+from ..net.environment.environment import HarborApiClientEnvironment
 from ..core.request_options import RequestOptions
 from ..services.async_.utils.to_async import to_async
 from typing import Awaitable
+from ..net.transport.pagination import AsyncPager
+import asyncio
 
 
 class AccountClient(BaseService):
@@ -83,7 +92,7 @@ class AccountClient(BaseService):
 
         serialized_request = (
             Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/account",
+                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/account",
                 [self.get_access_token(resolved_config)],
                 resolved_config,
             )
@@ -109,50 +118,76 @@ class AccountClient(BaseService):
 
     @cast_models
     def list_organization_memberships(
-        self, *, request_options: Optional[RequestOptions] = None
-    ) -> List[MyOrganizationsItem]:
+        self,
+        *,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> SyncPager[MyOrganizationsItem]:
         """list_organization_memberships
 
+        :param page_size: page_size, defaults to None
+        :type page_size: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: List[MyOrganizationsItem]
+        :rtype: SyncPager[MyOrganizationsItem]
         """
+
+        Validator(str).is_optional().validate(page_size, "page_size")
+        Validator(str).is_optional().validate(cursor, "cursor")
 
         resolved_config = self._get_resolved_config(
             self._list_organization_memberships_config, request_options
         )
 
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborAPIClientEnvironment.DEFAULT.url}/v1/account/organization-memberships",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("GET")
-        )
+        def _paginate() -> Generator[List[MyOrganizationsItem], None, None]:
+            nonlocal cursor
+            while True:
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/account/organization-memberships",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version",
+                        self._global_headers.get("Harbor-API-Version"),
+                    )
+                    .add_query("page_size", page_size)
+                    .add_query("cursor", cursor)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("GET")
+                )
+                response, status, content = self.send_request(serialized_request)
+                parsed_response = (
+                    AccountListOrganizationMembershipsResponse.model_validate(response)
+                    if should_validate_response(resolved_config)
+                    else construct_lenient(
+                        AccountListOrganizationMembershipsResponse, response
+                    )
+                )
+                current_page = parsed_response.items
 
-        response, status, content = self.send_request(serialized_request)
-        return (
-            [
-                MyOrganizationsItem.model_validate(item)
-                for item in (response if isinstance(response, list) else [])
-            ]
-            if should_validate_response(resolved_config)
-            else construct_lenient(
-                List[MyOrganizationsItem],
-                (response if isinstance(response, list) else []),
-            )
-        )
+                if not current_page:
+                    break
+
+                yield current_page
+
+                next_cursor = parsed_response.next_cursor
+                if not next_cursor:
+                    break
+
+                cursor = next_cursor
+
+        return SyncPager(_paginate(), lambda: self._last_response)
 
 
 class RawAccountClient:
@@ -175,12 +210,24 @@ class RawAccountClient:
         return HttpResponse(data=data, response=self._client._last_response)
 
     def list_organization_memberships(
-        self, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[List[MyOrganizationsItem]]:
+        self,
+        *,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[SyncPager[MyOrganizationsItem]]:
         data = AccountClient.list_organization_memberships(
-            self._client, request_options=request_options
+            self._client,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
-        return HttpResponse(data=data, response=self._client._last_response)
+        return HttpResponse(data=data, response_source=lambda: data.last_response)
 
 
 class AsyncAccountClient(AccountClient):
@@ -203,11 +250,28 @@ class AsyncAccountClient(AccountClient):
         return to_async(super().get)(request_options=request_options)
 
     def list_organization_memberships(
-        self, *, request_options: Optional[RequestOptions] = None
-    ) -> Awaitable[List[MyOrganizationsItem]]:  # type: ignore[override]
-        return to_async(super().list_organization_memberships)(
-            request_options=request_options
+        self,
+        *,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> AsyncPager[MyOrganizationsItem]:  # type: ignore[override]
+        sync_pager = super().list_organization_memberships(
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
+
+        async def _paginate():
+            for page in sync_pager.iter_pages():
+                yield page
+
+        return AsyncPager(_paginate(), lambda: sync_pager.last_response)
 
 
 class AsyncRawAccountClient:
@@ -227,10 +291,22 @@ class AsyncRawAccountClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
-    async def list_organization_memberships(
-        self, *, request_options: Optional[RequestOptions] = None
-    ) -> HttpResponse[List[MyOrganizationsItem]]:
-        data = await AsyncAccountClient.list_organization_memberships(
-            self._client, request_options=request_options
+    def list_organization_memberships(
+        self,
+        *,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
+        request_options: Optional[RequestOptions] = None,
+    ) -> HttpResponse[AsyncPager[MyOrganizationsItem]]:
+        data = AsyncAccountClient.list_organization_memberships(
+            self._client,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
-        return HttpResponse(data=data, response=self._client._last_response)
+        return HttpResponse(data=data, response_source=lambda: data.last_response)

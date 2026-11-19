@@ -135,13 +135,13 @@ class JobOverview(BaseModel):
     can_transfer: bool
     is_hosted: Optional[bool]
     billing_blocked: bool
-    manual_pause: JobManualPauseSummary
-    cancellation: JobCancellationSummary
+    manual_pause: Optional[JobManualPauseSummary]
+    cancellation: Optional[JobCancellationSummary]
     config: Any
     datasets: Optional[List[str]]
     run_targets: Optional[List[JobOverviewRunTargetsItem]]
-    stats: JobOverviewStatistics
-    circuit: JobCircuitState
+    stats: Optional[JobOverviewStatistics]
+    circuit: Optional[JobCircuitState]
     circuits: Optional[List[JobBucketCircuitState]]
 
 

@@ -5,7 +5,7 @@ from typing import Annotated
 from pydantic import TypeAdapter
 from .bad_request_encoded import BadRequestEncodedData
 from .invalid_page_size_encoded import InvalidPageSizeEncoded
-from .invalid_page_token_encoded import InvalidPageTokenEncoded
+from .invalid_cursor_encoded import InvalidCursorEncoded
 
 
 # fernMode variant type for a shared-component member of ApiKeysListBadRequestResponse
@@ -19,14 +19,14 @@ class ApiKeysListBadRequestResponse_InvalidPageSize(InvalidPageSizeEncoded):
 
 
 # fernMode variant type for a shared-component member of ApiKeysListBadRequestResponse
-class ApiKeysListBadRequestResponse_InvalidPageToken(InvalidPageTokenEncoded):
+class ApiKeysListBadRequestResponse_InvalidCursor(InvalidCursorEncoded):
     pass
 
 
 # Union type for ApiKeysListBadRequestResponse
 # Pydantic will attempt to validate against each type in order
 ApiKeysListBadRequestResponse = Union[
-    BadRequestEncodedData, InvalidPageSizeEncoded, InvalidPageTokenEncoded
+    BadRequestEncodedData, InvalidPageSizeEncoded, InvalidCursorEncoded
 ]
 # TypeAdapter for runtime validation of ApiKeysListBadRequestResponse
 # This allows validation of Union types which are not directly instantiable
