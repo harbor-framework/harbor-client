@@ -21,20 +21,20 @@ from .leaderboards_list_rows_bad_request_response import (
     LeaderboardsListRowsBadRequestResponse,
     LeaderboardsListRowsBadRequestResponse_BadRequest,
     LeaderboardsListRowsBadRequestResponse_InvalidPageSize,
-    LeaderboardsListRowsBadRequestResponse_InvalidPageToken,
+    LeaderboardsListRowsBadRequestResponse_InvalidCursor,
 )
 from .leaderboards_list_bad_request_response import (
     LeaderboardsListBadRequestResponse,
     LeaderboardsListBadRequestResponse_BadRequest,
     LeaderboardsListBadRequestResponse_InvalidPageSize,
-    LeaderboardsListBadRequestResponse_InvalidPageToken,
+    LeaderboardsListBadRequestResponse_InvalidCursor,
 )
 from .leaderboards_create_request_visibility import LeaderboardsCreateRequestVisibility
 from .leaderboards_list_trials_bad_request_response import (
     LeaderboardsListTrialsBadRequestResponse,
     LeaderboardsListTrialsBadRequestResponse_BadRequest,
     LeaderboardsListTrialsBadRequestResponse_InvalidPageSize,
-    LeaderboardsListTrialsBadRequestResponse_InvalidPageToken,
+    LeaderboardsListTrialsBadRequestResponse_InvalidCursor,
 )
 
 __all__ = [
@@ -48,14 +48,14 @@ __all__ = [
     "LeaderboardsListRowsBadRequestResponse",
     "LeaderboardsListRowsBadRequestResponse_BadRequest",
     "LeaderboardsListRowsBadRequestResponse_InvalidPageSize",
-    "LeaderboardsListRowsBadRequestResponse_InvalidPageToken",
+    "LeaderboardsListRowsBadRequestResponse_InvalidCursor",
     "LeaderboardsListBadRequestResponse",
     "LeaderboardsListBadRequestResponse_BadRequest",
     "LeaderboardsListBadRequestResponse_InvalidPageSize",
-    "LeaderboardsListBadRequestResponse_InvalidPageToken",
+    "LeaderboardsListBadRequestResponse_InvalidCursor",
     "LeaderboardsCreateRequestVisibility",
     "LeaderboardsListTrialsBadRequestResponse",
     "LeaderboardsListTrialsBadRequestResponse_BadRequest",
     "LeaderboardsListTrialsBadRequestResponse_InvalidPageSize",
-    "LeaderboardsListTrialsBadRequestResponse_InvalidPageToken",
+    "LeaderboardsListTrialsBadRequestResponse_InvalidCursor",
 ]

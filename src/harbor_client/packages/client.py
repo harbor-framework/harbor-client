@@ -13,6 +13,9 @@ from ..types.packages_list_version_files_bad_request_response import (
 from ..types.packages_list_version_catalog_bad_request_response import (
     PackagesListVersionCatalogBadRequestResponse_adapter,
 )
+from ..types.packages_list_tags_bad_request_response import (
+    PackagesListTagsBadRequestResponse_adapter,
+)
 from ..types.package_version_manifest import PackageVersionManifest_adapter
 from ..types.package_version_detail import PackageVersionDetail_adapter
 from ..types import (
@@ -22,6 +25,8 @@ from ..types import (
     InternalServerErrorEncoded,
     NotFoundEncoded,
     PackageAccess,
+    PackagesListTagsBadRequestResponse,
+    PackagesListTagsResponse,
     PackagesListVersionCatalogBadRequestResponse,
     PackagesListVersionCatalogRequestIncludeYanked,
     PackagesListVersionCatalogRequestType,
@@ -607,7 +612,7 @@ class PackagesClient(BaseService):
         ref: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[RegistryVersionFile]:
         """list_version_files
@@ -620,28 +625,27 @@ class PackagesClient(BaseService):
         :type ref: str
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
         :rtype: SyncPager[RegistryVersionFile]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(organization_name, "organization_name")
         Validator(str).validate(name, "name")
         Validator(str).validate(ref, "ref")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
 
         resolved_config = self._get_resolved_config(
             self._list_version_files_config, request_options
         )
 
         def _paginate() -> Generator[List[RegistryVersionFile], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -657,7 +661,7 @@ class PackagesClient(BaseService):
                     .add_path("name", name)
                     .add_path("ref", ref)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -671,15 +675,18 @@ class PackagesClient(BaseService):
                     if should_validate_response(resolved_config)
                     else construct_lenient(PackageVersionFilePage, response)
                 )
-                current_page = parsed_response.files
+                current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -689,58 +696,80 @@ class PackagesClient(BaseService):
         organization_name: str,
         name: str,
         *,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> List[PackageTag]:
+    ) -> SyncPager[PackageTag]:
         """list_tags
 
         :param organization_name: organization_name
         :type organization_name: str
         :param name: name
         :type name: str
+        :param page_size: page_size, defaults to None
+        :type page_size: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: List[PackageTag]
+        :rtype: SyncPager[PackageTag]
         """
 
         Validator(str).validate(organization_name, "organization_name")
         Validator(str).validate(name, "name")
+        Validator(str).is_optional().validate(page_size, "page_size")
+        Validator(str).is_optional().validate(cursor, "cursor")
 
         resolved_config = self._get_resolved_config(
             self._list_tags_config, request_options
         )
 
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_path("organization_name", organization_name)
-            .add_path("name", name)
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("GET")
-        )
+        def _paginate() -> Generator[List[PackageTag], None, None]:
+            nonlocal cursor
+            while True:
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/packages/{{organization_name}}/{{name}}/tags",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version",
+                        self._global_headers.get("Harbor-API-Version"),
+                    )
+                    .add_path("organization_name", organization_name)
+                    .add_path("name", name)
+                    .add_query("page_size", page_size)
+                    .add_query("cursor", cursor)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("GET")
+                )
+                response, status, content = self.send_request(serialized_request)
+                parsed_response = (
+                    PackagesListTagsResponse.model_validate(response)
+                    if should_validate_response(resolved_config)
+                    else construct_lenient(PackagesListTagsResponse, response)
+                )
+                current_page = parsed_response.items
 
-        response, status, content = self.send_request(serialized_request)
-        return (
-            [
-                PackageTag.model_validate(item)
-                for item in (response if isinstance(response, list) else [])
-            ]
-            if should_validate_response(resolved_config)
-            else construct_lenient(
-                List[PackageTag], (response if isinstance(response, list) else [])
-            )
-        )
+                if not current_page:
+                    break
+
+                yield current_page
+
+                next_cursor = parsed_response.next_cursor
+                if not next_cursor:
+                    break
+
+                cursor = next_cursor
+
+        return SyncPager(_paginate(), lambda: self._last_response)
 
     @cast_models
     def tag_version(
@@ -936,7 +965,7 @@ class PackagesClient(BaseService):
         *,
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -947,8 +976,8 @@ class PackagesClient(BaseService):
         :type type: PackagesListVersionCatalogRequestType
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param organization_id: organization_id, defaults to None
         :type organization_id: str, optional
         :param include_yanked: include_yanked, defaults to None
@@ -959,11 +988,10 @@ class PackagesClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[PackageVersionSummary]
         """
-        self = self._for_one_call()
 
         Validator(PackagesListVersionCatalogRequestType).validate(type, "type")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(
             PackagesListVersionCatalogRequestIncludeYanked
@@ -974,7 +1002,7 @@ class PackagesClient(BaseService):
         )
 
         def _paginate() -> Generator[List[PackageVersionSummary], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -987,7 +1015,7 @@ class PackagesClient(BaseService):
                         self._global_headers.get("Harbor-API-Version"),
                     )
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_query("type", type)
                     .add_query("organization_id", organization_id)
                     .add_query("include_yanked", include_yanked)
@@ -1004,15 +1032,18 @@ class PackagesClient(BaseService):
                     if should_validate_response(resolved_config)
                     else construct_lenient(PackageVersionCatalogPage, response)
                 )
-                current_page = parsed_response.versions
+                current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -1079,7 +1110,7 @@ class PackagesClient(BaseService):
         name: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         include_yanked: PackagesListVersionsRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[RegistryPackageVersion]:
@@ -1091,8 +1122,8 @@ class PackagesClient(BaseService):
         :type name: str
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param include_yanked: include_yanked, defaults to None
         :type include_yanked: PackagesListVersionsRequestIncludeYanked, optional
         ...
@@ -1101,12 +1132,11 @@ class PackagesClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[RegistryPackageVersion]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(organization_name, "organization_name")
         Validator(str).validate(name, "name")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(PackagesListVersionsRequestIncludeYanked).is_optional().validate(
             include_yanked, "include_yanked"
         )
@@ -1116,7 +1146,7 @@ class PackagesClient(BaseService):
         )
 
         def _paginate() -> Generator[List[RegistryPackageVersion], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -1131,7 +1161,7 @@ class PackagesClient(BaseService):
                     .add_path("organization_name", organization_name)
                     .add_path("name", name)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_query("include_yanked", include_yanked)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
@@ -1146,15 +1176,18 @@ class PackagesClient(BaseService):
                     if should_validate_response(resolved_config)
                     else construct_lenient(RegistryPackageVersionPage, response)
                 )
-                current_page = parsed_response.versions
+                current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -1405,7 +1438,7 @@ class RawPackagesClient:
         ref: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[RegistryVersionFile]]:
         data = PackagesClient.list_version_files(
@@ -1416,10 +1449,7 @@ class RawPackagesClient:
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -1432,12 +1462,24 @@ class RawPackagesClient:
         organization_name: str,
         name: str,
         *,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[List[PackageTag]]:
+    ) -> HttpResponse[SyncPager[PackageTag]]:
         data = PackagesClient.list_tags(
-            self._client, organization_name, name, request_options=request_options
+            self._client,
+            organization_name,
+            name,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
-        return HttpResponse(data=data, response=self._client._last_response)
+        return HttpResponse(data=data, response_source=lambda: data.last_response)
 
     def tag_version(
         self,
@@ -1502,7 +1544,7 @@ class RawPackagesClient:
         *,
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1515,7 +1557,7 @@ class RawPackagesClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
@@ -1544,7 +1586,7 @@ class RawPackagesClient:
         name: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         include_yanked: PackagesListVersionsRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[RegistryPackageVersion]]:
@@ -1557,7 +1599,7 @@ class RawPackagesClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "include_yanked": include_yanked,
                     }.items()
                     if v is not SENTINEL
@@ -1728,7 +1770,7 @@ class AsyncPackagesClient(PackagesClient):
         ref: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[RegistryVersionFile]:  # type: ignore[override]
         sync_pager = super().list_version_files(
@@ -1738,10 +1780,7 @@ class AsyncPackagesClient(PackagesClient):
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -1749,11 +1788,7 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1763,11 +1798,28 @@ class AsyncPackagesClient(PackagesClient):
         organization_name: str,
         name: str,
         *,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[List[PackageTag]]:  # type: ignore[override]
-        return to_async(super().list_tags)(
-            organization_name, name, request_options=request_options
+    ) -> AsyncPager[PackageTag]:  # type: ignore[override]
+        sync_pager = super().list_tags(
+            organization_name,
+            name,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
+
+        async def _paginate():
+            for page in sync_pager.iter_pages():
+                yield page
+
+        return AsyncPager(_paginate(), lambda: sync_pager.last_response)
 
     def tag_version(
         self,
@@ -1827,7 +1879,7 @@ class AsyncPackagesClient(PackagesClient):
         *,
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1839,7 +1891,7 @@ class AsyncPackagesClient(PackagesClient):
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
@@ -1850,11 +1902,7 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1876,7 +1924,7 @@ class AsyncPackagesClient(PackagesClient):
         name: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         include_yanked: PackagesListVersionsRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[RegistryPackageVersion]:  # type: ignore[override]
@@ -1888,7 +1936,7 @@ class AsyncPackagesClient(PackagesClient):
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "include_yanked": include_yanked,
                     }.items()
                     if v is not SENTINEL
@@ -1898,11 +1946,7 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2066,7 +2110,7 @@ class AsyncRawPackagesClient:
         ref: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[RegistryVersionFile]]:
         data = AsyncPackagesClient.list_version_files(
@@ -2077,10 +2121,7 @@ class AsyncRawPackagesClient:
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -2088,17 +2129,29 @@ class AsyncRawPackagesClient:
         )
         return HttpResponse(data=data, response_source=lambda: data.last_response)
 
-    async def list_tags(
+    def list_tags(
         self,
         organization_name: str,
         name: str,
         *,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[List[PackageTag]]:
-        data = await AsyncPackagesClient.list_tags(
-            self._client, organization_name, name, request_options=request_options
+    ) -> HttpResponse[AsyncPager[PackageTag]]:
+        data = AsyncPackagesClient.list_tags(
+            self._client,
+            organization_name,
+            name,
+            **dict[str, Any](
+                {
+                    k: v
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
+                    if v is not SENTINEL
+                }
+            ),
+            request_options=request_options,
         )
-        return HttpResponse(data=data, response=self._client._last_response)
+        return HttpResponse(data=data, response_source=lambda: data.last_response)
 
     async def tag_version(
         self,
@@ -2163,7 +2216,7 @@ class AsyncRawPackagesClient:
         *,
         type: PackagesListVersionCatalogRequestType,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         organization_id: str = SENTINEL,
         include_yanked: PackagesListVersionCatalogRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -2176,7 +2229,7 @@ class AsyncRawPackagesClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "organization_id": organization_id,
                         "include_yanked": include_yanked,
                     }.items()
@@ -2205,7 +2258,7 @@ class AsyncRawPackagesClient:
         name: str,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         include_yanked: PackagesListVersionsRequestIncludeYanked = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[RegistryPackageVersion]]:
@@ -2218,7 +2271,7 @@ class AsyncRawPackagesClient:
                     k: v
                     for k, v in {
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "include_yanked": include_yanked,
                     }.items()
                     if v is not SENTINEL

@@ -3,7 +3,7 @@ from .secrets_list_bad_request_response import (
     SecretsListBadRequestResponse,
     SecretsListBadRequestResponse_BadRequest,
     SecretsListBadRequestResponse_InvalidPageSize,
-    SecretsListBadRequestResponse_InvalidPageToken,
+    SecretsListBadRequestResponse_InvalidCursor,
 )
 from .secrets_upsert_request_scope import SecretsUpsertRequestScope
 from .secrets_upsert_conflict_response import (
@@ -41,7 +41,7 @@ __all__ = [
     "SecretsListBadRequestResponse",
     "SecretsListBadRequestResponse_BadRequest",
     "SecretsListBadRequestResponse_InvalidPageSize",
-    "SecretsListBadRequestResponse_InvalidPageToken",
+    "SecretsListBadRequestResponse_InvalidCursor",
     "SecretsUpsertRequestScope",
     "SecretsUpsertConflictResponse",
     "SecretsUpsertConflictResponse_Conflict",

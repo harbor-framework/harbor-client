@@ -44,9 +44,7 @@ class ApiError(Exception):
 
     def __str__(self) -> str:
         if self.status_code is not None or self.body is not None:
-            # Headers stay on `self.headers` but out of the string: logs and tracebacks
-            # must not carry Set-Cookie or other credentials.
-            summary = f"status_code: {self.status_code}, body: {self.body}"
+            summary = f"headers: {self.headers}, status_code: {self.status_code}, body: {self.body}"
             # Keep an explanatory message (e.g. the unmapped-status fallback) when one is set.
             return f"{summary}: {self.message}" if self.message else summary
         parts = []

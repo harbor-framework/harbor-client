@@ -93,30 +93,29 @@ class ApiKeysClient(BaseService):
         self,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[ApiKeyMetadata]:
         """list
 
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
         :rtype: SyncPager[ApiKeyMetadata]
         """
-        self = self._for_one_call()
 
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
 
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
         def _paginate() -> Generator[List[ApiKeyMetadata], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -129,7 +128,7 @@ class ApiKeysClient(BaseService):
                         self._global_headers.get("Harbor-API-Version"),
                     )
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -143,15 +142,18 @@ class ApiKeysClient(BaseService):
                     if should_validate_response(resolved_config)
                     else construct_lenient(ApiKeyMetadataPage, response)
                 )
-                current_page = parsed_response.api_keys
+                current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -276,7 +278,7 @@ class RawApiKeysClient:
         self,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[ApiKeyMetadata]]:
         data = ApiKeysClient.list(
@@ -284,10 +286,7 @@ class RawApiKeysClient:
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -343,17 +342,14 @@ class AsyncApiKeysClient(ApiKeysClient):
         self,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[ApiKeyMetadata]:  # type: ignore[override]
         sync_pager = super().list(
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -361,11 +357,7 @@ class AsyncApiKeysClient(ApiKeysClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -408,7 +400,7 @@ class AsyncRawApiKeysClient:
         self,
         *,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[ApiKeyMetadata]]:
         data = AsyncApiKeysClient.list(
@@ -416,10 +408,7 @@ class AsyncRawApiKeysClient:
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "page_size": page_size,
-                        "page_token": page_token,
-                    }.items()
+                    for k, v in {"page_size": page_size, "cursor": cursor}.items()
                     if v is not SENTINEL
                 }
             ),

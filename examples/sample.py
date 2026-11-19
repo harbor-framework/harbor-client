@@ -17,8 +17,8 @@ response = client.jobs.list(
     source=["source"],
     created_after="created_after",
     created_before="created_before",
-    page_size="page_size",
-    page_token="page_token",
+    page_size="50",
+    cursor="cursor",
     sort="id",
 )
 for item in response:

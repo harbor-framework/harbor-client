@@ -6,7 +6,7 @@ from .rollouts_list_bad_request_response import (
     RolloutsListBadRequestResponse,
     RolloutsListBadRequestResponse_BadRequest,
     RolloutsListBadRequestResponse_InvalidPageSize,
-    RolloutsListBadRequestResponse_InvalidPageToken,
+    RolloutsListBadRequestResponse_InvalidCursor,
 )
 from .rollouts_get_filters_request_attempts import RolloutsGetFiltersRequestAttempts
 from .rollouts_get_filters_request_failed_only import (
@@ -23,7 +23,7 @@ __all__ = [
     "RolloutsListBadRequestResponse",
     "RolloutsListBadRequestResponse_BadRequest",
     "RolloutsListBadRequestResponse_InvalidPageSize",
-    "RolloutsListBadRequestResponse_InvalidPageToken",
+    "RolloutsListBadRequestResponse_InvalidCursor",
     "RolloutsGetFiltersRequestAttempts",
     "RolloutsGetFiltersRequestFailedOnly",
     "RolloutsGetFiltersRequestTerminal",

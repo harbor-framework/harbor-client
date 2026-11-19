@@ -15,10 +15,17 @@ class JobTaskPage(BaseModel):
     :type items: List[JobTaskSummary]
     :param total: total
     :type total: int
-    :param next_page_token: next_page_token
-    :type next_page_token: str
+    :param next_cursor: Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice.
+    :type next_cursor: str
+    :param prev_cursor: Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice.
+    :type prev_cursor: str
     """
 
     items: List[JobTaskSummary]
     total: int
-    next_page_token: str
+    next_cursor: Optional[str] = Field(
+        description="Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+    )
+    prev_cursor: Optional[str] = Field(
+        description="Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
+    )

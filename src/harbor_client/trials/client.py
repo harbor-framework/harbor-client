@@ -256,7 +256,7 @@ class TrialsClient(BaseService):
         job_id: str = SENTINEL,
         job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: TrialsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[TrialSummary]:
@@ -300,8 +300,8 @@ class TrialsClient(BaseService):
         :type job_ids: List[str], optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
-        :param page_token: page_token, defaults to None
-        :type page_token: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         :param sort: sort, defaults to None
         :type sort: TrialsListRequestSort, optional
         ...
@@ -310,7 +310,6 @@ class TrialsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[TrialSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -341,13 +340,13 @@ class TrialsClient(BaseService):
         Validator(str).is_optional().validate(job_id, "job_id")
         Validator(str).is_array().is_optional().validate(job_ids, "job_ids")
         Validator(str).is_optional().validate(page_size, "page_size")
-        Validator(str).is_optional().validate(page_token, "page_token")
+        Validator(str).is_optional().validate(cursor, "cursor")
         Validator(TrialsListRequestSort).is_optional().validate(sort, "sort")
 
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
         def _paginate() -> Generator[List[TrialSummary], None, None]:
-            nonlocal page_token
+            nonlocal cursor
             while True:
                 serialized_request = (
                     Serializer(
@@ -378,7 +377,7 @@ class TrialsClient(BaseService):
                     .add_query("job_id", job_id)
                     .add_query("job_ids", job_ids)
                     .add_query("page_size", page_size)
-                    .add_query("page_token", page_token)
+                    .add_query("cursor", cursor)
                     .add_query("sort", sort)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
@@ -395,13 +394,16 @@ class TrialsClient(BaseService):
                 )
                 current_page = parsed_response.items
 
+                if not current_page:
+                    break
+
                 yield current_page
 
-                next_cursor = parsed_response.next_page_token
+                next_cursor = parsed_response.next_cursor
                 if not next_cursor:
                     break
 
-                page_token = next_cursor
+                cursor = next_cursor
 
         return SyncPager(_paginate(), lambda: self._last_response)
 
@@ -1077,7 +1079,7 @@ class RawTrialsClient:
         job_id: str = SENTINEL,
         job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: TrialsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[TrialSummary]]:
@@ -1106,7 +1108,7 @@ class RawTrialsClient:
                         "job_id": job_id,
                         "job_ids": job_ids,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -1384,7 +1386,7 @@ class AsyncTrialsClient(TrialsClient):
         job_id: str = SENTINEL,
         job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: TrialsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[TrialSummary]:  # type: ignore[override]
@@ -1412,7 +1414,7 @@ class AsyncTrialsClient(TrialsClient):
                         "job_id": job_id,
                         "job_ids": job_ids,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
@@ -1422,11 +1424,7 @@ class AsyncTrialsClient(TrialsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1673,7 +1671,7 @@ class AsyncRawTrialsClient:
         job_id: str = SENTINEL,
         job_ids: List[str] = SENTINEL,
         page_size: str = SENTINEL,
-        page_token: str = SENTINEL,
+        cursor: str = SENTINEL,
         sort: TrialsListRequestSort = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[TrialSummary]]:
@@ -1702,7 +1700,7 @@ class AsyncRawTrialsClient:
                         "job_id": job_id,
                         "job_ids": job_ids,
                         "page_size": page_size,
-                        "page_token": page_token,
+                        "cursor": cursor,
                         "sort": sort,
                     }.items()
                     if v is not SENTINEL
