@@ -96,14 +96,20 @@ def test_sync_read_preserves_cursor_and_reuses_caller_session():
         assert request.url.path == "/functions/v1/api/v1/jobs"
         assert request.headers["Harbor-API-Version"] == VERSION
         return httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": "next/+=token"}
+            200,
+            json={
+                "items": [],
+                "total": 0,
+                "next_cursor": "next/+=token",
+                "prev_cursor": None,
+            },
         )
 
     with httpx.Client(transport=httpx.MockTransport(handler)) as http:
         client = HarborAPIClient(harbor_api_version=VERSION, httpx_client=http)
         for cursor in ["opaque/+=token", "next/+=token"]:
             pager = client.jobs.list(
-                page_token=cursor,
+                cursor=cursor,
                 request_options={
                     "additional_headers": {"Authorization": "Bearer active"}
                 },
@@ -111,10 +117,10 @@ def test_sync_read_preserves_cursor_and_reuses_caller_session():
             assert isinstance(pager, SyncPager)
             assert next(pager.iter_pages()) == []
             page = JobPage.model_validate(pager.last_response.body)
-            assert page.total == 0 and page.next_page_token == "next/+=token"
+            assert page.total == 0 and page.next_cursor == "next/+=token"
         assert not http.is_closed
     assert http.is_closed
-    assert [r.url.params["page_token"] for r in requests] == [
+    assert [r.url.params["cursor"] for r in requests] == [
         "opaque/+=token",
         "next/+=token",
     ]
@@ -150,7 +156,8 @@ async def test_async_resource_wrapper_and_borrowed_pool():
     def handler(request):
         requests.append(request)
         return httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": ""}
+            200,
+            json={"items": [], "total": 0, "next_cursor": None, "prev_cursor": None},
         )
 
     # Fern's async resource methods dispatch sync transport work to worker
@@ -168,8 +175,8 @@ async def test_async_resource_wrapper_and_borrowed_pool():
 @pytest.mark.parametrize(
     "payload",
     [
-        {"items": [], "next_page_token": ""},
-        {"items": [], "total": "invalid", "next_page_token": ""},
+        {"items": [], "next_cursor": None, "prev_cursor": None},
+        {"items": [], "total": "invalid", "next_cursor": None, "prev_cursor": None},
     ],
 )
 def test_invalid_success_response_is_rejected(payload):
@@ -283,7 +290,8 @@ def test_token_should_reach_identity_dependent_public_reads():
     def handler(request):
         requests.append(request)
         return httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": ""}
+            200,
+            json={"items": [], "total": 0, "next_cursor": None, "prev_cursor": None},
         )
 
     with httpx.Client(transport=httpx.MockTransport(handler)) as http:

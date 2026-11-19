@@ -34,7 +34,12 @@ def test_retired_job_sort_values_are_absent_from_generated_literals():
     "sort", ["id", "-id", "created_at", "-created_at", "updated_at", "-updated_at"]
 )
 async def test_job_sort_wire_contract(asynchronous, sort):
-    payload = {**response_fixture("/v1/jobs"), "items": [], "next_page_token": ""}
+    payload = {
+        **response_fixture("/v1/jobs"),
+        "items": [],
+        "next_cursor": None,
+        "prev_cursor": None,
+    }
     seen = []
 
     def handler(request):

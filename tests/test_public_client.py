@@ -36,7 +36,13 @@ def test_public_and_compatibility_clients_reject_invalid_wire_fields(factory, in
     with factory(
         transport=httpx.MockTransport(
             lambda _: httpx.Response(
-                200, json={"items": [], "total": invalid, "next_page_token": ""}
+                200,
+                json={
+                    "items": [],
+                    "total": invalid,
+                    "next_cursor": None,
+                    "prev_cursor": None,
+                },
             )
         )
     ) as client:
@@ -53,7 +59,9 @@ async def test_borrowed_httpx_pool_remains_open_and_retains_headers(asynchronous
         return httpx.Response(
             200,
             content=gzip.compress(
-                json.dumps({"items": [], "total": 0, "next_page_token": ""}).encode()
+                json.dumps(
+                    {"items": [], "total": 0, "next_cursor": None, "prev_cursor": None}
+                ).encode()
             ),
             headers={"content-encoding": "gzip", "content-type": "application/json"},
         )
@@ -64,7 +72,7 @@ async def test_borrowed_httpx_pool_remains_open_and_retains_headers(asynchronous
     cls = AsyncHarborAPIClient if asynchronous else HarborAPIClient
     client = cls(token="key", httpx_client=pool, timeout=0.5)
     try:
-        pager = client.jobs.list(page_token="opaque/+=token")
+        pager = client.jobs.list(cursor="opaque/+=token")
         if asynchronous:
             assert [item async for item in pager] == []
             await client.aclose()
@@ -78,7 +86,7 @@ async def test_borrowed_httpx_pool_remains_open_and_retains_headers(asynchronous
         assert seen[0].headers["X-Caller"] == "present"
         assert seen[0].headers["Harbor-API-Version"] == API_VERSION
         assert seen[0].headers["Authorization"] == "Bearer key"
-        assert seen[0].url.params["page_token"] == "opaque/+=token"
+        assert seen[0].url.params["cursor"] == "opaque/+=token"
         assert seen[0].extensions["timeout"]["read"] == 0.5
     finally:
         client.close()
@@ -90,7 +98,13 @@ async def test_async_entry_points_enforce_the_same_contract(factory):
     async with factory(
         transport=httpx.MockTransport(
             lambda _: httpx.Response(
-                200, json={"items": [], "total": True, "next_page_token": ""}
+                200,
+                json={
+                    "items": [],
+                    "total": True,
+                    "next_cursor": None,
+                    "prev_cursor": None,
+                },
             )
         )
     ) as client:
@@ -136,7 +150,9 @@ async def test_borrowed_requests_session_retains_caller_ownership(asynchronous):
             response = requests.Response()
             response.status_code = 200
             response.headers["Content-Type"] = "application/json"
-            response._content = b'{"items": [], "total": 0, "next_page_token": ""}'
+            response._content = (
+                b'{"items": [], "total": 0, "next_cursor": null, "prev_cursor": null}'
+            )
             return response
 
         def close(self):
@@ -170,7 +186,8 @@ async def test_async_token_provider_works_through_the_public_constructor():
     def handler(request):
         seen.append(request)
         return httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": ""}
+            200,
+            json={"items": [], "total": 0, "next_cursor": None, "prev_cursor": None},
         )
 
     async with AsyncHarborAPIClient(
@@ -212,7 +229,9 @@ def loopback(handler):
         server.server_close()
 
 
-EMPTY_PAGE = json.dumps({"items": [], "total": 0, "next_page_token": ""}).encode()
+EMPTY_PAGE = json.dumps(
+    {"items": [], "total": 0, "next_cursor": None, "prev_cursor": None}
+).encode()
 FAST_RETRY = {"attempts": 2, "delay_ms": 1, "max_delay_ms": 1}
 
 
@@ -299,7 +318,8 @@ async def test_token_provider_returning_none_sends_no_authorization(asynchronous
     def handler(request):
         sent.append(request)
         return httpx.Response(
-            200, json={"items": [], "total": 0, "next_page_token": ""}
+            200,
+            json={"items": [], "total": 0, "next_cursor": None, "prev_cursor": None},
         )
 
     tokens = iter(["first", None])
@@ -382,7 +402,8 @@ def test_request_and_response_strings_omit_credentials(monkeypatch):
                 json={
                     "items": [],
                     "total": 0,
-                    "next_page_token": "",
+                    "next_cursor": None,
+                    "prev_cursor": None,
                     "secret": "BODY-SECRET",
                 },
                 headers={"Set-Cookie": "session=COOKIE-SECRET"},

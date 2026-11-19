@@ -28,7 +28,7 @@ def test_valid_package_metadata_is_decoded_without_error():
             organization_name="example", name="missing"
         )
         assert next(pager.iter_pages()) == []
-        assert pager.last_response.body["package"] == payload["package"]
+        assert pager.last_response.body == payload
 
 
 def required_nullable_reference_fields():

@@ -113,12 +113,13 @@ def test_every_cursor_endpoint_has_exact_native_metadata_and_a_pager_method():
         for operation in methods.values()
         if isinstance(operation, dict)
         and any(
-            param.get("in") == "query" and param.get("name") == "page_token"
+            param.get("in") == "query" and param.get("name") == "cursor"
             for param in operation.get("parameters", [])
         )
     }
     assert set(CURSORS) == set(METHODS) == expected
     assert {operation["operationId"] for operation in CURSORS.values()} == {
+        "account.listOrganizationMemberships",
         "apiKeys.list",
         "jobs.list",
         "jobs.listTasks",
@@ -127,13 +128,14 @@ def test_every_cursor_endpoint_has_exact_native_metadata_and_a_pager_method():
         "packages.listVersionFiles",
         "packages.listVersionCatalog",
         "packages.listVersions",
+        "packages.listTags",
         "leaderboards.list",
         "leaderboards.listRows",
         "leaderboards.listTrials",
         "secrets.list",
     }
     assert all(
-        operation["x-fern-pagination"]["cursor"] == "$request.page_token"
+        operation["x-fern-pagination"]["cursor"] == "$request.cursor"
         for operation in CURSORS.values()
     )
     for path, operation in CURSORS.items():
@@ -167,7 +169,7 @@ async def test_every_native_pager_exposes_one_page_with_original_metadata(
             )
         )
         assert request.method == "GET"
-        assert request.url.params["page_token"] == "incoming+/cursor=="
+        assert request.url.params["cursor"] == "incoming+/cursor=="
         return httpx.Response(200, json=payload, headers={"X-Page": "first"})
 
     transport = httpx.MockTransport(handler)
@@ -176,7 +178,7 @@ async def test_every_native_pager_exposes_one_page_with_original_metadata(
         async with async_client(token="test", transport=transport) as client:
             method = getattr(getattr(client, resource), method_name)
             pager = method(
-                **arguments(CURSORS[path], method), page_token="incoming+/cursor=="
+                **arguments(CURSORS[path], method), cursor="incoming+/cursor=="
             )
             async with aclosing(pager.iter_pages_with_response()) as batches:
                 batch = await anext(batches)
@@ -185,7 +187,7 @@ async def test_every_native_pager_exposes_one_page_with_original_metadata(
         with sync_client(token="test", transport=transport) as client:
             method = getattr(getattr(client, resource), method_name)
             pager = method(
-                **arguments(CURSORS[path], method), page_token="incoming+/cursor=="
+                **arguments(CURSORS[path], method), cursor="incoming+/cursor=="
             )
             batches = pager.iter_pages_with_response()
             batch = next(batches)
@@ -198,7 +200,16 @@ async def test_every_native_pager_exposes_one_page_with_original_metadata(
     assert body == payload
 
 
-@pytest.mark.parametrize("path", ["/v1/api-keys", "/v1/trials", "/v1/rollouts"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/v1/api-keys",
+        "/v1/trials",
+        "/v1/rollouts",
+        "/v1/account/organization-memberships",
+        "/v1/packages/{organization_name}/{name}/tags",
+    ],
+)
 @pytest.mark.parametrize(
     "empty_position", [0, 1, 2], ids=["first", "middle", "terminal"]
 )
@@ -212,7 +223,7 @@ async def test_native_cursor_iteration_preserves_opaque_tokens_through_empty_bat
 
     def handler(request):
         position = len(calls)
-        calls.append(request.url.params.get("page_token"))
+        calls.append(request.url.params.get("cursor"))
         assert position < 3, "Fetched beyond the terminal empty cursor"
         payload = response_fixture(path)
         info = CURSORS[path]["x-fern-pagination"]
@@ -221,12 +232,15 @@ async def test_native_cursor_iteration_preserves_opaque_tokens_through_empty_bat
         return httpx.Response(200, json=payload)
 
     transport = httpx.MockTransport(handler)
+    resource, method_name = METHODS[path]
     if asynchronous:
         async with async_client(token="test", transport=transport) as client:
-            values = [item async for item in getattr(client, METHODS[path][0]).list()]
+            method = getattr(getattr(client, resource), method_name)
+            values = [item async for item in method(**arguments(CURSORS[path], method))]
     else:
         with sync_client(token="test", transport=transport) as client:
-            values = list(getattr(client, METHODS[path][0]).list())
+            method = getattr(getattr(client, resource), method_name)
+            values = list(method(**arguments(CURSORS[path], method)))
     assert len(values) == 2
     assert calls == tokens
 
@@ -271,7 +285,7 @@ async def test_concurrent_native_pagers_keep_their_own_response_metadata(monkeyp
     original = LeaderboardSummaryPage.model_validate
 
     def validate(cls, value, *args, **kwargs):
-        if value["leaderboards"][0]["id"] == first_id:
+        if value["items"][0]["id"] == first_id:
             started.set()
             if not release.wait(5):
                 raise RuntimeError("First page decode was not released")
@@ -292,7 +306,7 @@ async def test_concurrent_native_pagers_keep_their_own_response_metadata(monkeyp
         return httpx.Response(
             200,
             json={
-                "leaderboards": [
+                "items": [
                     {
                         **example(
                             SPEC["components"]["schemas"]["LeaderboardSummary"],
@@ -307,8 +321,9 @@ async def test_concurrent_native_pagers_keep_their_own_response_metadata(monkeyp
                         "created_at": "2026-11-01T00:00:00Z",
                     }
                 ],
-                "next_page_token": "",
-                "total_size": 11 if first else 22,
+                "next_cursor": None,
+                "prev_cursor": None,
+                "total": 11 if first else 22,
             },
         )
 
@@ -325,16 +340,16 @@ async def test_concurrent_native_pagers_keep_their_own_response_metadata(monkeyp
                 release.set()
         assert (
             task.result()[0].id
-            == first.last_response.body["leaderboards"][0]["id"]
+            == first.last_response.body["items"][0]["id"]
             == first_id
         )
         assert (
             second_batch[0].id
-            == second.last_response.body["leaderboards"][0]["id"]
+            == second.last_response.body["items"][0]["id"]
             == second_id
         )
-        assert first.last_response.body["total_size"] == 11
-        assert second.last_response.body["total_size"] == 22
+        assert first.last_response.body["total"] == 11
+        assert second.last_response.body["total"] == 22
     assert len(requests) == 2 and pool.closes == 1
 
 
@@ -366,7 +381,9 @@ async def test_execution_pagers_keep_concurrent_response_metadata(
         payload = response_fixture(path)
         item = item_for(path)
         item["id"] = first_id if first else second_id
-        payload.update(items=[item], total=11 if first else 22, next_page_token="")
+        payload.update(
+            items=[item], total=11 if first else 22, next_cursor=None, prev_cursor=None
+        )
         return httpx.Response(200, json=payload)
 
     async with async_client(transport=httpx.MockTransport(handler)) as client:

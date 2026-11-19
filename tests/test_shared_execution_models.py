@@ -58,7 +58,7 @@ async def test_execution_aliases_parse_with_shared_detail_and_page_models(
                 SPEC["components"]["schemas"]["TrialSummary"], allow_null=False
             )
             item["name"] = resource
-            payload.update(items=[item], total=1, next_page_token="")
+            payload.update(items=[item], total=1, next_cursor=None, prev_cursor=None)
         return httpx.Response(200, json=payload)
 
     with httpx.Client(transport=httpx.MockTransport(handler)) as http:
