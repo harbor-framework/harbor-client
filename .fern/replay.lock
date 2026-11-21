@@ -154,14 +154,20 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-python-sdk: 6.17.0
-current_generation: b7352bcace7e048a94921d30cff321cf686ce040
+  - commit_sha: b33a4dff549709063bbafcac6a68507c97054343
+    tree_hash: 6801a298552f966e731a57fc4c25aa6a3f8e0b7c
+    timestamp: 2026-11-21T01:16:06.105Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-python-sdk: 6.17.0
+current_generation: b33a4dff549709063bbafcac6a68507c97054343
 patches:
   - id: patch-dfc12c0a
-    content_hash: sha256:597d95fc19af40f00268e80c46a5ea97d3b7613be8d15bac239256cbf538e4ea
+    content_hash: sha256:597fa913d8213ebb8082775b7685f72e1acd747bbe102c4fc11a898e57e3127b
     original_commit: dfc12c0a7350b8f9b13312b9009ba99c34d071a0
     original_message: Preserve SDK contract fixes and standalone package checks
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - pyproject.toml
       - src/harbor_client/api_keys/client.py
@@ -182,7 +188,7 @@ patches:
       - src/harbor_client/types/utils/cast_models.py
     patch_content: |
       diff --git a/pyproject.toml b/pyproject.toml
-      index b18a900..2c8d81e 100644
+      index e5cfa0f..a383fe9 100644
       --- a/pyproject.toml
       +++ b/pyproject.toml
       @@ -1,3 +1,9 @@
@@ -198,7 +204,7 @@ patches:
       @@ -5,9 +11,9 @@ build-backend = "setuptools.build_meta"
        [project]
        name = "harbor-framework-client"
-       version = "0.3.0"
+       version = "0.1.0"
       -description = """To use this version of the API, send the `Harbor-API-Version: 2026-09-10.preview` header with every request. This is the latest version."""
       -readme = "PyPI_README.md"
       -requires-python = ">=3.9"
@@ -439,7 +445,7 @@ patches:
        
                return AsyncPager(_paginate(), lambda: sync_pager.last_response)
       diff --git a/src/harbor_client/net/transport/serializer.py b/src/harbor_client/net/transport/serializer.py
-      index 2e78b95..acd62c2 100644
+      index ddba9ae..f5bc0b8 100644
       --- a/src/harbor_client/net/transport/serializer.py
       +++ b/src/harbor_client/net/transport/serializer.py
       @@ -481,7 +481,7 @@ class Serializer:
@@ -805,7 +811,7 @@ patches:
 
         [project]
         name = "harbor-framework-client"
-        version = "0.3.0"
+        version = "0.1.0"
         description = "Typed synchronous and asynchronous clients for the Harbor API."
         readme = "README.md"
         requires-python = ">=3.12"
@@ -5732,14 +5738,14 @@ patches:
                 self.errors: dict[int, ApiError] = {}
                 self.config: Optional["SdkConfig"] = config
 
-                self.headers["User-Agent"] = "harbor-framework-client/0.3.0"
+                self.headers["User-Agent"] = "harbor-framework-client/0.1.0"
                 self.headers["X-Fern-Language"] = "Python"
                 self.headers["X-Fern-Runtime"] = f"python/{platform.python_version()}"
                 self.headers["X-Fern-Platform"] = (
                     f"{platform.system().lower()}/{platform.release()}"
                 )
                 self.headers["X-Fern-SDK-Name"] = "harbor-framework-client"
-                self.headers["X-Fern-SDK-Version"] = "0.3.0"
+                self.headers["X-Fern-SDK-Version"] = "0.1.0"
 
                 # Apply default headers, FIRST contributor of a header name winning (FSDK-1671).
                 #
@@ -13148,7 +13154,7 @@ patches:
     original_commit: 54e30fcc2e70a5a25ca8ce220dff7fec9d3ac537
     original_message: Align typed execution controls and rollout cursor behavior
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/rollouts/client.py
       - src/harbor_client/types/jobs_submit_response.py
@@ -14761,7 +14767,7 @@ patches:
     original_commit: 7c950c27c3f8157028cedf5326ca844a31a54e66
     original_message: Preserve nullable reward-map entries in execution responses
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/types/trial_detail.py
       - src/harbor_client/types/trial_summary.py
@@ -15004,7 +15010,7 @@ patches:
     original_commit: 081259ba6a8b25cae8c12b2fec964f9eaacab618
     original_message: Preserve nullable RewardValue exports and package typing marker
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/types/reward_value.py
     patch_content: |
@@ -15028,7 +15034,7 @@ patches:
     original_commit: bcfdf29264deb0ec4b0f35fdda0a397f93913e94
     original_message: Keep native service ordering and limit Replay edits to pager fixes
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/jobs/client.py
       - src/harbor_client/rollouts/client.py
@@ -21491,7 +21497,7 @@ patches:
     original_commit: ef6bc19ecbf4c7653ccf96b7aa5e569b33b32a0e
     original_message: Keep the native generated example aligned with execution filters
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - examples/sample.py
     patch_content: |
@@ -21547,7 +21553,7 @@ patches:
     original_commit: d332059a9eac2c02fb2fc3b50005cdea1c8b04ad
     original_message: Use one checked public client over Fern generated bases
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/base_client.py
     patch_content: |
@@ -22632,7 +22638,7 @@ patches:
     original_commit: aff4821ec02f05f786650e9cb1c1594b8cb29cb0
     original_message: Preserve public exports and verify both client entry paths
     original_author: Sam Vance <samvance243@gmail.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/__init__.py
       - src/harbor_client/environment.py
@@ -22779,7 +22785,7 @@ patches:
     original_commit: 0aef99d6d3a1dfae76a69853bea5de3c5c30b72b
     original_message: Keep response headers out of ApiError strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/net/transport/api_error.py
     patch_content: |
@@ -22924,7 +22930,7 @@ patches:
     original_commit: 554b6f7e83a0b97433dd5adf9e834ba71bd37e4a
     original_message: Keep credentials out of Request and Response strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/net/transport/request.py
       - src/harbor_client/net/transport/response.py
@@ -23612,7 +23618,7 @@ patches:
     original_commit: a8e5d1c2ba71ee2b477ffd7ff0568a31840cb2ac
     original_message: Show problem detail in typed API error strings
     original_author: Amp <amp@ampcode.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/types/utils/base_error.py
     patch_content: |
@@ -23774,7 +23780,7 @@ patches:
     original_commit: e990fe29ca45dcbbbb59479ddefefb19b175fe4a
     original_message: Keep paging past empty batches on the new memberships and tags pagers
     original_author: Amp <amp@ampcode.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/account/client.py
       - src/harbor_client/packages/client.py
@@ -26585,7 +26591,7 @@ patches:
     original_commit: 6455e14b954f8d3650a761ecb1534d8f42e55c44
     original_message: Restore the memberships and tags pager fixes Replay dropped
     original_author: Amp <amp@ampcode.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/account/client.py
       - src/harbor_client/packages/client.py
@@ -29390,12 +29396,13 @@ patches:
                     request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
+    user_owned: true
   - id: patch-eb035e11
     content_hash: sha256:996047a4268c6f59983943175523e7a594e3f692ff5ae9b8dec36fd9b1626113
     original_commit: eb035e11c4b376748ccd2a10e5f2d3efb2506ec8
     original_message: Fix the new registry-credentials pager like the other cursor lists
     original_author: Amp <amp@ampcode.com>
-    base_generation: b7352bcace7e048a94921d30cff321cf686ce040
+    base_generation: b33a4dff549709063bbafcac6a68507c97054343
     files:
       - src/harbor_client/secrets/client.py
     patch_content: |
@@ -30831,6 +30838,7 @@ patches:
                     request_options=request_options,
                 )
                 return HttpResponse(data=data, response=self._client._last_response)
+    user_owned: true
 dismissals:
   - patch_id: patch-1ca0ca5e
     original_commit: 1ca0ca5efc2d21a821fc189acd0fad4c40c5d374
