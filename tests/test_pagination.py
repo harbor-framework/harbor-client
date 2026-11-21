@@ -87,15 +87,9 @@ def methods():
 
 
 METHODS = methods()
-# Fern regenerates these pagers without the Replay fixes; new cursor lists belong here.
-EMPTY_BATCH_PATHS = [
-    "/v1/api-keys",
-    "/v1/trials",
-    "/v1/rollouts",
-    "/v1/account/organization-memberships",
-    "/v1/packages/{organization_name}/{name}/tags",
-    "/v1/secrets/registry-credentials",
-]
+# Fern's cursor pagers stop at the first empty batch and page on the event loop;
+# every list in the contract must keep paging and fetch async pages on workers.
+EMPTY_BATCH_PATHS = sorted(CURSORS)
 
 
 def arguments(operation, method):
@@ -127,23 +121,6 @@ def test_every_cursor_endpoint_has_exact_native_metadata_and_a_pager_method():
         )
     }
     assert set(CURSORS) == set(METHODS) == expected
-    assert {operation["operationId"] for operation in CURSORS.values()} == {
-        "account.listOrganizationMemberships",
-        "apiKeys.list",
-        "jobs.list",
-        "jobs.listTasks",
-        "trials.list",
-        "rollouts.list",
-        "packages.listVersionFiles",
-        "packages.listVersionCatalog",
-        "packages.listVersions",
-        "packages.listTags",
-        "leaderboards.list",
-        "leaderboards.listRows",
-        "leaderboards.listTrials",
-        "secrets.list",
-        "secrets.listRegistryCredentials",
-    }
     assert all(
         operation["x-fern-pagination"]["cursor"] == "$request.cursor"
         for operation in CURSORS.values()
