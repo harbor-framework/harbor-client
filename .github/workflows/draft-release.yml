@@ -1,0 +1,39 @@
+name: Draft SDK release
+# Publishing the draft is the release decision: the person who publishes it starts
+# Release SDK, which waits for the pypi environment's reviewer before uploading.
+# Releases created with GITHUB_TOKEN would not start that workflow, so this only drafts.
+on:
+  push:
+    branches: [main]
+    paths: [pyproject.toml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sdk-draft-release
+  cancel-in-progress: false
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - name: Draft a release for an unreleased package version
+        run: |
+          set -euo pipefail
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          tag="v$version"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "$tag already has a release or draft; nothing to do."
+            exit 0
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "::error::Tag $tag exists without a release. Create the release from that tag by hand."
+            exit 1
+          fi
+          url=$(gh release create "$tag" --draft --target "$GITHUB_SHA" --title "$tag" --generate-notes)
+          echo "::notice::Drafted $tag. Review its notes, then publish it to release to PyPI: $url"
+          echo "Drafted [$tag]($url). Review its notes, then publish it to release to PyPI." >> "$GITHUB_STEP_SUMMARY"
