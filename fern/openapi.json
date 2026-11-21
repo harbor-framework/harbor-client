@@ -6866,14 +6866,7 @@
                     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
                   },
                   "keep_source_access": {
-                    "anyOf": [
-                      {
-                        "type": "boolean"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
+                    "type": "boolean"
                   },
                   "keep_job_credentials": {
                     "anyOf": [
@@ -6887,7 +6880,8 @@
                   }
                 },
                 "required": [
-                  "target_organization_id"
+                  "target_organization_id",
+                  "keep_source_access"
                 ],
                 "additionalProperties": false
               }
@@ -7723,6 +7717,16 @@
             "required": false
           },
           {
+            "name": "organization_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+              "description": "Only jobs owned by this organization; retains the caller-related list scope and does not select jobs merely shared with it."
+            },
+            "required": false
+          },
+          {
             "name": "page_size",
             "in": "query",
             "schema": {
@@ -7999,6 +8003,16 @@
             "schema": {
               "type": "string",
               "description": "ISO datetime; an omitted timezone means UTC"
+            },
+            "required": false
+          },
+          {
+            "name": "organization_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+              "description": "Only jobs owned by this organization; retains the caller-related list scope and does not select jobs merely shared with it."
             },
             "required": false
           },
@@ -9926,6 +9940,19 @@
             "required": false
           },
           {
+            "name": "all_tags",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Include every stored secret tag. Omitted or false retains default-tag-only listing."
+            },
+            "required": false
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -10626,6 +10653,25 @@
             "required": false
           },
           {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Rows per page. Defaults to 50 when omitted or 0; the maximum is 100, and larger values return 100 rows. Negative values are rejected.",
+              "default": "50"
+            },
+            "required": false
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Opaque next_cursor or prev_cursor from a previous response; omit for the first page. Its contents and format may change without notice. A cursor the list can no longer use returns 400 InvalidCursor; request the list again without cursor."
+            },
+            "required": false
+          },
+          {
             "name": "Harbor-API-Version",
             "in": "header",
             "required": true,
@@ -10651,15 +10697,39 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "credentials": {
+                    "items": {
                       "type": "array",
                       "items": {
                         "$ref": "#/components/schemas/RegistryCredentialSummary"
                       }
+                    },
+                    "next_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Opaque cursor for the next page, or null on the last page. Pass it back unchanged as cursor; its contents and format may change without notice."
+                    },
+                    "prev_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Opaque cursor for the previous page, or null on the first page. Pass it back unchanged as cursor; its contents and format may change without notice."
                     }
                   },
                   "required": [
-                    "credentials"
+                    "items",
+                    "next_cursor",
+                    "prev_cursor"
                   ],
                   "additionalProperties": false
                 }
@@ -10667,11 +10737,21 @@
             }
           },
           "400": {
-            "description": "BadRequest",
+            "description": "BadRequest | InvalidPageSize | InvalidCursor",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BadRequestEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BadRequestEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidPageSizeEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidCursorEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -10716,6 +10796,11 @@
               }
             }
           }
+        },
+        "x-fern-pagination": {
+          "cursor": "$request.cursor",
+          "next_cursor": "$response.next_cursor",
+          "results": "$response.items"
         }
       },
       "post": {
@@ -13142,6 +13227,90 @@
         ],
         "additionalProperties": false
       },
+      "InvalidCursorEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "InvalidCursor"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "https://api.harborframework.com/problems/invalid-cursor"
+            ],
+            "description": "The cursor can't be used: it is malformed, from an older cursor format, or was issued for a request with different parameters, such as other filters or sort. Cursors are opaque and may stop working when their format changes. Request the list again without cursor to start from the first page."
+          },
+          "title": {
+            "type": "string",
+            "enum": [
+              "Invalid cursor"
+            ]
+          },
+          "status": {
+            "type": "number",
+            "enum": [
+              400
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "cursor is invalid, expired, or was issued for a different request. Request the list again without cursor to start from the first page."
+            ]
+          }
+        },
+        "required": [
+          "_tag",
+          "type",
+          "title",
+          "status",
+          "detail"
+        ],
+        "additionalProperties": false
+      },
+      "InvalidPageSizeEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "InvalidPageSize"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "about:blank"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "enum": [
+              "Bad Request"
+            ]
+          },
+          "status": {
+            "type": "number",
+            "enum": [
+              400
+            ]
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "type",
+          "title",
+          "status",
+          "detail"
+        ],
+        "additionalProperties": false
+      },
       "RegistryCredentialSummary": {
         "type": "object",
         "properties": {
@@ -14165,90 +14334,6 @@
           "max_concurrent_trials",
           "status",
           "created_at"
-        ],
-        "additionalProperties": false
-      },
-      "InvalidCursorEncoded": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "InvalidCursor"
-            ]
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "https://api.harborframework.com/problems/invalid-cursor"
-            ],
-            "description": "The cursor can't be used: it is malformed, from an older cursor format, or was issued for a request with different parameters, such as other filters or sort. Cursors are opaque and may stop working when their format changes. Request the list again without cursor to start from the first page."
-          },
-          "title": {
-            "type": "string",
-            "enum": [
-              "Invalid cursor"
-            ]
-          },
-          "status": {
-            "type": "number",
-            "enum": [
-              400
-            ]
-          },
-          "detail": {
-            "type": "string",
-            "enum": [
-              "cursor is invalid, expired, or was issued for a different request. Request the list again without cursor to start from the first page."
-            ]
-          }
-        },
-        "required": [
-          "_tag",
-          "type",
-          "title",
-          "status",
-          "detail"
-        ],
-        "additionalProperties": false
-      },
-      "InvalidPageSizeEncoded": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "InvalidPageSize"
-            ]
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "about:blank"
-            ]
-          },
-          "title": {
-            "type": "string",
-            "enum": [
-              "Bad Request"
-            ]
-          },
-          "status": {
-            "type": "number",
-            "enum": [
-              400
-            ]
-          },
-          "detail": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "_tag",
-          "type",
-          "title",
-          "status",
-          "detail"
         ],
         "additionalProperties": false
       },
@@ -17351,6 +17436,16 @@
             "type": "string",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
+          "organization_id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+            "description": "Owning organization UUID."
+          },
+          "created_by": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+            "description": "User who created this job."
+          },
           "name": {
             "type": "string"
           },
@@ -17419,6 +17514,8 @@
           "started_at",
           "finished_at",
           "id",
+          "organization_id",
+          "created_by",
           "name",
           "state",
           "rollouts",
@@ -17607,6 +17704,16 @@
             "type": "string",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
           },
+          "organization_id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+            "description": "Owning organization UUID."
+          },
+          "created_by": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+            "description": "User who created this job."
+          },
           "name": {
             "type": "string"
           },
@@ -17699,6 +17806,8 @@
           "started_at",
           "finished_at",
           "id",
+          "organization_id",
+          "created_by",
           "name",
           "state",
           "rollouts",
