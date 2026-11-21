@@ -23,7 +23,7 @@ class JobCancellationSummary(BaseModel):
 
     requested_at: str
     running_count: JobCancellationSummaryRunningCount
-    requested_by_user: JobCreator
+    requested_by_user: Optional[JobCreator]
 
 
 JobCancellationSummaryRunningCountOne = typing.Union[
