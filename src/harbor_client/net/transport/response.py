@@ -214,8 +214,9 @@ class Response:
         :return: A string representation of the Response object.
         :rtype: str
         """
-        # Headers carry Set-Cookie and bodies can carry credentials, such as a new API key.
-        return f"Response(status={self.status})"
+        return (
+            f"Response(status={self.status}, headers={self.headers}, body={self.body})"
+        )
 
     @property
     def raw(self) -> RequestsResponse:
