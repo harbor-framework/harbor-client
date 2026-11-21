@@ -760,7 +760,7 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 **Parameters:**
 
 - `organization_id`
-- `status`
+- `status_filter`
 - `page_size`
 - `cursor`
 

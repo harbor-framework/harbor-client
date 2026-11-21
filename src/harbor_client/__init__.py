@@ -44,6 +44,3 @@ def __getattr__(name):
 
 def __dir__():
     return sorted(set(globals()) | set(dir(_models)) | set(_LAZY_EXPORTS))
-
-# Preserve the established environment import across generator naming changes.
-from .net.environment import HarborAPIClientEnvironment

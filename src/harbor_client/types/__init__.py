@@ -243,7 +243,7 @@ _MODEL_TO_MODULE = {
     "SecretPreflightSelectedSecretsItemSource": "secret_preflight",
     "SecretPreflightCredentialChecksItemStatus": "secret_preflight",
     "SecretsListRegistryCredentialsResponse": "secrets_list_registry_credentials_response",
-    "SecretsListRegistryCredentialsRequestStatus": "secrets_list_registry_credentials_request_status",
+    "SecretsListRegistryCredentialsRequestStatusFilter": "secrets_list_registry_credentials_request_status_filter",
     "RegistryCredentialUpsertEncoded": "registry_credential_upsert_encoded",
     "RegistryCredentialUpsertEncodedProvider": "registry_credential_upsert_encoded",
     "RegistryCredential": "registry_credential",

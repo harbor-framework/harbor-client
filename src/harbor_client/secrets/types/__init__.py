@@ -19,8 +19,8 @@ from .secrets_preflight_request_config import SecretsPreflightRequestConfig
 from .secrets_preflight_request_config_credential_mode import (
     SecretsPreflightRequestConfigCredentialMode,
 )
-from .secrets_list_registry_credentials_request_status import (
-    SecretsListRegistryCredentialsRequestStatus,
+from .secrets_list_registry_credentials_request_status_filter import (
+    SecretsListRegistryCredentialsRequestStatusFilter,
 )
 from .secrets_list_registry_credentials_response import (
     SecretsListRegistryCredentialsResponse,
@@ -59,7 +59,7 @@ __all__ = [
     "SecretsRevokeResponse",
     "SecretsPreflightRequestConfig",
     "SecretsPreflightRequestConfigCredentialMode",
-    "SecretsListRegistryCredentialsRequestStatus",
+    "SecretsListRegistryCredentialsRequestStatusFilter",
     "SecretsListRegistryCredentialsResponse",
     "SecretsListRegistryCredentialsBadRequestResponse",
     "SecretsListRegistryCredentialsBadRequestResponse_BadRequest",
