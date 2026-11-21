@@ -796,7 +796,7 @@ class JobsClient(BaseService):
         job_id: str,
         *,
         target_organization_id: str,
-        keep_source_access: Union[bool, None] = SENTINEL,
+        keep_source_access: bool,
         keep_job_credentials: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> TransferJobResponse:
@@ -821,13 +821,11 @@ class JobsClient(BaseService):
 
         request_body = JobsTransferRequest(
             target_organization_id=target_organization_id,
+            keep_source_access=keep_source_access,
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "keep_source_access": keep_source_access,
-                        "keep_job_credentials": keep_job_credentials,
-                    }.items()
+                    for k, v in {"keep_job_credentials": keep_job_credentials}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -1133,6 +1131,7 @@ class JobsClient(BaseService):
         source: List[str] = SENTINEL,
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
+        organization_id: str = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
@@ -1164,6 +1163,8 @@ class JobsClient(BaseService):
         :type created_after: str, optional
         :param created_before: created_before, defaults to None
         :type created_before: str, optional
+        :param organization_id: organization_id, defaults to None
+        :type organization_id: str, optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
         :param cursor: cursor, defaults to None
@@ -1176,7 +1177,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).is_array().is_optional().validate(task, "task")
         Validator(RunState).is_optional().validate(state, "state")
@@ -1194,6 +1194,7 @@ class JobsClient(BaseService):
         Validator(str).is_array().is_optional().validate(source, "source")
         Validator(str).is_optional().validate(created_after, "created_after")
         Validator(str).is_optional().validate(created_before, "created_before")
+        Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(cursor, "cursor")
         Validator(JobsListRequestSort).is_optional().validate(sort, "sort")
@@ -1225,6 +1226,7 @@ class JobsClient(BaseService):
                     .add_query("source", source)
                     .add_query("created_after", created_after)
                     .add_query("created_before", created_before)
+                    .add_query("organization_id", organization_id)
                     .add_query("page_size", page_size)
                     .add_query("cursor", cursor)
                     .add_query("sort", sort)
@@ -1242,6 +1244,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1270,6 +1275,7 @@ class JobsClient(BaseService):
         source: List[str] = SENTINEL,
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
+        organization_id: str = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> FilterValuesResponse:
@@ -1301,6 +1307,8 @@ class JobsClient(BaseService):
         :type created_after: str, optional
         :param created_before: created_before, defaults to None
         :type created_before: str, optional
+        :param organization_id: organization_id, defaults to None
+        :type organization_id: str, optional
         :param limit: limit, defaults to None
         :type limit: str, optional
         ...
@@ -1327,6 +1335,7 @@ class JobsClient(BaseService):
         Validator(str).is_array().is_optional().validate(source, "source")
         Validator(str).is_optional().validate(created_after, "created_after")
         Validator(str).is_optional().validate(created_before, "created_before")
+        Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(str).is_optional().validate(limit, "limit")
 
         resolved_config = self._get_resolved_config(
@@ -1354,6 +1363,7 @@ class JobsClient(BaseService):
             .add_query("source", source)
             .add_query("created_after", created_after)
             .add_query("created_before", created_before)
+            .add_query("organization_id", organization_id)
             .add_query("field", field)
             .add_query("limit", limit)
             .add_error(401, UnauthorizedEncoded)
@@ -1419,7 +1429,6 @@ class JobsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[JobTaskSummary]
         """
-        self = self._for_one_call()
 
         Validator(str).validate(job_id, "job_id")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -1475,6 +1484,9 @@ class JobsClient(BaseService):
                     else construct_lenient(JobTaskPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -1824,7 +1836,7 @@ class RawJobsClient:
         job_id: str,
         *,
         target_organization_id: str,
-        keep_source_access: Union[bool, None] = SENTINEL,
+        keep_source_access: bool,
         keep_job_credentials: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[TransferJobResponse]:
@@ -1832,13 +1844,11 @@ class RawJobsClient:
             self._client,
             job_id,
             target_organization_id=target_organization_id,
+            keep_source_access=keep_source_access,
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "keep_source_access": keep_source_access,
-                        "keep_job_credentials": keep_job_credentials,
-                    }.items()
+                    for k, v in {"keep_job_credentials": keep_job_credentials}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -1937,6 +1947,7 @@ class RawJobsClient:
         source: List[str] = SENTINEL,
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
+        organization_id: str = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
@@ -1960,6 +1971,7 @@ class RawJobsClient:
                         "source": source,
                         "created_after": created_after,
                         "created_before": created_before,
+                        "organization_id": organization_id,
                         "page_size": page_size,
                         "cursor": cursor,
                         "sort": sort,
@@ -1987,6 +1999,7 @@ class RawJobsClient:
         source: List[str] = SENTINEL,
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
+        organization_id: str = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[FilterValuesResponse]:
@@ -2009,6 +2022,7 @@ class RawJobsClient:
                         "source": source,
                         "created_after": created_after,
                         "created_before": created_before,
+                        "organization_id": organization_id,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL
@@ -2257,20 +2271,18 @@ class AsyncJobsClient(JobsClient):
         job_id: str,
         *,
         target_organization_id: str,
-        keep_source_access: Union[bool, None] = SENTINEL,
+        keep_source_access: bool,
         keep_job_credentials: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> Awaitable[TransferJobResponse]:  # type: ignore[override]
         return to_async(super().transfer)(
             job_id,
             target_organization_id=target_organization_id,
+            keep_source_access=keep_source_access,
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "keep_source_access": keep_source_access,
-                        "keep_job_credentials": keep_job_credentials,
-                    }.items()
+                    for k, v in {"keep_job_credentials": keep_job_credentials}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -2356,6 +2368,7 @@ class AsyncJobsClient(JobsClient):
         source: List[str] = SENTINEL,
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
+        organization_id: str = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
@@ -2378,6 +2391,7 @@ class AsyncJobsClient(JobsClient):
                         "source": source,
                         "created_after": created_after,
                         "created_before": created_before,
+                        "organization_id": organization_id,
                         "page_size": page_size,
                         "cursor": cursor,
                         "sort": sort,
@@ -2389,11 +2403,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2414,6 +2424,7 @@ class AsyncJobsClient(JobsClient):
         source: List[str] = SENTINEL,
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
+        organization_id: str = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> Awaitable[FilterValuesResponse]:  # type: ignore[override]
@@ -2435,6 +2446,7 @@ class AsyncJobsClient(JobsClient):
                         "source": source,
                         "created_after": created_after,
                         "created_before": created_before,
+                        "organization_id": organization_id,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL
@@ -2481,11 +2493,7 @@ class AsyncJobsClient(JobsClient):
         )
 
         async def _paginate():
-            pages = iter(sync_pager.iter_pages())
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    break
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -2698,7 +2706,7 @@ class AsyncRawJobsClient:
         job_id: str,
         *,
         target_organization_id: str,
-        keep_source_access: Union[bool, None] = SENTINEL,
+        keep_source_access: bool,
         keep_job_credentials: Union[bool, None] = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[TransferJobResponse]:
@@ -2706,13 +2714,11 @@ class AsyncRawJobsClient:
             self._client,
             job_id,
             target_organization_id=target_organization_id,
+            keep_source_access=keep_source_access,
             **dict[str, Any](
                 {
                     k: v
-                    for k, v in {
-                        "keep_source_access": keep_source_access,
-                        "keep_job_credentials": keep_job_credentials,
-                    }.items()
+                    for k, v in {"keep_job_credentials": keep_job_credentials}.items()
                     if v is not SENTINEL
                 }
             ),
@@ -2811,6 +2817,7 @@ class AsyncRawJobsClient:
         source: List[str] = SENTINEL,
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
+        organization_id: str = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
         sort: JobsListRequestSort = SENTINEL,
@@ -2834,6 +2841,7 @@ class AsyncRawJobsClient:
                         "source": source,
                         "created_after": created_after,
                         "created_before": created_before,
+                        "organization_id": organization_id,
                         "page_size": page_size,
                         "cursor": cursor,
                         "sort": sort,
@@ -2861,6 +2869,7 @@ class AsyncRawJobsClient:
         source: List[str] = SENTINEL,
         created_after: str = SENTINEL,
         created_before: str = SENTINEL,
+        organization_id: str = SENTINEL,
         limit: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[FilterValuesResponse]:
@@ -2883,6 +2892,7 @@ class AsyncRawJobsClient:
                         "source": source,
                         "created_after": created_after,
                         "created_before": created_before,
+                        "organization_id": organization_id,
                         "limit": limit,
                     }.items()
                     if v is not SENTINEL

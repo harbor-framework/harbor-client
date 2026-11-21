@@ -10,6 +10,9 @@ from ..types.secrets_upsert_registry_credential_conflict_response import (
 from ..types.secrets_upsert_conflict_response import (
     SecretsUpsertConflictResponse_adapter,
 )
+from ..types.secrets_list_registry_credentials_bad_request_response import (
+    SecretsListRegistryCredentialsBadRequestResponse_adapter,
+)
 from ..types.secrets_list_bad_request_response import (
     SecretsListBadRequestResponse_adapter,
 )
@@ -22,14 +25,17 @@ from ..types import (
     NotFoundEncoded,
     RegistryCredential,
     RegistryCredentialRevokeResult,
+    RegistryCredentialSummary,
     RegistryCredentialUpsertEncoded,
     RegistryCredentialUpsertEncodedProvider,
     SecretMetadata,
     SecretMetadataPage,
     SecretPreflight,
     SecretsListBadRequestResponse,
+    SecretsListRegistryCredentialsBadRequestResponse,
     SecretsListRegistryCredentialsRequestStatus,
     SecretsListRegistryCredentialsResponse,
+    SecretsListRequestAllTags,
     SecretsListRequestStatusFilter,
     SecretsPreflightRequest,
     SecretsPreflightRequestConfig,
@@ -165,6 +171,7 @@ class SecretsClient(BaseService):
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
+        all_tags: SecretsListRequestAllTags = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> SyncPager[SecretMetadata]:
         """list
@@ -179,13 +186,14 @@ class SecretsClient(BaseService):
         :type page_size: str, optional
         :param cursor: cursor, defaults to None
         :type cursor: str, optional
+        :param all_tags: all_tags, defaults to None
+        :type all_tags: SecretsListRequestAllTags, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
         :rtype: SyncPager[SecretMetadata]
         """
-        self = self._for_one_call()
 
         Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(str).is_optional().validate(job_id, "job_id")
@@ -194,6 +202,9 @@ class SecretsClient(BaseService):
         )
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(cursor, "cursor")
+        Validator(SecretsListRequestAllTags).is_optional().validate(
+            all_tags, "all_tags"
+        )
 
         resolved_config = self._get_resolved_config(self._list_config, request_options)
 
@@ -215,6 +226,7 @@ class SecretsClient(BaseService):
                     .add_query("status", status_filter)
                     .add_query("page_size", page_size)
                     .add_query("cursor", cursor)
+                    .add_query("all_tags", all_tags)
                     .add_error(401, UnauthorizedEncoded)
                     .add_error(403, ForbiddenEncoded)
                     .add_error(404, NotFoundEncoded)
@@ -229,6 +241,9 @@ class SecretsClient(BaseService):
                     else construct_lenient(SecretMetadataPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -467,59 +482,84 @@ class SecretsClient(BaseService):
         *,
         organization_id: str = SENTINEL,
         status: SecretsListRegistryCredentialsRequestStatus = SENTINEL,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> SecretsListRegistryCredentialsResponse:
+    ) -> SyncPager[RegistryCredentialSummary]:
         """list_registry_credentials
 
         :param organization_id: organization_id, defaults to None
         :type organization_id: str, optional
         :param status: status, defaults to None
         :type status: SecretsListRegistryCredentialsRequestStatus, optional
+        :param page_size: page_size, defaults to None
+        :type page_size: str, optional
+        :param cursor: cursor, defaults to None
+        :type cursor: str, optional
         ...
         :raises RequestError: Raised when a request fails, with optional HTTP status code and details.
         ...
         :return: The parsed response data.
-        :rtype: SecretsListRegistryCredentialsResponse
+        :rtype: SyncPager[RegistryCredentialSummary]
         """
 
         Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(SecretsListRegistryCredentialsRequestStatus).is_optional().validate(
             status, "status"
         )
+        Validator(str).is_optional().validate(page_size, "page_size")
+        Validator(str).is_optional().validate(cursor, "cursor")
 
         resolved_config = self._get_resolved_config(
             self._list_registry_credentials_config, request_options
         )
 
-        serialized_request = (
-            Serializer(
-                f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
-                [self.get_access_token(resolved_config)],
-                resolved_config,
-            )
-            .add_header(
-                "Harbor-API-Version", self._global_headers.get("Harbor-API-Version")
-            )
-            .add_query("organization_id", organization_id)
-            .add_query("status", status)
-            .add_error(401, UnauthorizedEncoded)
-            .add_error(403, ForbiddenEncoded)
-            .add_error(404, NotFoundEncoded)
-            .add_error(500, InternalServerErrorEncoded)
-            .serialize()
-            .set_method("GET")
-        )
+        def _paginate() -> Generator[List[RegistryCredentialSummary], None, None]:
+            nonlocal cursor
+            while True:
+                serialized_request = (
+                    Serializer(
+                        f"{self._resolve_base_url(resolved_config) or HarborApiClientEnvironment.DEFAULT.url}/v1/secrets/registry-credentials",
+                        [self.get_access_token(resolved_config)],
+                        resolved_config,
+                    )
+                    .add_header(
+                        "Harbor-API-Version",
+                        self._global_headers.get("Harbor-API-Version"),
+                    )
+                    .add_query("organization_id", organization_id)
+                    .add_query("status", status)
+                    .add_query("page_size", page_size)
+                    .add_query("cursor", cursor)
+                    .add_error(401, UnauthorizedEncoded)
+                    .add_error(403, ForbiddenEncoded)
+                    .add_error(404, NotFoundEncoded)
+                    .add_error(500, InternalServerErrorEncoded)
+                    .serialize()
+                    .set_method("GET")
+                )
+                response, status, content = self.send_request(serialized_request)
+                parsed_response = (
+                    SecretsListRegistryCredentialsResponse.model_validate(response)
+                    if should_validate_response(resolved_config)
+                    else construct_lenient(
+                        SecretsListRegistryCredentialsResponse, response
+                    )
+                )
+                current_page = parsed_response.items
 
-        response, status, content = self.send_request(serialized_request)
-        return (
-            None
-            if response in (b"", "")
-            else (
-                SecretsListRegistryCredentialsResponse.model_validate(response)
-                if should_validate_response(resolved_config)
-                else construct_lenient(SecretsListRegistryCredentialsResponse, response)
-            )
-        )
+                if not current_page:
+                    break
+
+                yield current_page
+
+                next_cursor = parsed_response.next_cursor
+                if not next_cursor:
+                    break
+
+                cursor = next_cursor
+
+        return SyncPager(_paginate(), lambda: self._last_response)
 
     @cast_models
     def upsert_registry_credential(
@@ -686,6 +726,7 @@ class RawSecretsClient:
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
+        all_tags: SecretsListRequestAllTags = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[SyncPager[SecretMetadata]]:
         data = SecretsClient.list(
@@ -699,6 +740,7 @@ class RawSecretsClient:
                         "status_filter": status_filter,
                         "page_size": page_size,
                         "cursor": cursor,
+                        "all_tags": all_tags,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -807,8 +849,10 @@ class RawSecretsClient:
         *,
         organization_id: str = SENTINEL,
         status: SecretsListRegistryCredentialsRequestStatus = SENTINEL,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[SecretsListRegistryCredentialsResponse]:
+    ) -> HttpResponse[SyncPager[RegistryCredentialSummary]]:
         data = SecretsClient.list_registry_credentials(
             self._client,
             **dict[str, Any](
@@ -817,13 +861,15 @@ class RawSecretsClient:
                     for k, v in {
                         "organization_id": organization_id,
                         "status": status,
+                        "page_size": page_size,
+                        "cursor": cursor,
                     }.items()
                     if v is not SENTINEL
                 }
             ),
             request_options=request_options,
         )
-        return HttpResponse(data=data, response=self._client._last_response)
+        return HttpResponse(data=data, response_source=lambda: data.last_response)
 
     def upsert_registry_credential(
         self,
@@ -904,6 +950,7 @@ class AsyncSecretsClient(SecretsClient):
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
+        all_tags: SecretsListRequestAllTags = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> AsyncPager[SecretMetadata]:  # type: ignore[override]
         sync_pager = super().list(
@@ -916,6 +963,7 @@ class AsyncSecretsClient(SecretsClient):
                         "status_filter": status_filter,
                         "page_size": page_size,
                         "cursor": cursor,
+                        "all_tags": all_tags,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -924,11 +972,7 @@ class AsyncSecretsClient(SecretsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1027,21 +1071,31 @@ class AsyncSecretsClient(SecretsClient):
         *,
         organization_id: str = SENTINEL,
         status: SecretsListRegistryCredentialsRequestStatus = SENTINEL,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> Awaitable[SecretsListRegistryCredentialsResponse]:  # type: ignore[override]
-        return to_async(super().list_registry_credentials)(
+    ) -> AsyncPager[RegistryCredentialSummary]:  # type: ignore[override]
+        sync_pager = super().list_registry_credentials(
             **dict[str, Any](
                 {
                     k: v
                     for k, v in {
                         "organization_id": organization_id,
                         "status": status,
+                        "page_size": page_size,
+                        "cursor": cursor,
                     }.items()
                     if v is not SENTINEL
                 }
             ),
             request_options=request_options,
         )
+
+        async def _paginate():
+            for page in sync_pager.iter_pages():
+                yield page
+
+        return AsyncPager(_paginate(), lambda: sync_pager.last_response)
 
     def upsert_registry_credential(
         self,
@@ -1113,6 +1167,7 @@ class AsyncRawSecretsClient:
         status_filter: SecretsListRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
+        all_tags: SecretsListRequestAllTags = SENTINEL,
         request_options: Optional[RequestOptions] = None,
     ) -> HttpResponse[AsyncPager[SecretMetadata]]:
         data = AsyncSecretsClient.list(
@@ -1126,6 +1181,7 @@ class AsyncRawSecretsClient:
                         "status_filter": status_filter,
                         "page_size": page_size,
                         "cursor": cursor,
+                        "all_tags": all_tags,
                     }.items()
                     if v is not SENTINEL
                 }
@@ -1229,14 +1285,16 @@ class AsyncRawSecretsClient:
         )
         return HttpResponse(data=data, response=self._client._last_response)
 
-    async def list_registry_credentials(
+    def list_registry_credentials(
         self,
         *,
         organization_id: str = SENTINEL,
         status: SecretsListRegistryCredentialsRequestStatus = SENTINEL,
+        page_size: str = SENTINEL,
+        cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
-    ) -> HttpResponse[SecretsListRegistryCredentialsResponse]:
-        data = await AsyncSecretsClient.list_registry_credentials(
+    ) -> HttpResponse[AsyncPager[RegistryCredentialSummary]]:
+        data = AsyncSecretsClient.list_registry_credentials(
             self._client,
             **dict[str, Any](
                 {
@@ -1244,13 +1302,15 @@ class AsyncRawSecretsClient:
                     for k, v in {
                         "organization_id": organization_id,
                         "status": status,
+                        "page_size": page_size,
+                        "cursor": cursor,
                     }.items()
                     if v is not SENTINEL
                 }
             ),
             request_options=request_options,
         )
-        return HttpResponse(data=data, response=self._client._last_response)
+        return HttpResponse(data=data, response_source=lambda: data.last_response)
 
     async def upsert_registry_credential(
         self,
