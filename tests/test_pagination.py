@@ -94,6 +94,7 @@ EMPTY_BATCH_PATHS = [
     "/v1/rollouts",
     "/v1/account/organization-memberships",
     "/v1/packages/{organization_name}/{name}/tags",
+    "/v1/secrets/registry-credentials",
 ]
 
 
@@ -141,6 +142,7 @@ def test_every_cursor_endpoint_has_exact_native_metadata_and_a_pager_method():
         "leaderboards.listRows",
         "leaderboards.listTrials",
         "secrets.list",
+        "secrets.listRegistryCredentials",
     }
     assert all(
         operation["x-fern-pagination"]["cursor"] == "$request.cursor"
