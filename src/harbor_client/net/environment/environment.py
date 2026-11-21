@@ -27,3 +27,6 @@ class HarborApiClientEnvironment(Enum):
     def url(self):
         """Get the base URL for this environment"""
         return self._url
+
+# Preserve the established environment import across generator naming changes.
+HarborAPIClientEnvironment = HarborApiClientEnvironment
