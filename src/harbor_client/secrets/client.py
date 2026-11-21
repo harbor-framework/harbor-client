@@ -33,7 +33,7 @@ from ..types import (
     SecretPreflight,
     SecretsListBadRequestResponse,
     SecretsListRegistryCredentialsBadRequestResponse,
-    SecretsListRegistryCredentialsRequestStatus,
+    SecretsListRegistryCredentialsRequestStatusFilter,
     SecretsListRegistryCredentialsResponse,
     SecretsListRequestAllTags,
     SecretsListRequestStatusFilter,
@@ -194,7 +194,6 @@ class SecretsClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[SecretMetadata]
         """
-        self = self._for_one_call()
 
         Validator(str).is_optional().validate(organization_id, "organization_id")
         Validator(str).is_optional().validate(job_id, "job_id")
@@ -242,6 +241,9 @@ class SecretsClient(BaseService):
                     else construct_lenient(SecretMetadataPage, response)
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -479,7 +481,7 @@ class SecretsClient(BaseService):
         self,
         *,
         organization_id: str = SENTINEL,
-        status: SecretsListRegistryCredentialsRequestStatus = SENTINEL,
+        status_filter: SecretsListRegistryCredentialsRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -488,8 +490,8 @@ class SecretsClient(BaseService):
 
         :param organization_id: organization_id, defaults to None
         :type organization_id: str, optional
-        :param status: status, defaults to None
-        :type status: SecretsListRegistryCredentialsRequestStatus, optional
+        :param status_filter: status_filter, defaults to None
+        :type status_filter: SecretsListRegistryCredentialsRequestStatusFilter, optional
         :param page_size: page_size, defaults to None
         :type page_size: str, optional
         :param cursor: cursor, defaults to None
@@ -502,9 +504,9 @@ class SecretsClient(BaseService):
         """
 
         Validator(str).is_optional().validate(organization_id, "organization_id")
-        Validator(SecretsListRegistryCredentialsRequestStatus).is_optional().validate(
-            status, "status"
-        )
+        Validator(
+            SecretsListRegistryCredentialsRequestStatusFilter
+        ).is_optional().validate(status_filter, "status_filter")
         Validator(str).is_optional().validate(page_size, "page_size")
         Validator(str).is_optional().validate(cursor, "cursor")
 
@@ -526,7 +528,7 @@ class SecretsClient(BaseService):
                         self._global_headers.get("Harbor-API-Version"),
                     )
                     .add_query("organization_id", organization_id)
-                    .add_query("status", status)
+                    .add_query("status", status_filter)
                     .add_query("page_size", page_size)
                     .add_query("cursor", cursor)
                     .add_error(401, UnauthorizedEncoded)
@@ -545,6 +547,9 @@ class SecretsClient(BaseService):
                     )
                 )
                 current_page = parsed_response.items
+
+                if not current_page:
+                    break
 
                 yield current_page
 
@@ -843,7 +848,7 @@ class RawSecretsClient:
         self,
         *,
         organization_id: str = SENTINEL,
-        status: SecretsListRegistryCredentialsRequestStatus = SENTINEL,
+        status_filter: SecretsListRegistryCredentialsRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -855,7 +860,7 @@ class RawSecretsClient:
                     k: v
                     for k, v in {
                         "organization_id": organization_id,
-                        "status": status,
+                        "status_filter": status_filter,
                         "page_size": page_size,
                         "cursor": cursor,
                     }.items()
@@ -967,11 +972,7 @@ class AsyncSecretsClient(SecretsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1069,7 +1070,7 @@ class AsyncSecretsClient(SecretsClient):
         self,
         *,
         organization_id: str = SENTINEL,
-        status: SecretsListRegistryCredentialsRequestStatus = SENTINEL,
+        status_filter: SecretsListRegistryCredentialsRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1080,7 +1081,7 @@ class AsyncSecretsClient(SecretsClient):
                     k: v
                     for k, v in {
                         "organization_id": organization_id,
-                        "status": status,
+                        "status_filter": status_filter,
                         "page_size": page_size,
                         "cursor": cursor,
                     }.items()
@@ -1091,11 +1092,7 @@ class AsyncSecretsClient(SecretsClient):
         )
 
         async def _paginate():
-            pages = sync_pager.iter_pages()
-            while True:
-                page = await to_async(next)(pages, None)
-                if page is None:
-                    return
+            for page in sync_pager.iter_pages():
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1292,7 +1289,7 @@ class AsyncRawSecretsClient:
         self,
         *,
         organization_id: str = SENTINEL,
-        status: SecretsListRegistryCredentialsRequestStatus = SENTINEL,
+        status_filter: SecretsListRegistryCredentialsRequestStatusFilter = SENTINEL,
         page_size: str = SENTINEL,
         cursor: str = SENTINEL,
         request_options: Optional[RequestOptions] = None,
@@ -1304,7 +1301,7 @@ class AsyncRawSecretsClient:
                     k: v
                     for k, v in {
                         "organization_id": organization_id,
-                        "status": status,
+                        "status_filter": status_filter,
                         "page_size": page_size,
                         "cursor": cursor,
                     }.items()

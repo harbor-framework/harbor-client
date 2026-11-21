@@ -1,15 +1,13 @@
 import warnings
 import requests
 import logging
-import asyncio
 from typing import Any, Callable, Dict, Optional, TYPE_CHECKING, Union
-from .net.environment import HarborAPIClientEnvironment
+from .net.environment import HarborApiClientEnvironment
 from .services.utils.base_service import BaseService
 from .net.sdk_config import SdkConfig, RetryConfig
 from typing import Awaitable
 
 if TYPE_CHECKING:
-    from .transfers import AsyncStorageTransfers, StorageTransfers
     from .organizations.client import OrganizationsClient, AsyncOrganizationsClient
     from .packages.client import PackagesClient, AsyncPackagesClient
     from .jobs.client import JobsClient, AsyncJobsClient
@@ -36,8 +34,8 @@ class BaseHarborAPIClient(BaseService):
         *,
         token: Optional[Union[str, Callable[[], str]]] = None,
         harbor_api_version: str,
-        base_url: Union[HarborAPIClientEnvironment, str, None] = None,
-        environment: Optional[HarborAPIClientEnvironment] = None,
+        base_url: Union[HarborApiClientEnvironment, str, None] = None,
+        environment: Optional[HarborApiClientEnvironment] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         timeout_ms: Optional[int] = None,
@@ -54,7 +52,7 @@ class BaseHarborAPIClient(BaseService):
             base_url = environment
         _resolved_url = (
             base_url.value
-            if isinstance(base_url, HarborAPIClientEnvironment)
+            if isinstance(base_url, HarborApiClientEnvironment)
             else base_url
         )
         super().__init__(
@@ -119,33 +117,7 @@ class BaseHarborAPIClient(BaseService):
                 }
             )
 
-        self._owned_http_client: Optional[requests.Session] = None
-        if http_client is None and httpx_client is None:
-            self._owned_http_client = requests.Session()
-            self.set_http_client(self._owned_http_client)
-
-    def close(self) -> None:
-        """Release this client's default pool; supplied transports remain caller-owned."""
-        owned, self._owned_http_client = self._owned_http_client, None
-        if owned is not None:
-            owned.close()
-
-    def __enter__(self) -> "BaseHarborAPIClient":
-        return self
-
-    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        self.close()
-
-    @property
-    def transfers(self) -> "StorageTransfers":
-        """Run signed upload, download, and copy workflows."""
-        from .transfers import StorageTransfers
-
-        if not hasattr(self, "_storage_transfers"):
-            self._storage_transfers = StorageTransfers(self)
-        return self._storage_transfers
-
-    def set_base_url(self, base_url: Union[HarborAPIClientEnvironment, str]):
+    def set_base_url(self, base_url: Union[HarborApiClientEnvironment, str]):
         """
         Sets the base URL for the whole SDK, including every resource client already built.
 
@@ -155,7 +127,7 @@ class BaseHarborAPIClient(BaseService):
         sending that child's requests to the previous server, silently and with no error. Each
         child forwards to its own sub-resources in turn.
 
-        :param base_url: The base URL to be set, as a string or an HarborAPIClientEnvironment enum member.
+        :param base_url: The base URL to be set, as a string or an HarborApiClientEnvironment enum member.
         :return: The SDK instance.
         """
         super().set_base_url(base_url)
@@ -609,16 +581,16 @@ class BaseHarborAPIClient(BaseService):
         return self._storage
 
     @property
-    def with_raw_response(self) -> "RawHarborAPIClient":
+    def with_raw_response(self) -> "RawBaseHarborAPIClient":
         """
         Returns a raw-response client whose methods mirror this client's ROOT endpoints but return
         ``HttpResponse[T]`` (parsed body plus the raw status code and headers) instead of the bare
         deserialized body. Resource clients expose their own `with_raw_response`.
         """
-        return RawHarborAPIClient(self)
+        return RawBaseHarborAPIClient(self)
 
 
-class RawHarborAPIClient:
+class RawBaseHarborAPIClient:
     """
     Raw-response client for BaseHarborAPIClient's root endpoints.
 
@@ -643,8 +615,8 @@ class AsyncBaseHarborAPIClient(BaseHarborAPIClient):
         *,
         token: Optional[Union[str, Callable[[], str]]] = None,
         harbor_api_version: str,
-        base_url: Union[HarborAPIClientEnvironment, str, None] = None,
-        environment: Optional[HarborAPIClientEnvironment] = None,
+        base_url: Union[HarborApiClientEnvironment, str, None] = None,
+        environment: Optional[HarborApiClientEnvironment] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         timeout_ms: Optional[int] = None,
@@ -676,25 +648,6 @@ class AsyncBaseHarborAPIClient(BaseHarborAPIClient):
             stream_reconnection_enabled=stream_reconnection_enabled,
             max_stream_reconnection_attempts=max_stream_reconnection_attempts,
         )
-
-    async def aclose(self) -> None:
-        """Release the default pool used by Fern's native asynchronous wrappers."""
-        await asyncio.to_thread(self.close)
-
-    async def __aenter__(self) -> "AsyncBaseHarborAPIClient":
-        return self
-
-    async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        await self.aclose()
-
-    @property
-    def transfers(self) -> "AsyncStorageTransfers":
-        """Run signed upload, download, and copy workflows asynchronously."""
-        from .transfers import AsyncStorageTransfers
-
-        if not hasattr(self, "_async_storage_transfers"):
-            self._async_storage_transfers = AsyncStorageTransfers(self)
-        return self._async_storage_transfers
 
     @property
     def organizations(self) -> "AsyncOrganizationsClient":
@@ -895,15 +848,15 @@ class AsyncBaseHarborAPIClient(BaseHarborAPIClient):
         return self._storage
 
     @property
-    def with_raw_response(self) -> "AsyncRawHarborAPIClient":  # type: ignore[override]
+    def with_raw_response(self) -> "AsyncRawBaseHarborAPIClient":  # type: ignore[override]
         """
         Returns an async raw-response client whose methods mirror this client's ROOT endpoints but
         return ``HttpResponse[T]`` (parsed body plus the raw status code and headers).
         """
-        return AsyncRawHarborAPIClient(self)
+        return AsyncRawBaseHarborAPIClient(self)
 
 
-class AsyncRawHarborAPIClient:
+class AsyncRawBaseHarborAPIClient:
     """
     Async raw-response client for AsyncBaseHarborAPIClient's root endpoints.
     """
