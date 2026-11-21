@@ -536,7 +536,7 @@ class SecretsClient(BaseService):
                     .serialize()
                     .set_method("GET")
                 )
-                response, status, content = self.send_request(serialized_request)
+                response, _, content = self.send_request(serialized_request)
                 parsed_response = (
                     SecretsListRegistryCredentialsResponse.model_validate(response)
                     if should_validate_response(resolved_config)
@@ -545,9 +545,6 @@ class SecretsClient(BaseService):
                     )
                 )
                 current_page = parsed_response.items
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -1094,7 +1091,11 @@ class AsyncSecretsClient(SecretsClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
