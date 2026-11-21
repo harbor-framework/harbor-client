@@ -633,6 +633,7 @@ class PackagesClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[RegistryVersionFile]
         """
+        self = self._for_one_call()
 
         Validator(str).validate(organization_name, "organization_name")
         Validator(str).validate(name, "name")
@@ -676,9 +677,6 @@ class PackagesClient(BaseService):
                     else construct_lenient(PackageVersionFilePage, response)
                 )
                 current_page = parsed_response.items
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -757,9 +755,6 @@ class PackagesClient(BaseService):
                     else construct_lenient(PackagesListTagsResponse, response)
                 )
                 current_page = parsed_response.items
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -988,6 +983,7 @@ class PackagesClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[PackageVersionSummary]
         """
+        self = self._for_one_call()
 
         Validator(PackagesListVersionCatalogRequestType).validate(type, "type")
         Validator(str).is_optional().validate(page_size, "page_size")
@@ -1033,9 +1029,6 @@ class PackagesClient(BaseService):
                     else construct_lenient(PackageVersionCatalogPage, response)
                 )
                 current_page = parsed_response.items
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -1132,6 +1125,7 @@ class PackagesClient(BaseService):
         :return: The parsed response data.
         :rtype: SyncPager[RegistryPackageVersion]
         """
+        self = self._for_one_call()
 
         Validator(str).validate(organization_name, "organization_name")
         Validator(str).validate(name, "name")
@@ -1177,9 +1171,6 @@ class PackagesClient(BaseService):
                     else construct_lenient(RegistryPackageVersionPage, response)
                 )
                 current_page = parsed_response.items
-
-                if not current_page:
-                    break
 
                 yield current_page
 
@@ -1788,7 +1779,11 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1902,7 +1897,11 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
@@ -1946,7 +1945,11 @@ class AsyncPackagesClient(PackagesClient):
         )
 
         async def _paginate():
-            for page in sync_pager.iter_pages():
+            pages = sync_pager.iter_pages()
+            while True:
+                page = await to_async(next)(pages, None)
+                if page is None:
+                    return
                 yield page
 
         return AsyncPager(_paginate(), lambda: sync_pager.last_response)
