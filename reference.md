@@ -295,6 +295,7 @@
 - `source`
 - `created_after`
 - `created_before`
+- `organization_id`
 - `page_size`
 - `cursor`
 - `sort`
@@ -318,6 +319,7 @@
 - `source`
 - `created_after`
 - `created_before`
+- `organization_id`
 - `limit`
 
 ### `client.jobs.list_tasks`
@@ -737,6 +739,7 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 - `status_filter`
 - `page_size`
 - `cursor`
+- `all_tags`
 
 ### `client.secrets.upsert`
 
@@ -758,6 +761,8 @@ Create a personal API key using a signed-in user session. Harbor API keys and ex
 
 - `organization_id`
 - `status`
+- `page_size`
+- `cursor`
 
 ### `client.secrets.upsert_registry_credential`
 

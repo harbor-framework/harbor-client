@@ -1,10 +1,10 @@
-# HarborApiClient Python SDK 0.2.0<a id="harborapiclient-python-sdk-020"></a>
+# HarborApiClient Python SDK 0.3.0<a id="harborapiclient-python-sdk-030"></a>
 
 Welcome to the HarborApiClient SDK documentation. This guide will help you get started with integrating and using the HarborApiClient SDK in your project.
 
 ## Versions<a id="versions"></a>
 
-- SDK version: `0.2.0`
+- SDK version: `0.3.0`
 
 ## About the API<a id="about-the-api"></a>
 
@@ -148,6 +148,7 @@ response = client.jobs.list(
     ],
     created_after="created_after",
     created_before="created_before",
+    organization_id="Ad2eDf71-53C7-Cc0F-AEee-Fc506aAcbfDd",
     page_size="50",
     cursor="cursor",
     sort="id",
@@ -209,6 +210,7 @@ async def main():
     source=source,
     created_after="created_after",
     created_before="created_before",
+    organization_id="Ad2eDf71-53C7-Cc0F-AEee-Fc506aAcbfDd",
     page_size="50",
     cursor="cursor",
     sort="id"
@@ -344,6 +346,7 @@ The SDK includes several models that represent the data structures used in API r
 | LeaderboardTrialLinkPage                       |                                                                                                                               |
 | SecretMetadataPage                             |                                                                                                                               |
 | SecretsListRequestStatusFilter                 |                                                                                                                               |
+| SecretsListRequestAllTags                      | Include every stored secret tag. Omitted or false retains default-tag-only listing.                                           |
 | SecretsUpsertRequest                           |                                                                                                                               |
 | SecretWriteResult                              |                                                                                                                               |
 | SecretsRevokeRequest                           |                                                                                                                               |

@@ -56,7 +56,7 @@ class TrialDetail(BaseModel):
     :param model: model
     :type model: ModelIdentity
     :param rewards: rewards
-    :type rewards: Dict[str, Optional[float]]
+    :type rewards: Dict[str, float]
     :param usage: usage
     :type usage: Usage
     :param error_type: error_type
@@ -86,7 +86,7 @@ class TrialDetail(BaseModel):
     task: TaskIdentity
     agent: AgentIdentity
     model: ModelIdentity
-    rewards: Optional[Dict[str, Optional[float]]]
+    rewards: Optional[Dict[str, float]]
     usage: Usage
     error_type: Optional[str]
     lock: Optional[Dict[str, Any]] = Field(

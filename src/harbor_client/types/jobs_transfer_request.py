@@ -11,12 +11,12 @@ class JobsTransferRequest(BaseModel):
 
     :param target_organization_id: target_organization_id
     :type target_organization_id: str
-    :param keep_source_access: keep_source_access, defaults to None
-    :type keep_source_access: bool, optional
+    :param keep_source_access: keep_source_access
+    :type keep_source_access: bool
     :param keep_job_credentials: keep_job_credentials, defaults to None
     :type keep_job_credentials: bool, optional
     """
 
     target_organization_id: str
-    keep_source_access: Optional[bool] = Field(default=None)
+    keep_source_access: bool
     keep_job_credentials: Optional[bool] = Field(default=None)

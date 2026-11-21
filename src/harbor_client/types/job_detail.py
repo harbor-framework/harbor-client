@@ -25,6 +25,10 @@ class JobDetail(BaseModel):
     :type finished_at: str
     :param id: id
     :type id: str
+    :param organization_id: Owning organization UUID.
+    :type organization_id: str
+    :param created_by: User who created this job.
+    :type created_by: str
     :param name: name
     :type name: str
     :param state: state
@@ -64,6 +68,8 @@ class JobDetail(BaseModel):
     started_at: Optional[str]
     finished_at: Optional[str]
     id: str
+    organization_id: str = Field(description="Owning organization UUID.")
+    created_by: str = Field(description="User who created this job.")
     name: str
     state: RunState
     rollouts: TrialCounts

@@ -25,7 +25,7 @@
       "sdkName": "HarborAPIClient",
       "apiName": "api",
       "organizationName": "harbor",
-      "sdkVersion": "0.2.0"
+      "sdkVersion": "0.3.0"
     },
     "api": {
       "baseUrl": "https://api.harborframework.com/functions/v1/api",
@@ -311,6 +311,7 @@
     "src/harbor_client/leaderboards/types/leaderboards_list_trials_bad_request_response.py",
     "src/harbor_client/leaderboards/types/__init__.py",
     "src/harbor_client/secrets/types/secrets_list_request_status_filter.py",
+    "src/harbor_client/secrets/types/secrets_list_request_all_tags.py",
     "src/harbor_client/secrets/types/secrets_list_bad_request_response.py",
     "src/harbor_client/secrets/types/secrets_upsert_request_scope.py",
     "src/harbor_client/secrets/types/secrets_upsert_conflict_response.py",
@@ -320,6 +321,7 @@
     "src/harbor_client/secrets/types/secrets_preflight_request_config_credential_mode.py",
     "src/harbor_client/secrets/types/secrets_list_registry_credentials_request_status.py",
     "src/harbor_client/secrets/types/secrets_list_registry_credentials_response.py",
+    "src/harbor_client/secrets/types/secrets_list_registry_credentials_bad_request_response.py",
     "src/harbor_client/secrets/types/registry_credential_upsert_encoded_provider.py",
     "src/harbor_client/secrets/types/secrets_upsert_registry_credential_conflict_response.py",
     "src/harbor_client/secrets/types/secrets_revoke_registry_credential_request_purge.py",
@@ -369,6 +371,7 @@
     "src/harbor_client/types/rollouts_get_filters_request_terminal.py",
     "src/harbor_client/types/leaderboard_package_selector_encoded.py",
     "src/harbor_client/types/secrets_list_request_status_filter.py",
+    "src/harbor_client/types/secrets_list_request_all_tags.py",
     "src/harbor_client/types/secrets_list_registry_credentials_request_status.py",
     "src/harbor_client/types/secrets_revoke_registry_credential_request_purge.py",
     "src/harbor_client/types/storage_upload_create.py",
@@ -389,6 +392,7 @@
     "src/harbor_client/types/leaderboards_list_trials_bad_request_response.py",
     "src/harbor_client/types/secrets_list_bad_request_response.py",
     "src/harbor_client/types/secrets_upsert_conflict_response.py",
+    "src/harbor_client/types/secrets_list_registry_credentials_bad_request_response.py",
     "src/harbor_client/types/secrets_upsert_registry_credential_conflict_response.py",
     "src/harbor_client/types/organizations_ensure_request.py",
     "src/harbor_client/types/ensure_organization_response.py",
