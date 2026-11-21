@@ -536,7 +536,7 @@ class SecretsClient(BaseService):
                     .serialize()
                     .set_method("GET")
                 )
-                response, _, content = self.send_request(serialized_request)
+                response, status, content = self.send_request(serialized_request)
                 parsed_response = (
                     SecretsListRegistryCredentialsResponse.model_validate(response)
                     if should_validate_response(resolved_config)

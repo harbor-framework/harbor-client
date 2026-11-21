@@ -6,3 +6,9 @@ paths:
         - name: status
           in: query
           x-fern-parameter-name: status_filter
+  /v1/secrets/registry-credentials:
+    get:
+      parameters:
+        - name: status
+          in: query
+          x-fern-parameter-name: status_filter
